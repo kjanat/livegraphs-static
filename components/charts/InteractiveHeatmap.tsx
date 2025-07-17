@@ -88,8 +88,9 @@ export function InteractiveHeatmap({
                 const isHovered = hoveredCell?.day === day && hoveredCell?.hour === hour;
 
                 return (
-                  <div
+                  <button
                     key={`${day}-${hour}`}
+                    type="button"
                     className={`
                       flex-1 aspect-square flex items-center justify-center
                       text-xs font-medium rounded cursor-pointer
@@ -101,9 +102,10 @@ export function InteractiveHeatmap({
                     onMouseEnter={() => setHoveredCell({ hour, day })}
                     onMouseLeave={() => setHoveredCell(null)}
                     title={`${day} ${hour}:00 - ${count} sessions`}
+                    aria-label={`${day} ${hour}:00 - ${count} sessions`}
                   >
                     {count > 0 && <span className={isHovered ? "font-bold" : ""}>{count}</span>}
-                  </div>
+                  </button>
                 );
               })}
             </div>

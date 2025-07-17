@@ -1,4 +1,11 @@
-import { vi } from "vitest";
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, beforeEach, vi } from "vitest";
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
 
 // Mock sql.js for tests
 vi.mock("sql.js", () => ({
@@ -20,6 +27,63 @@ vi.mock("sql.js", () => ({
     })
   )
 }));
+
+// Mock Chart.js and react-chartjs-2
+vi.mock("chart.js", () => ({
+  Chart: {
+    register: vi.fn()
+  },
+  ArcElement: {},
+  BarElement: {},
+  CategoryScale: {},
+  Filler: {},
+  Legend: {},
+  LinearScale: {},
+  LineElement: {},
+  PointElement: {},
+  TimeScale: {},
+  Title: {},
+  Tooltip: {}
+}));
+
+// Mock canvas for Chart.js
+class MockCanvas {
+  getContext() {
+    return {
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 0 })),
+      beginPath: vi.fn(),
+      closePath: vi.fn(),
+      stroke: vi.fn(),
+      fill: vi.fn(),
+      arc: vi.fn(),
+      rect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
+      setTransform: vi.fn(),
+      createLinearGradient: vi.fn(() => ({
+        addColorStop: vi.fn()
+      })),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      lineWidth: 1,
+      strokeStyle: "#000000",
+      fillStyle: "#000000",
+      globalAlpha: 1,
+      font: "10px sans-serif"
+    };
+  }
+}
+
+global.HTMLCanvasElement.prototype.getContext = vi.fn(function (this: HTMLCanvasElement) {
+  return new MockCanvas().getContext();
+});
 
 // Mock localStorage
 const localStorageMock: Storage = {
