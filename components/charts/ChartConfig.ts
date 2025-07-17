@@ -8,8 +8,11 @@ import {
   LineElement,
   PointElement,
   TimeScale,
-  Tooltip
+  Tooltip,
+  Filler,
+  Title
 } from "chart.js";
+import 'chartjs-adapter-date-fns';
 
 export const setupCharts = () => {
   Chart.register(
@@ -21,6 +24,8 @@ export const setupCharts = () => {
     BarElement,
     PointElement,
     LineElement,
-    TimeScale
+    TimeScale,
+    Filler,
+    Title
   );
 };

@@ -147,6 +147,151 @@ export async function prepareChartData(
   const dates_labels = timeData.map((row) => row.date as string);
   const dates_values = timeData.map((row) => row.count as number);
 
+  // Response time over time
+  const responseTimeData = executeQuery(`
+    SELECT 
+      DATE(start_time) as date,
+      AVG(avg_response_time) as avg_response
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY date
+    ORDER BY date
+  `);
+
+  const response_time_dates = responseTimeData.map(row => row.date as string);
+  const response_time_values = responseTimeData.map(row => Number((row.avg_response as number).toFixed(1)));
+
+  // Cost over time
+  const costData = executeQuery(`
+    SELECT 
+      DATE(start_time) as date,
+      SUM(cost_eur_cents) / 100.0 as daily_cost
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY date
+    ORDER BY date
+  `);
+
+  const cost_dates = costData.map(row => row.date as string);
+  const cost_values = costData.map(row => Number((row.daily_cost as number).toFixed(2)));
+
+  // Geographic distribution
+  const countryData = executeQuery(`
+    SELECT country, COUNT(*) as count
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY country
+    ORDER BY count DESC
+    LIMIT 10
+  `);
+
+  const country_labels = countryData.map(row => row.country as string);
+  const country_values = countryData.map(row => row.count as number);
+
+  // Language distribution
+  const languageData = executeQuery(`
+    SELECT language, COUNT(*) as count
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY language
+    ORDER BY count DESC
+    LIMIT 8
+  `);
+
+  const language_labels = languageData.map(row => row.language as string);
+  const language_values = languageData.map(row => row.count as number);
+
+  // Hourly heatmap data
+  const heatmapData = executeQuery(`
+    SELECT 
+      CAST(strftime('%H', start_time) as INTEGER) as hour,
+      strftime('%w', start_time) as day_of_week,
+      COUNT(*) as count
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY hour, day_of_week
+  `);
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const hourly_data = heatmapData.map(row => ({
+    hour: row.hour as number,
+    day: dayNames[parseInt(row.day_of_week as string)],
+    count: row.count as number
+  }));
+
+  // Conversation durations
+  const durationData = executeQuery(`
+    SELECT conversation_duration_seconds / 60.0 as duration_minutes
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    ORDER BY duration_minutes
+  `);
+
+  const conversation_durations = durationData.map(row => 
+    Number((row.duration_minutes as number).toFixed(1))
+  );
+
+  // Messages per conversation
+  const messagesData = executeQuery(`
+    SELECT total_messages
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    ORDER BY total_messages
+  `);
+
+  const messages_per_conversation = messagesData.map(row => row.total_messages as number);
+
+  // Rating distribution
+  const ratingData = executeQuery(`
+    SELECT 
+      user_rating,
+      COUNT(*) as count
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+      AND user_rating IS NOT NULL
+    GROUP BY user_rating
+    ORDER BY user_rating
+  `);
+
+  const rating_distribution = ratingData.map(row => ({
+    rating: row.user_rating as number,
+    count: row.count as number
+  }));
+
+  // Average rating
+  const avgRatingData = executeQuery(`
+    SELECT AVG(user_rating) as avg_rating
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+      AND user_rating IS NOT NULL
+  `);
+
+  const avg_rating = avgRatingData.length > 0 && avgRatingData[0].avg_rating 
+    ? Number((avgRatingData[0].avg_rating as number).toFixed(1))
+    : null;
+
+  // Cost by category
+  const categoryCostData = executeQuery(`
+    SELECT 
+      category,
+      SUM(cost_eur_cents) / 100.0 as total_cost,
+      AVG(cost_eur_cents) / 100.0 as avg_cost,
+      COUNT(*) as count
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+      AND category IS NOT NULL
+    GROUP BY category
+    ORDER BY total_cost DESC
+    LIMIT 10
+  `);
+
+  const category_costs = categoryCostData.map(row => ({
+    category: row.category as string,
+    total_cost: Number((row.total_cost as number).toFixed(2)),
+    avg_cost: Number((row.avg_cost as number).toFixed(4)),
+    count: row.count as number
+  }));
+
   return {
     sentiment_labels,
     sentiment_values,
@@ -157,7 +302,21 @@ export async function prepareChartData(
     questions_labels,
     questions_values,
     dates_labels,
-    dates_values
+    dates_values,
+    response_time_dates,
+    response_time_values,
+    cost_dates,
+    cost_values,
+    country_labels,
+    country_values,
+    language_labels,
+    language_values,
+    hourly_data,
+    conversation_durations,
+    messages_per_conversation,
+    rating_distribution,
+    avg_rating,
+    category_costs
   };
 }
 

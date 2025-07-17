@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnalyticsChart } from "@/components/charts/AnalyticsChart";
+import { HeatmapChart } from "@/components/charts/HeatmapChart";
+import { GaugeChart } from "@/components/charts/GaugeChart";
+import { BubbleChart } from "@/components/charts/BubbleChart";
+import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { HistogramChart } from "@/components/charts/HistogramChart";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
@@ -243,75 +248,253 @@ export default function Home() {
           </div>
         )}
 
-        {/* Charts Section */}
+        {/* Charts Dashboard */}
         {chartData && !isLoadingData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <AnalyticsChart
-              type="doughnut"
-              title="Sentiment Distribution"
-              data={{
-                labels: chartData.sentiment_labels,
-                datasets: [
+          <>
+            {/* Primary Insights Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <AnalyticsChart
+                type="doughnut"
+                title="Sentiment Distribution"
+                data={{
+                  labels: chartData.sentiment_labels,
+                  datasets: [
+                    {
+                      label: "Sessions",
+                      data: chartData.sentiment_values,
+                      backgroundColor: ["#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#8B5CF6"]
+                    }
+                  ]
+                }}
+              />
+              <AnalyticsChart
+                type="doughnut"
+                title="Resolution Status"
+                data={{
+                  labels: chartData.resolution_labels,
+                  datasets: [
+                    {
+                      label: "Sessions",
+                      data: chartData.resolution_values,
+                      backgroundColor: ["#10B981", "#EF4444", "#F59E0B"]
+                    }
+                  ]
+                }}
+              />
+              <GaugeChart
+                value={chartData.avg_rating}
+                title="Average User Rating"
+              />
+            </div>
+
+            {/* Time Series Analysis */}
+            <div className="mb-8">
+              <MultiLineChart
+                title="Performance Trends Over Time"
+                labels={chartData.dates_labels}
+                datasets={[
                   {
                     label: "Sessions",
-                    data: chartData.sentiment_data,
-                    backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF"]
-                  }
-                ]
-              }}
-            />
-            <AnalyticsChart
-              type="bar"
-              title="Session Categories"
-              data={{
-                labels: chartData.category_labels,
-                datasets: [
+                    data: chartData.dates_values,
+                    borderColor: "#3B82F6",
+                    backgroundColor: "#3B82F640",
+                    fill: true
+                  },
                   {
-                    label: "Sessions",
-                    data: chartData.category_data,
-                    backgroundColor: "#36A2EB"
+                    label: "Avg Response Time (sec)",
+                    data: chartData.response_time_values,
+                    borderColor: "#F59E0B",
+                    yAxisID: "y1"
                   }
-                ]
-              }}
-              options={{
-                scales: {
-                  y: {
-                    beginAtZero: true
+                ]}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: {
+                    mode: 'index' as const,
+                    intersect: false
+                  },
+                  scales: {
+                    x: {
+                      grid: {
+                        display: false
+                      }
+                    },
+                    y: {
+                      type: 'linear' as const,
+                      display: true,
+                      position: 'left' as const,
+                      title: {
+                        display: true,
+                        text: 'Number of Sessions'
+                      }
+                    },
+                    y1: {
+                      type: 'linear' as const,
+                      display: true,
+                      position: 'right' as const,
+                      title: {
+                        display: true,
+                        text: 'Response Time (sec)'
+                      },
+                      grid: {
+                        drawOnChartArea: false
+                      }
+                    }
                   }
-                }
-              }}
-            />
-          </div>
-        )}
-        {chartData && !isLoadingData && (
-          <AnalyticsChart
-            type="line"
-            title="Sessions Over Time"
-            data={{
-              labels: chartData.dates_labels,
-              datasets: [
-                {
-                  label: "Sessions",
-                  data: chartData.dates_data,
-                  borderColor: "#4BC0C0",
-                  tension: 0.1
-                }
-              ]
-            }}
-            options={{
-              scales: {
-                x: {
-                  type: "time",
-                  time: {
-                    unit: "day"
+                }}
+              />
+            </div>
+
+            {/* Usage Patterns */}
+            <div className="mb-8">
+              <HeatmapChart
+                data={chartData.hourly_data}
+                title="Weekly Usage Heatmap"
+              />
+            </div>
+
+            {/* Geographic & Language Insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <AnalyticsChart
+                type="bar"
+                title="Sessions by Country"
+                data={{
+                  labels: chartData.country_labels,
+                  datasets: [
+                    {
+                      label: "Sessions",
+                      data: chartData.country_values,
+                      backgroundColor: "#3B82F6"
+                    }
+                  ]
+                }}
+                options={{
+                  indexAxis: 'y' as const,
+                  scales: {
+                    x: {
+                      beginAtZero: true
+                    }
                   }
-                },
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }}
-          />
+                }}
+              />
+              <AnalyticsChart
+                type="bar"
+                title="Language Distribution"
+                data={{
+                  labels: chartData.language_labels,
+                  datasets: [
+                    {
+                      label: "Sessions",
+                      data: chartData.language_values,
+                      backgroundColor: "#10B981"
+                    }
+                  ]
+                }}
+                options={{
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {/* Category Analysis */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <AnalyticsChart
+                type="bar"
+                title="Top Categories"
+                data={{
+                  labels: chartData.category_labels.slice(0, 8),
+                  datasets: [
+                    {
+                      label: "Sessions",
+                      data: chartData.category_values.slice(0, 8),
+                      backgroundColor: "#8B5CF6"
+                    }
+                  ]
+                }}
+                options={{
+                  indexAxis: 'y' as const,
+                  scales: {
+                    x: {
+                      beginAtZero: true
+                    }
+                  }
+                }}
+              />
+              <BubbleChart
+                data={chartData.category_costs}
+                title="Cost Analysis by Category"
+              />
+            </div>
+
+            {/* Performance Distributions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <HistogramChart
+                data={chartData.conversation_durations}
+                title="Conversation Duration Distribution"
+                xLabel="Duration (minutes)"
+                bins={15}
+                color="#14B8A6"
+              />
+              <HistogramChart
+                data={chartData.messages_per_conversation}
+                title="Messages per Conversation"
+                xLabel="Number of Messages"
+                bins={10}
+                color="#EC4899"
+              />
+            </div>
+
+            {/* Cost Analysis */}
+            <div className="mb-8">
+              <MultiLineChart
+                title="Daily Cost Trend"
+                labels={chartData.cost_dates}
+                datasets={[
+                  {
+                    label: "Daily Cost (€)",
+                    data: chartData.cost_values,
+                    borderColor: "#F59E0B",
+                    backgroundColor: "#F59E0B40",
+                    fill: true
+                  }
+                ]}
+                options={{
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return '€' + Number(value).toFixed(2);
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {/* Top Questions */}
+            {chartData.questions_labels.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Top Questions</h3>
+                <div className="space-y-3">
+                  {chartData.questions_labels.map((question, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="text-gray-700 flex-1 mr-4">{question}</span>
+                      <span className="text-gray-600 font-semibold whitespace-nowrap">
+                        {chartData.questions_values[index]} times
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Empty State */}
