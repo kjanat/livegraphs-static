@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Line } from 'react-chartjs-2';
-import { ChartOptions } from 'chart.js';
-import { setupCharts } from './ChartConfig';
+import type { ChartOptions } from "chart.js";
+import { Line } from "react-chartjs-2";
+import { setupCharts } from "./ChartConfig";
 
 setupCharts();
 
@@ -19,48 +19,48 @@ interface MultiLineChartProps {
   labels: string[];
   datasets: Dataset[];
   title?: string;
-  options?: ChartOptions<'line'>;
+  options?: ChartOptions<"line">;
 }
 
-export function MultiLineChart({ 
-  labels, 
-  datasets, 
-  title = 'Trends Over Time',
+export function MultiLineChart({
+  labels,
+  datasets,
+  title = "Trends Over Time",
   options: customOptions
 }: MultiLineChartProps) {
   const chartData = {
     labels,
-    datasets: datasets.map(dataset => ({
+    datasets: datasets.map((dataset) => ({
       ...dataset,
       tension: 0.3,
       borderWidth: 2,
       pointRadius: 3,
       pointHoverRadius: 5,
       pointBackgroundColor: dataset.borderColor,
-      pointBorderColor: '#fff',
+      pointBorderColor: "#fff",
       pointBorderWidth: 2
     }))
   };
 
-  const defaultOptions: ChartOptions<'line'> = {
+  const defaultOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index' as const,
+      mode: "index" as const,
       intersect: false
     },
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
         labels: {
           usePointStyle: true,
           padding: 15
         }
       },
       tooltip: {
-        mode: 'index' as const,
+        mode: "index" as const,
         intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
         titleFont: {
           size: 13
         },
@@ -80,7 +80,7 @@ export function MultiLineChart({
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
+          color: "rgba(0, 0, 0, 0.05)"
         }
       }
     }

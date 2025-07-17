@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Bar } from 'react-chartjs-2';
-import { ChartOptions } from 'chart.js';
-import { setupCharts } from './ChartConfig';
+import type { ChartOptions } from "chart.js";
+import { Bar } from "react-chartjs-2";
+import { setupCharts } from "./ChartConfig";
 
 setupCharts();
 
@@ -14,20 +14,18 @@ interface HistogramChartProps {
   color?: string;
 }
 
-export function HistogramChart({ 
-  data, 
+export function HistogramChart({
+  data,
   bins = 10,
-  title = 'Distribution',
-  xLabel = 'Value',
-  color = '#3B82F6'
+  title = "Distribution",
+  xLabel = "Value",
+  color = "#3B82F6"
 }: HistogramChartProps) {
   if (!data.length) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
-        <div className="text-center text-gray-500 py-12">
-          No data available
-        </div>
+        <div className="text-center text-gray-500 py-12">No data available</div>
       </div>
     );
   }
@@ -36,16 +34,16 @@ export function HistogramChart({
   const min = Math.min(...data);
   const max = Math.max(...data);
   const binWidth = (max - min) / bins;
-  
+
   const histogram = new Array(bins).fill(0);
   const binLabels = [];
-  
+
   for (let i = 0; i < bins; i++) {
     const binStart = min + i * binWidth;
     const binEnd = binStart + binWidth;
     binLabels.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
-    
-    data.forEach(value => {
+
+    data.forEach((value) => {
       if (value >= binStart && value < binEnd) {
         histogram[i]++;
       } else if (i === bins - 1 && value === max) {
@@ -56,17 +54,19 @@ export function HistogramChart({
 
   const chartData = {
     labels: binLabels,
-    datasets: [{
-      label: 'Frequency',
-      data: histogram,
-      backgroundColor: color + '80',
-      borderColor: color,
-      borderWidth: 1,
-      borderRadius: 4
-    }]
+    datasets: [
+      {
+        label: "Frequency",
+        data: histogram,
+        backgroundColor: `${color}80`,
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 4
+      }
+    ]
   };
 
-  const options: ChartOptions<'bar'> = {
+  const options: ChartOptions<"bar"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -96,7 +96,7 @@ export function HistogramChart({
       y: {
         title: {
           display: true,
-          text: 'Frequency'
+          text: "Frequency"
         },
         beginAtZero: true,
         ticks: {

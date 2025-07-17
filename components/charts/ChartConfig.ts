@@ -3,16 +3,16 @@ import {
   BarElement,
   CategoryScale,
   Chart,
+  Filler,
   Legend,
   LinearScale,
   LineElement,
   PointElement,
   TimeScale,
-  Tooltip,
-  Filler,
-  Title
+  Title,
+  Tooltip
 } from "chart.js";
-import 'chartjs-adapter-date-fns';
+import "chartjs-adapter-date-fns";
 
 export const setupCharts = () => {
   Chart.register(

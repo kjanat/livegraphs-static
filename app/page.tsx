@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnalyticsChart } from "@/components/charts/AnalyticsChart";
-import { HeatmapChart } from "@/components/charts/HeatmapChart";
-import { GaugeChart } from "@/components/charts/GaugeChart";
 import { BubbleChart } from "@/components/charts/BubbleChart";
-import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { GaugeChart } from "@/components/charts/GaugeChart";
+import { HeatmapChart } from "@/components/charts/HeatmapChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
+import { MultiLineChart } from "@/components/charts/MultiLineChart";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
@@ -281,10 +281,7 @@ export default function Home() {
                   ]
                 }}
               />
-              <GaugeChart
-                value={chartData.avg_rating}
-                title="Average User Rating"
-              />
+              <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
             </div>
 
             {/* Time Series Analysis */}
@@ -311,7 +308,7 @@ export default function Home() {
                   responsive: true,
                   maintainAspectRatio: false,
                   interaction: {
-                    mode: 'index' as const,
+                    mode: "index" as const,
                     intersect: false
                   },
                   scales: {
@@ -321,21 +318,21 @@ export default function Home() {
                       }
                     },
                     y: {
-                      type: 'linear' as const,
+                      type: "linear" as const,
                       display: true,
-                      position: 'left' as const,
+                      position: "left" as const,
                       title: {
                         display: true,
-                        text: 'Number of Sessions'
+                        text: "Number of Sessions"
                       }
                     },
                     y1: {
-                      type: 'linear' as const,
+                      type: "linear" as const,
                       display: true,
-                      position: 'right' as const,
+                      position: "right" as const,
                       title: {
                         display: true,
-                        text: 'Response Time (sec)'
+                        text: "Response Time (sec)"
                       },
                       grid: {
                         drawOnChartArea: false
@@ -348,10 +345,7 @@ export default function Home() {
 
             {/* Usage Patterns */}
             <div className="mb-8">
-              <HeatmapChart
-                data={chartData.hourly_data}
-                title="Weekly Usage Heatmap"
-              />
+              <HeatmapChart data={chartData.hourly_data} title="Weekly Usage Heatmap" />
             </div>
 
             {/* Geographic & Language Insights */}
@@ -370,7 +364,7 @@ export default function Home() {
                   ]
                 }}
                 options={{
-                  indexAxis: 'y' as const,
+                  indexAxis: "y" as const,
                   scales: {
                     x: {
                       beginAtZero: true
@@ -417,7 +411,7 @@ export default function Home() {
                   ]
                 }}
                 options={{
-                  indexAxis: 'y' as const,
+                  indexAxis: "y" as const,
                   scales: {
                     x: {
                       beginAtZero: true
@@ -425,10 +419,7 @@ export default function Home() {
                   }
                 }}
               />
-              <BubbleChart
-                data={chartData.category_costs}
-                title="Cost Analysis by Category"
-              />
+              <BubbleChart data={chartData.category_costs} title="Cost Analysis by Category" />
             </div>
 
             {/* Performance Distributions */}
@@ -468,9 +459,7 @@ export default function Home() {
                     y: {
                       beginAtZero: true,
                       ticks: {
-                        callback: function(value) {
-                          return '€' + Number(value).toFixed(2);
-                        }
+                        callback: (value) => `€${Number(value).toFixed(2)}`
                       }
                     }
                   }
@@ -484,7 +473,10 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Top Questions</h3>
                 <div className="space-y-3">
                   {chartData.questions_labels.map((question, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div
+                      key={`question-${index}-${question.slice(0, 20)}`}
+                      className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                    >
                       <span className="text-gray-700 flex-1 mr-4">{question}</span>
                       <span className="text-gray-600 font-semibold whitespace-nowrap">
                         {chartData.questions_values[index]} times

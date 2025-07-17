@@ -158,8 +158,10 @@ export async function prepareChartData(
     ORDER BY date
   `);
 
-  const response_time_dates = responseTimeData.map(row => row.date as string);
-  const response_time_values = responseTimeData.map(row => Number((row.avg_response as number).toFixed(1)));
+  const response_time_dates = responseTimeData.map((row) => row.date as string);
+  const response_time_values = responseTimeData.map((row) =>
+    Number((row.avg_response as number).toFixed(1))
+  );
 
   // Cost over time
   const costData = executeQuery(`
@@ -172,8 +174,8 @@ export async function prepareChartData(
     ORDER BY date
   `);
 
-  const cost_dates = costData.map(row => row.date as string);
-  const cost_values = costData.map(row => Number((row.daily_cost as number).toFixed(2)));
+  const cost_dates = costData.map((row) => row.date as string);
+  const cost_values = costData.map((row) => Number((row.daily_cost as number).toFixed(2)));
 
   // Geographic distribution
   const countryData = executeQuery(`
@@ -185,8 +187,8 @@ export async function prepareChartData(
     LIMIT 10
   `);
 
-  const country_labels = countryData.map(row => row.country as string);
-  const country_values = countryData.map(row => row.count as number);
+  const country_labels = countryData.map((row) => row.country as string);
+  const country_values = countryData.map((row) => row.count as number);
 
   // Language distribution
   const languageData = executeQuery(`
@@ -198,8 +200,8 @@ export async function prepareChartData(
     LIMIT 8
   `);
 
-  const language_labels = languageData.map(row => row.language as string);
-  const language_values = languageData.map(row => row.count as number);
+  const language_labels = languageData.map((row) => row.language as string);
+  const language_values = languageData.map((row) => row.count as number);
 
   // Hourly heatmap data
   const heatmapData = executeQuery(`
@@ -212,8 +214,8 @@ export async function prepareChartData(
     GROUP BY hour, day_of_week
   `);
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const hourly_data = heatmapData.map(row => ({
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const hourly_data = heatmapData.map((row) => ({
     hour: row.hour as number,
     day: dayNames[parseInt(row.day_of_week as string)],
     count: row.count as number
@@ -227,7 +229,7 @@ export async function prepareChartData(
     ORDER BY duration_minutes
   `);
 
-  const conversation_durations = durationData.map(row => 
+  const conversation_durations = durationData.map((row) =>
     Number((row.duration_minutes as number).toFixed(1))
   );
 
@@ -239,7 +241,7 @@ export async function prepareChartData(
     ORDER BY total_messages
   `);
 
-  const messages_per_conversation = messagesData.map(row => row.total_messages as number);
+  const messages_per_conversation = messagesData.map((row) => row.total_messages as number);
 
   // Rating distribution
   const ratingData = executeQuery(`
@@ -253,7 +255,7 @@ export async function prepareChartData(
     ORDER BY user_rating
   `);
 
-  const rating_distribution = ratingData.map(row => ({
+  const rating_distribution = ratingData.map((row) => ({
     rating: row.user_rating as number,
     count: row.count as number
   }));
@@ -266,9 +268,10 @@ export async function prepareChartData(
       AND user_rating IS NOT NULL
   `);
 
-  const avg_rating = avgRatingData.length > 0 && avgRatingData[0].avg_rating 
-    ? Number((avgRatingData[0].avg_rating as number).toFixed(1))
-    : null;
+  const avg_rating =
+    avgRatingData.length > 0 && avgRatingData[0].avg_rating
+      ? Number((avgRatingData[0].avg_rating as number).toFixed(1))
+      : null;
 
   // Cost by category
   const categoryCostData = executeQuery(`
@@ -285,7 +288,7 @@ export async function prepareChartData(
     LIMIT 10
   `);
 
-  const category_costs = categoryCostData.map(row => ({
+  const category_costs = categoryCostData.map((row) => ({
     category: row.category as string,
     total_cost: Number((row.total_cost as number).toFixed(2)),
     avg_cost: Number((row.avg_cost as number).toFixed(4)),

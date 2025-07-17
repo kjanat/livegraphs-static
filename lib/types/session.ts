@@ -65,39 +65,39 @@ export interface ChartData {
   questions_values: number[];
   dates_labels: string[];
   dates_values: number[];
-  
+
   // Enhanced time series
   response_time_dates: string[];
   response_time_values: number[];
   cost_dates: string[];
   cost_values: number[];
-  
+
   // Geographic distribution
   country_labels: string[];
   country_values: number[];
-  
+
   // Language distribution
   language_labels: string[];
   language_values: number[];
-  
+
   // Hourly heatmap data
   hourly_data: {
     hour: number;
     day: string;
     count: number;
   }[];
-  
+
   // Performance metrics
   conversation_durations: number[];
   messages_per_conversation: number[];
-  
+
   // Ratings data
   rating_distribution: {
     rating: number;
     count: number;
   }[];
   avg_rating: number | null;
-  
+
   // Cost analysis
   category_costs: {
     category: string;
