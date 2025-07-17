@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Zod schemas for validating imported JSON data
 
 const TranscriptMessageSchema = z.object({
   timestamp: z.string().datetime(),
-  role: z.enum(['User', 'Assistant']),
+  role: z.enum(["User", "Assistant"]),
   content: z.string()
 });
 
@@ -39,7 +39,7 @@ export const ChatSessionSchema = z.object({
   transcript: z.array(TranscriptMessageSchema),
   messages: MessageMetricsSchema,
   user: UserInfoSchema,
-  sentiment: z.enum(['positive', 'neutral', 'negative']),
+  sentiment: z.enum(["positive", "neutral", "negative"]),
   escalated: z.boolean(),
   forwarded_hr: z.boolean(),
   category: z.string(),
@@ -56,9 +56,9 @@ export function validateSessionData(data: unknown): z.infer<typeof ChatSessionAr
     return ChatSessionArraySchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const issues = error.issues.map(issue => 
-        `${issue.path.join('.')}: ${issue.message}`
-      ).join('\n');
+      const issues = error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("\n");
       throw new Error(`Validation failed:\n${issues}`);
     }
     throw error;

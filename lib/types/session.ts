@@ -4,7 +4,7 @@
 
 export interface TranscriptMessage {
   timestamp: string;
-  role: 'User' | 'Assistant';
+  role: "User" | "Assistant";
   content: string;
 }
 
@@ -39,7 +39,7 @@ export interface ChatSession {
   transcript: TranscriptMessage[];
   messages: MessageMetrics;
   user: UserInfo;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: "positive" | "neutral" | "negative";
   escalated: boolean;
   forwarded_hr: boolean;
   category: string;
@@ -67,11 +67,11 @@ export interface ChartData {
 }
 
 export interface Metrics {
-  'Total Conversations': number;
-  'Unique Users': number;
-  'Avg. Conversation Length (min)': number;
-  'Avg. Response Time (sec)': number;
-  'Resolved Chats (%)': number;
-  'Average Daily Cost (€)': number;
-  'Peak Usage Time': string;
+  "Total Conversations": number;
+  "Unique Users": number;
+  "Avg. Conversation Length (min)": number;
+  "Avg. Response Time (sec)": number;
+  "Resolved Chats (%)": number;
+  "Average Daily Cost (€)": number;
+  "Peak Usage Time": string;
 }

@@ -1,22 +1,24 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Mock sql.js for tests
-vi.mock('sql.js', () => ({
-  default: vi.fn(() => Promise.resolve({
-    Database: vi.fn().mockImplementation(() => ({
-      run: vi.fn(),
-      prepare: vi.fn(() => ({
+vi.mock("sql.js", () => ({
+  default: vi.fn(() =>
+    Promise.resolve({
+      Database: vi.fn().mockImplementation(() => ({
         run: vi.fn(),
-        bind: vi.fn(),
-        step: vi.fn(),
-        getAsObject: vi.fn(),
-        free: vi.fn()
-      })),
-      exec: vi.fn(),
-      export: vi.fn(() => new Uint8Array()),
-      close: vi.fn()
-    }))
-  }))
+        prepare: vi.fn(() => ({
+          run: vi.fn(),
+          bind: vi.fn(),
+          step: vi.fn(),
+          getAsObject: vi.fn(),
+          free: vi.fn()
+        })),
+        exec: vi.fn(),
+        export: vi.fn(() => new Uint8Array()),
+        close: vi.fn()
+      }))
+    })
+  )
 }));
 
 // Mock localStorage

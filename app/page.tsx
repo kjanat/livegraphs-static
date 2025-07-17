@@ -1,15 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useDatabase } from '@/hooks/useDatabase';
-import { validateSessionData } from '@/lib/validation/schema';
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
-import { calculateMetrics, prepareChartData, exportToCSV } from '@/lib/dataProcessor';
-import type { Metrics, ChartData, DateRange } from '@/lib/types/session';
+import { useCallback, useEffect, useState } from "react";
+import { AnalyticsChart } from "@/components/charts/AnalyticsChart";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDatabase } from "@/hooks/useDatabase";
+import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
+import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
+import { validateSessionData } from "@/lib/validation/schema";
 
 export default function Home() {
-  const { isInitialized, error: dbError, loadSessionsFromJSON, getDatabaseStats, clearDatabase, db } = useDatabase();
-  const [dbStats, setDbStats] = useState<{ totalSessions: number; dateRange: { min: string; max: string } } | null>(null);
+  const {
+    isInitialized,
+    error: dbError,
+    loadSessionsFromJSON,
+    getDatabaseStats,
+    clearDatabase,
+    db
+  } = useDatabase();
+  const [dbStats, setDbStats] = useState<{
+    totalSessions: number;
+    dateRange: { min: string; max: string };
+  } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -24,26 +35,29 @@ export default function Home() {
     }
   }, [isInitialized, dbError, getDatabaseStats]);
 
-  const loadDataForDateRange = useCallback(async (startDate: Date, endDate: Date) => {
-    if (!db) return;
-    
-    setIsLoadingData(true);
-    try {
-      const range: DateRange = { start: startDate, end: endDate };
-      setDateRange(range);
-      
-      // Calculate metrics and prepare chart data
-      const newMetrics = await calculateMetrics(db, range);
-      const newChartData = await prepareChartData(db, range);
-      
-      setMetrics(newMetrics);
-      setChartData(newChartData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [db]);
+  const loadDataForDateRange = useCallback(
+    async (startDate: Date, endDate: Date) => {
+      if (!db) return;
+
+      setIsLoadingData(true);
+      try {
+        const range: DateRange = { start: startDate, end: endDate };
+        setDateRange(range);
+
+        // Calculate metrics and prepare chart data
+        const newMetrics = await calculateMetrics(db, range);
+        const newChartData = await prepareChartData(db, range);
+
+        setMetrics(newMetrics);
+        setChartData(newChartData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    },
+    [db]
+  );
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -55,37 +69,37 @@ export default function Home() {
     try {
       const text = await file.text();
       const jsonData = JSON.parse(text);
-      
+
       // Validate the data
       const validatedData = validateSessionData(jsonData);
-      
+
       // Load into database
       const count = await loadSessionsFromJSON(validatedData);
-      
+
       // Update stats
       const stats = getDatabaseStats();
       setDbStats(stats);
-      
+
       // Clear existing data views to force reload
       setMetrics(null);
       setChartData(null);
       setDateRange(null);
-      
+
       alert(`Successfully loaded ${count} sessions`);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Failed to load file');
+      setUploadError(err instanceof Error ? err.message : "Failed to load file");
       console.error(err);
     } finally {
       setIsUploading(false);
       // Clear the input
-      event.target.value = '';
+      event.target.value = "";
     }
   };
 
   const handleClearDatabase = () => {
-    if (confirm('Are you sure you want to clear all data?')) {
+    if (confirm("Are you sure you want to clear all data?")) {
       clearDatabase();
-      setDbStats({ totalSessions: 0, dateRange: { min: '', max: '' } });
+      setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
       setMetrics(null);
       setChartData(null);
       setDateRange(null);
@@ -94,13 +108,13 @@ export default function Home() {
 
   const handleExportCSV = () => {
     if (!db || !dateRange) return;
-    
+
     const csv = exportToCSV(db, dateRange);
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `livegraphs_${dateRange.start.toISOString().split('T')[0]}_to_${dateRange.end.toISOString().split('T')[0]}.csv`;
+    a.download = `livegraphs_${dateRange.start.toISOString().split("T")[0]}_to_${dateRange.end.toISOString().split("T")[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -111,7 +125,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">LiveGraphs Dashboard</h1>
-        
+
         {/* Database Status */}
         {!isInitialized && !dbError && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
@@ -144,6 +158,7 @@ export default function Home() {
               {dbStats && dbStats.totalSessions > 0 && (
                 <>
                   <button
+                    type="button"
                     onClick={handleClearDatabase}
                     className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded"
                   >
@@ -151,6 +166,7 @@ export default function Home() {
                   </button>
                   {dateRange && (
                     <button
+                      type="button"
                       onClick={handleExportCSV}
                       className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded"
                     >
@@ -180,13 +196,17 @@ export default function Home() {
               <div className="bg-green-50 p-4 rounded">
                 <div className="text-sm text-gray-600">Data Start Date</div>
                 <div className="text-lg font-semibold text-green-600">
-                  {dbStats.dateRange.min ? new Date(dbStats.dateRange.min).toLocaleDateString() : 'No data'}
+                  {dbStats.dateRange.min
+                    ? new Date(dbStats.dateRange.min).toLocaleDateString()
+                    : "No data"}
                 </div>
               </div>
               <div className="bg-purple-50 p-4 rounded">
                 <div className="text-sm text-gray-600">Data End Date</div>
                 <div className="text-lg font-semibold text-purple-600">
-                  {dbStats.dateRange.max ? new Date(dbStats.dateRange.max).toLocaleDateString() : 'No data'}
+                  {dbStats.dateRange.max
+                    ? new Date(dbStats.dateRange.max).toLocaleDateString()
+                    : "No data"}
                 </div>
               </div>
             </div>
@@ -214,7 +234,7 @@ export default function Home() {
                   <div key={key} className="bg-gray-50 p-4 rounded">
                     <div className="text-sm text-gray-600">{key}</div>
                     <div className="text-xl font-semibold text-gray-800">
-                      {typeof value === 'number' ? value.toLocaleString() : value}
+                      {typeof value === "number" ? value.toLocaleString() : value}
                     </div>
                   </div>
                 ))}
@@ -223,34 +243,82 @@ export default function Home() {
           </div>
         )}
 
-        {/* Charts Placeholder */}
-        {chartData && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Analytics Charts</h2>
-            {isLoadingData ? (
-              <p className="text-gray-600">Loading charts...</p>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Chart data is ready. Sentiment: {chartData.sentiment_labels.length} categories,
-                  Categories: {chartData.category_labels.length} types,
-                  Time series: {chartData.dates_labels.length} days
-                </p>
-                <p className="text-sm text-gray-500">
-                  Chart components will be implemented next...
-                </p>
-              </div>
-            )}
+        {/* Charts Section */}
+        {chartData && !isLoadingData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <AnalyticsChart
+              type="doughnut"
+              title="Sentiment Distribution"
+              data={{
+                labels: chartData.sentiment_labels,
+                datasets: [
+                  {
+                    label: "Sessions",
+                    data: chartData.sentiment_data,
+                    backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF"]
+                  }
+                ]
+              }}
+            />
+            <AnalyticsChart
+              type="bar"
+              title="Session Categories"
+              data={{
+                labels: chartData.category_labels,
+                datasets: [
+                  {
+                    label: "Sessions",
+                    data: chartData.category_data,
+                    backgroundColor: "#36A2EB"
+                  }
+                ]
+              }}
+              options={{
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }}
+            />
           </div>
+        )}
+        {chartData && !isLoadingData && (
+          <AnalyticsChart
+            type="line"
+            title="Sessions Over Time"
+            data={{
+              labels: chartData.dates_labels,
+              datasets: [
+                {
+                  label: "Sessions",
+                  data: chartData.dates_data,
+                  borderColor: "#4BC0C0",
+                  tension: 0.1
+                }
+              ]
+            }}
+            options={{
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    unit: "day"
+                  }
+                },
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }}
+          />
         )}
 
         {/* Empty State */}
         {(!dbStats || dbStats.totalSessions === 0) && isInitialized && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Get Started</h2>
-            <p className="text-gray-600">
-              Upload a JSON file to start analyzing your chat data.
-            </p>
+            <p className="text-gray-600">Upload a JSON file to start analyzing your chat data.</p>
           </div>
         )}
       </div>

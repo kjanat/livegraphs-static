@@ -1,11 +1,7 @@
-import type { ChartData, Metrics, DateRange } from './types/session';
-import type { SqlJs } from 'sql.js';
+import type { SqlJs } from "sql.js";
+import type { ChartData, DateRange, Metrics } from "./types/session";
 
-export async function calculateMetrics(
-  db: SqlJs.Database, 
-  dateRange: DateRange
-): Promise<Metrics> {
-
+export async function calculateMetrics(db: SqlJs.Database, dateRange: DateRange): Promise<Metrics> {
   // Get basic metrics
   const stmt = db.prepare(`
     SELECT 
@@ -23,14 +19,16 @@ export async function calculateMetrics(
   const metricsRow = stmt.getAsObject();
   stmt.free();
 
-  const metrics = metricsRow ? [
-    metricsRow.total_conversations,
-    metricsRow.unique_users,
-    metricsRow.avg_conversation_minutes,
-    metricsRow.avg_response_seconds,
-    metricsRow.resolved_percentage,
-    metricsRow.avg_daily_cost
-  ] : [0, 0, 0, 0, 0, 0];
+  const metrics = metricsRow
+    ? [
+        metricsRow.total_conversations,
+        metricsRow.unique_users,
+        metricsRow.avg_conversation_minutes,
+        metricsRow.avg_response_seconds,
+        metricsRow.resolved_percentage,
+        metricsRow.avg_daily_cost
+      ]
+    : [0, 0, 0, 0, 0, 0];
 
   // Get peak usage time
   const peakStmt = db.prepare(`
@@ -48,16 +46,16 @@ export async function calculateMetrics(
   const peakRow = peakStmt.getAsObject();
   peakStmt.free();
 
-  const peakHour = peakRow?.hour || 'N/A';
+  const peakHour = peakRow?.hour || "N/A";
 
   return {
-    'Total Conversations': Math.round(metrics[0] as number),
-    'Unique Users': Math.round(metrics[1] as number),
-    'Avg. Conversation Length (min)': Number((metrics[2] as number || 0).toFixed(1)),
-    'Avg. Response Time (sec)': Number((metrics[3] as number || 0).toFixed(1)),
-    'Resolved Chats (%)': Number((metrics[4] as number || 0).toFixed(1)),
-    'Average Daily Cost (€)': Number((metrics[5] as number || 0).toFixed(2)),
-    'Peak Usage Time': peakHour as string
+    "Total Conversations": Math.round(metrics[0] as number),
+    "Unique Users": Math.round(metrics[1] as number),
+    "Avg. Conversation Length (min)": Number(((metrics[2] as number) || 0).toFixed(1)),
+    "Avg. Response Time (sec)": Number(((metrics[3] as number) || 0).toFixed(1)),
+    "Resolved Chats (%)": Number(((metrics[4] as number) || 0).toFixed(1)),
+    "Average Daily Cost (€)": Number(((metrics[5] as number) || 0).toFixed(2)),
+    "Peak Usage Time": peakHour as string
   };
 }
 
@@ -88,8 +86,8 @@ export async function prepareChartData(
     GROUP BY sentiment
   `);
 
-  const sentiment_labels = sentimentData.map(row => capitalizeFirst(row.sentiment as string));
-  const sentiment_values = sentimentData.map(row => row.count as number);
+  const sentiment_labels = sentimentData.map((row) => capitalizeFirst(row.sentiment as string));
+  const sentiment_values = sentimentData.map((row) => row.count as number);
 
   // Resolution data
   const resolutionData = executeQuery(`
@@ -105,8 +103,8 @@ export async function prepareChartData(
     GROUP BY status
   `);
 
-  const resolution_labels = resolutionData.map(row => row.status as string);
-  const resolution_values = resolutionData.map(row => row.count as number);
+  const resolution_labels = resolutionData.map((row) => row.status as string);
+  const resolution_values = resolutionData.map((row) => row.count as number);
 
   // Category data
   const categoryData = executeQuery(`
@@ -118,8 +116,8 @@ export async function prepareChartData(
     ORDER BY count DESC
   `);
 
-  const category_labels = categoryData.map(row => row.category as string);
-  const category_values = categoryData.map(row => row.count as number);
+  const category_labels = categoryData.map((row) => row.category as string);
+  const category_values = categoryData.map((row) => row.count as number);
 
   // Top questions
   const questionsData = executeQuery(`
@@ -132,8 +130,8 @@ export async function prepareChartData(
     LIMIT 5
   `);
 
-  const questions_labels = questionsData.map(row => truncateText(row.question as string, 50));
-  const questions_values = questionsData.map(row => row.count as number);
+  const questions_labels = questionsData.map((row) => truncateText(row.question as string, 50));
+  const questions_values = questionsData.map((row) => row.count as number);
 
   // Time series data
   const timeData = executeQuery(`
@@ -146,8 +144,8 @@ export async function prepareChartData(
     ORDER BY date
   `);
 
-  const dates_labels = timeData.map(row => row.date as string);
-  const dates_values = timeData.map(row => row.count as number);
+  const dates_labels = timeData.map((row) => row.date as string);
+  const dates_values = timeData.map((row) => row.count as number);
 
   return {
     sentiment_labels,
@@ -170,7 +168,7 @@ function capitalizeFirst(str: string): string {
 
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - 3) + '...';
+  return `${text.slice(0, maxLength - 3)}...`;
 }
 
 // Export data as CSV
@@ -202,11 +200,11 @@ export function exportToCSV(db: SqlJs.Database, dateRange: DateRange): string {
   `);
 
   stmt.bind([dateRange.start.toISOString(), dateRange.end.toISOString()]);
-  
+
   const rows = [];
   const columns: string[] = [];
   let headerSet = false;
-  
+
   while (stmt.step()) {
     const row = stmt.getAsObject();
     if (!headerSet) {
@@ -217,20 +215,22 @@ export function exportToCSV(db: SqlJs.Database, dateRange: DateRange): string {
   }
   stmt.free();
 
-  if (rows.length === 0) return '';
+  if (rows.length === 0) return "";
 
   // Build CSV
-  const headers = columns.join(',');
-  const csvRows = rows.map(row => 
-    columns.map(col => {
-      const val = row[col];
-      if (val === null || val === undefined) return '';
-      if (typeof val === 'string' && val.includes(',')) {
-        return `"${val.replace(/"/g, '""')}"`;
-      }
-      return val;
-    }).join(',')
+  const headers = columns.join(",");
+  const csvRows = rows.map((row) =>
+    columns
+      .map((col) => {
+        const val = row[col];
+        if (val === null || val === undefined) return "";
+        if (typeof val === "string" && val.includes(",")) {
+          return `"${val.replace(/"/g, '""')}"`;
+        }
+        return val;
+      })
+      .join(",")
   );
 
-  return [headers, ...csvRows].join('\n');
+  return [headers, ...csvRows].join("\n");
 }
