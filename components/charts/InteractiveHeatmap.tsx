@@ -1,0 +1,142 @@
+"use client";
+
+import { useState } from "react";
+
+interface HeatmapData {
+  hour: number;
+  day: string;
+  count: number;
+}
+
+interface InteractiveHeatmapProps {
+  data: HeatmapData[];
+  title?: string;
+}
+
+export function InteractiveHeatmap({
+  data,
+  title = "Weekly Usage Heatmap"
+}: InteractiveHeatmapProps) {
+  const [hoveredCell, setHoveredCell] = useState<{ hour: number; day: string } | null>(null);
+
+  // Days and hours for the grid
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // Create a map for quick lookups
+  const dataMap = new Map<string, number>();
+  data.forEach(({ hour, day, count }) => {
+    dataMap.set(`${day}-${hour}`, count);
+  });
+
+  // Find max value for color scaling
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+
+  // Get color based on count
+  const getCellColor = (count: number) => {
+    if (count === 0) return "bg-gray-100";
+    const intensity = count / maxCount;
+    if (intensity < 0.2) return "bg-blue-100";
+    if (intensity < 0.4) return "bg-blue-200";
+    if (intensity < 0.6) return "bg-blue-300";
+    if (intensity < 0.8) return "bg-blue-400";
+    return "bg-blue-500";
+  };
+
+  // Get hover color
+  const getHoverColor = (count: number) => {
+    if (count === 0) return "hover:bg-gray-200";
+    const intensity = count / maxCount;
+    if (intensity < 0.2) return "hover:bg-blue-200";
+    if (intensity < 0.4) return "hover:bg-blue-300";
+    if (intensity < 0.6) return "hover:bg-blue-400";
+    if (intensity < 0.8) return "hover:bg-blue-500";
+    return "hover:bg-blue-600";
+  };
+
+  // Get text color based on background intensity
+  const getTextColor = (count: number) => {
+    const intensity = count / maxCount;
+    return intensity > 0.6 ? "text-white" : "text-gray-700";
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-full">
+          {/* Hour labels */}
+          <div className="flex mb-2">
+            <div className="w-12" /> {/* Spacer for day labels */}
+            {hours.map((hour) => (
+              <div key={hour} className="flex-1 text-center text-xs text-gray-600 min-w-[2.5rem]">
+                {hour}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid */}
+          {days.map((day) => (
+            <div key={day} className="flex items-center mb-1">
+              {/* Day label */}
+              <div className="w-12 text-sm font-medium text-gray-700 pr-2 text-right">{day}</div>
+
+              {/* Hour cells */}
+              {hours.map((hour) => {
+                const count = dataMap.get(`${day}-${hour}`) || 0;
+                const isHovered = hoveredCell?.day === day && hoveredCell?.hour === hour;
+
+                return (
+                  <div
+                    key={`${day}-${hour}`}
+                    className={`
+                      flex-1 aspect-square flex items-center justify-center
+                      text-xs font-medium rounded cursor-pointer
+                      transition-all duration-200 mx-0.5 min-w-[2.5rem]
+                      ${getCellColor(count)} ${getHoverColor(count)}
+                      ${isHovered ? "transform scale-110 shadow-lg z-10" : ""}
+                      ${count > 0 ? getTextColor(count) : "text-gray-400"}
+                    `}
+                    onMouseEnter={() => setHoveredCell({ hour, day })}
+                    onMouseLeave={() => setHoveredCell(null)}
+                    title={`${day} ${hour}:00 - ${count} sessions`}
+                  >
+                    {count > 0 && <span className={isHovered ? "font-bold" : ""}>{count}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-6 flex items-center justify-between">
+        <div className="text-sm text-gray-600">Sessions per hour</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Low</span>
+          <div className="flex gap-1">
+            <div className="w-6 h-4 bg-gray-100 rounded" />
+            <div className="w-6 h-4 bg-blue-100 rounded" />
+            <div className="w-6 h-4 bg-blue-200 rounded" />
+            <div className="w-6 h-4 bg-blue-300 rounded" />
+            <div className="w-6 h-4 bg-blue-400 rounded" />
+            <div className="w-6 h-4 bg-blue-500 rounded" />
+          </div>
+          <span className="text-xs text-gray-500">High</span>
+        </div>
+      </div>
+
+      {/* Hover tooltip */}
+      {hoveredCell && (
+        <div className="mt-2 text-sm text-gray-600 text-center">
+          {hoveredCell.day} at {hoveredCell.hour}:00 -{" "}
+          <span className="font-semibold">
+            {dataMap.get(`${hoveredCell.day}-${hoveredCell.hour}`) || 0} sessions
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}

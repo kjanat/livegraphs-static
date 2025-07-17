@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { AnalyticsChart } from "@/components/charts/AnalyticsChart";
 import { BubbleChart } from "@/components/charts/BubbleChart";
 import { GaugeChart } from "@/components/charts/GaugeChart";
-import { HeatmapChart } from "@/components/charts/HeatmapChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
+import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
 import { MultiLineChart } from "@/components/charts/MultiLineChart";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDatabase } from "@/hooks/useDatabase";
@@ -345,7 +345,7 @@ export default function Home() {
 
             {/* Usage Patterns */}
             <div className="mb-8">
-              <HeatmapChart data={chartData.hourly_data} title="Weekly Usage Heatmap" />
+              <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
             </div>
 
             {/* Geographic & Language Insights */}
