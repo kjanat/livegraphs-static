@@ -1,11 +1,14 @@
-import type { SqlJs } from "sql.js";
+import type initSqlJs from "sql.js";
 import type { ChatSession } from "../types/session";
 
-let SQL: SqlJs.SqlJsStatic | null = null;
-let db: SqlJs.Database | null = null;
+type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
+type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+
+let SQL: SqlJsStatic | null = null;
+let db: InstanceType<Database> | null = null;
 
 // Initialize SQL.js with the WASM file
-export async function initializeDatabase(): Promise<SqlJs.Database> {
+export async function initializeDatabase(): Promise<InstanceType<Database>> {
   if (db) return db;
 
   if (!SQL) {
@@ -173,7 +176,7 @@ export function getSessionsByDateRange(startDate: Date, endDate: Date): ChatSess
   stmt.free();
 
   // TODO: Reconstruct full ChatSession objects with transcript and questions
-  return rows as ChatSession[];
+  return rows as unknown as ChatSession[];
 }
 
 // Get database statistics

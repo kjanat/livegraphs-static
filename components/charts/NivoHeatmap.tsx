@@ -24,14 +24,14 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
     dataMap.set(`${day}-${hour}`, count);
   });
 
-  // Transform to Nivo format
-  const nivoData = days.map((day) => {
-    const dayData: Record<string, string | number> = { id: day };
-    hours.forEach((hour) => {
-      dayData[`${hour}h`] = dataMap.get(`${day}-${hour}`) || 0;
-    });
-    return dayData;
-  });
+  // Transform to Nivo format - using the proper format for @nivo/heatmap
+  const nivoData = days.map((day) => ({
+    id: day,
+    data: hours.map((hour) => ({
+      x: `${hour}h`,
+      y: dataMap.get(`${day}-${hour}`) || 0
+    }))
+  }));
 
   const maxValue = Math.max(...data.map((d) => d.count), 1);
 
@@ -42,8 +42,6 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
       <div style={{ height: "300px" }}>
         <ResponsiveHeatMap
           data={nivoData}
-          keys={hours.map((h) => `${h}h`)}
-          indexBy="id"
           margin={{ top: 30, right: 30, bottom: 30, left: 60 }}
           forceSquare={true}
           axisTop={{
@@ -51,8 +49,7 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
             tickPadding: 5,
             tickRotation: 0,
             legend: "",
-            legendOffset: 36,
-            format: (value) => value.replace("h", ":00")
+            legendOffset: 36
           }}
           axisLeft={{
             tickSize: 5,
@@ -61,46 +58,12 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
             legend: "",
             legendOffset: -40
           }}
-          cellOpacity={1}
-          cellBorderColor={{ from: "color", modifiers: [["darker", 0.4]] }}
-          labelTextColor={{ from: "color", modifiers: [["darker", 1.8]] }}
           colors={{
             type: "sequential",
-            scheme: "blues",
-            minValue: 0,
-            maxValue: maxValue
+            scheme: "blues"
           }}
           animate={true}
-          motionConfig="wobbly"
           hoverTarget="cell"
-          cellHoverOthersOpacity={0.25}
-          tooltip={({ xKey, yKey, value, color }) => (
-            <div
-              style={{
-                background: "white",
-                padding: "9px 12px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    backgroundColor: color,
-                    borderRadius: "2px"
-                  }}
-                />
-                <div>
-                  <strong>{yKey}</strong> at <strong>{xKey.replace("h", ":00")}</strong>
-                  <br />
-                  <span style={{ fontSize: "14px" }}>{value} sessions</span>
-                </div>
-              </div>
-            </div>
-          )}
         />
       </div>
 

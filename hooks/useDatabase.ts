@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import type { SqlJs } from "sql.js";
+import type initSqlJs from "sql.js";
 import type { ChatSession } from "@/lib/types/session";
 
-let SQL: SqlJs.SqlJsStatic | null = null;
-let db: SqlJs.Database | null = null;
+type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
+type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+
+let SQL: SqlJsStatic | null = null;
+let db: InstanceType<Database> | null = null;
 
 export function useDatabase() {
   const [isInitialized, setIsInitialized] = useState(false);

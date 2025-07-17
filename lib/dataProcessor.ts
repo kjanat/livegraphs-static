@@ -1,7 +1,12 @@
-import type { SqlJs } from "sql.js";
+import type initSqlJs from "sql.js";
 import type { ChartData, DateRange, Metrics } from "./types/session";
 
-export async function calculateMetrics(db: SqlJs.Database, dateRange: DateRange): Promise<Metrics> {
+type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
+
+export async function calculateMetrics(
+  db: InstanceType<Database>,
+  dateRange: DateRange
+): Promise<Metrics> {
   // Get basic metrics
   const stmt = db.prepare(`
     SELECT 
@@ -60,7 +65,7 @@ export async function calculateMetrics(db: SqlJs.Database, dateRange: DateRange)
 }
 
 export async function prepareChartData(
-  db: SqlJs.Database,
+  db: InstanceType<Database>,
   dateRange: DateRange
 ): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
@@ -334,7 +339,7 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 // Export data as CSV
-export function exportToCSV(db: SqlJs.Database, dateRange: DateRange): string {
+export function exportToCSV(db: InstanceType<Database>, dateRange: DateRange): string {
   const stmt = db.prepare(`
     SELECT 
       session_id,

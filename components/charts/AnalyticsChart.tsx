@@ -39,22 +39,27 @@ interface AnalyticsChartProps {
   title: string;
 }
 
-const ChartComponent = ({
+const ChartComponent = <T extends ChartType>({
   type,
   data,
   options
 }: {
-  type: ChartType;
-  data: ChartData<ChartType>;
-  options?: ChartOptions<ChartType>;
+  type: T;
+  data: ChartData<T>;
+  options?: ChartOptions<T>;
 }) => {
   switch (type) {
     case "doughnut":
-      return <Doughnut data={data} options={options} />;
+      return (
+        <Doughnut
+          data={data as ChartData<"doughnut">}
+          options={options as ChartOptions<"doughnut">}
+        />
+      );
     case "bar":
-      return <Bar data={data} options={options} />;
+      return <Bar data={data as ChartData<"bar">} options={options as ChartOptions<"bar">} />;
     case "line":
-      return <Line data={data} options={options} />;
+      return <Line data={data as ChartData<"line">} options={options as ChartOptions<"line">} />;
     default:
       return null;
   }
