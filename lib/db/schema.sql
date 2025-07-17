@@ -1,4 +1,4 @@
--- SQLite schema for LiveGraphs
+-- SQLite schema for Notso AI
 -- This schema is designed to efficiently store and query chat session data
 
 -- Main sessions table

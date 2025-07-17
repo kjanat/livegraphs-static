@@ -7,6 +7,7 @@ import { GaugeChart } from "@/components/charts/GaugeChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
 import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { Logo } from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
@@ -129,7 +130,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">LiveGraphs Dashboard</h1>
+        <div className="flex items-center gap-4 mb-8">
+          <Logo size={48} className="text-blue-600" />
+          <h1 className="text-4xl font-bold text-gray-900">Notso AI Dashboard</h1>
+        </div>
 
         {/* Database Status */}
         {!isInitialized && !dbError && (

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LiveGraphs - Chatbot Analytics Dashboard",
+  title: "Notso AI - Chatbot Analytics Dashboard",
   description: "Visualize and analyze chatbot conversation data with interactive charts",
   icons: {
     icon: [

@@ -1,5 +1,5 @@
 /**
- * Core types for the LiveGraphs application
+ * Core types for the Notso AI application
  */
 
 export interface TranscriptMessage {
