@@ -3,18 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "build": "next build",
     "dev": "next dev",
     "dev:turbo": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "lint:strict": "biome check",
     "format": "biome format --write",
     "format:check": "biome format",
+    "lint": "next lint",
+    "lint:strict": "biome check",
+    "pre-commit": "lint-staged",
+    "prepare": "husky",
+    "start": "next start",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:watch": "vitest"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --unsafe --no-errors-on-unmatched"
+    ],
+    "package.json": [
+      "pnpm dlx sort-package-json"
+    ]
   },
   "dependencies": {
     "@nivo/core": "^0.99.0",
@@ -41,10 +51,13 @@
     "@types/react-dom": "^19.1.6",
     "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-react": "^4.6.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "eslint": "^9.31.0",
     "eslint-config-next": "15.4.1",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "lint-staged": "^16.1.2",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
