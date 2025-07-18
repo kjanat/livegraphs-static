@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
 
-  // Base path for GitHub Pages deployment
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // // Base path for GitHub Pages deployment
+  // basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
 
   // Disable image optimization for static export
   images: {
