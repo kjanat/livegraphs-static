@@ -11,7 +11,7 @@ This repository is configured with comprehensive GitHub Actions workflows and pr
 **Jobs:**
 
 - **Lint:** Runs ESLint, Biome checks, and format validation
-- **Test:** Matrix testing on Node.js 20.x and 22.x with coverage reporting
+- **Test:** Matrix testing on Node.js 20.x and 24.x with coverage reporting
 - **Build:** Validates production build
 - **Type Check:** TypeScript type validation
 - **Bundle Analysis:** Analyzes bundle size on pull requests
