@@ -19,10 +19,12 @@ const nextConfig: NextConfig = {
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer, webpack }) => {
     // Add more robust sql.js handling
-    config.externals = config.externals || [];
-    config.externals.push({
-      'sql.js': 'sql.js'
-    });
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        'sql.js': 'sql.js'
+      });
+    }
 
     // Configure module resolution
     config.resolve = {
