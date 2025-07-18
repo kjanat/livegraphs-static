@@ -14,7 +14,7 @@ LiveGraphs Static is a Next.js-based web application for visualizing chatbot con
 - **Charts**: Chart.js 4.5.0, React-ChartJS-2, Nivo
 - **Styling**: Tailwind CSS v4
 - **Package Manager**: pnpm v10
-- **Node Version**: 22.x (20.x also supported)
+- **Node Version**: 24.x (20.x also supported)
 - **Testing**: Vitest with React Testing Library
 - **Code Quality**: Biome (formatter/linter), ESLint, Husky, lint-staged
 
