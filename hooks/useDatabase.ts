@@ -5,14 +5,42 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type initSqlJs from "sql.js";
 import type { ChatSession } from "@/lib/types/session";
 
-type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
-type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+// Type definitions for sql.js loaded from CDN
+interface SqlJsStatic {
+  Database: new (data?: ArrayLike<number> | Buffer | null) => SqlJsDatabase;
+}
 
-let SQL: SqlJsStatic | null = null;
-let db: InstanceType<Database> | null = null;
+interface SqlJsDatabase {
+  run(sql: string): void;
+  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
+  prepare(sql: string): SqlJsStatement;
+  export(): Uint8Array;
+  close(): void;
+}
+
+interface SqlJsStatement {
+  run(params?: unknown[]): void;
+  step(): boolean;
+  get(params?: unknown[]): unknown[];
+  getColumnNames(): string[];
+  bind(params?: unknown[]): boolean;
+  getAsObject(params?: unknown[]): Record<string, unknown>;
+  free(): void;
+}
+
+declare global {
+  interface Window {
+    initSqlJs?: (config?: { locateFile?: (file: string) => string }) => Promise<SqlJsStatic>;
+  }
+}
+
+type Database = SqlJsDatabase;
+type SqlJsStaticType = SqlJsStatic;
+
+let SQL: SqlJsStaticType | null = null;
+let db: Database | null = null;
 
 export function useDatabase() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -20,13 +48,32 @@ export function useDatabase() {
 
   useEffect(() => {
     const initDb = async () => {
+      // Ensure we're in the browser environment
+      if (typeof window === "undefined") {
+        return;
+      }
+
       try {
         if (!SQL) {
-          // Dynamic import to ensure it only runs in the browser,
-          // pull in the browser-compatible bundle via our alias above
-          const initSqlJsDefault = (await import(/* webpackChunkName: "sql.js" */ "sql.js"))
-            .default;
-          SQL = await initSqlJsDefault({
+          // Load sql.js from CDN to avoid webpack build issues
+          // This approach completely bypasses webpack static analysis
+          const script = document.createElement("script");
+          script.src = "https://sql.js.org/dist/sql-wasm.js";
+
+          // Wait for script to load
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+
+          // Access the global initSqlJs function
+          const initSqlJs = window.initSqlJs;
+          if (!initSqlJs) {
+            throw new Error("Failed to load sql.js from CDN");
+          }
+
+          SQL = await initSqlJs({
             // will load sql-wasm.wasm from sql.js.org CDN
             locateFile: (file: string) => `https://sql.js.org/dist/${file}`
           });

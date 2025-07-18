@@ -4,22 +4,70 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import type initSqlJs from "sql.js";
 import type { ChatSession } from "../types/session";
 
-type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
-type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+// Type definitions for sql.js loaded from CDN
+interface SqlJsStatic {
+  Database: new (data?: ArrayLike<number> | Buffer | null) => SqlJsDatabase;
+}
 
-let SQL: SqlJsStatic | null = null;
-let db: InstanceType<Database> | null = null;
+interface SqlJsDatabase {
+  run(sql: string): void;
+  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
+  prepare(sql: string): SqlJsStatement;
+  export(): Uint8Array;
+  close(): void;
+}
+
+interface SqlJsStatement {
+  run(params?: unknown[]): void;
+  step(): boolean;
+  get(params?: unknown[]): unknown[];
+  getColumnNames(): string[];
+  bind(params?: unknown[]): boolean;
+  getAsObject(params?: unknown[]): Record<string, unknown>;
+  free(): void;
+}
+
+declare global {
+  interface Window {
+    initSqlJs?: (config?: { locateFile?: (file: string) => string }) => Promise<SqlJsStatic>;
+  }
+}
+
+type Database = SqlJsDatabase;
+type SqlJsStaticType = SqlJsStatic;
+
+let SQL: SqlJsStaticType | null = null;
+let db: Database | null = null;
 
 // Initialize SQL.js with the WASM file
-export async function initializeDatabase(): Promise<InstanceType<Database>> {
+export async function initializeDatabase(): Promise<Database> {
+  // Ensure we're in the browser environment
+  if (typeof window === "undefined") {
+    throw new Error("Database can only be initialized in browser environment");
+  }
+
   if (db) return db;
 
   if (!SQL) {
-    // Dynamic import to avoid SSR issues
-    const initSqlJs = (await import("sql.js")).default;
+    // Load sql.js from CDN to avoid webpack build issues
+    const script = document.createElement("script");
+    script.src = "https://sql.js.org/dist/sql-wasm.js";
+
+    // Wait for script to load
+    await new Promise<void>((resolve, reject) => {
+      script.onload = () => resolve();
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    // Access the global initSqlJs function
+    const initSqlJs = window.initSqlJs;
+    if (!initSqlJs) {
+      throw new Error("Failed to load sql.js from CDN");
+    }
+
     SQL = await initSqlJs({
       // Use CDN for WASM file to avoid bundling issues
       locateFile: (file) => `https://sql.js.org/dist/${file}`
