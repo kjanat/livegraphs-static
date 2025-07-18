@@ -22,10 +22,37 @@ export function useDatabase() {
     const initDb = async () => {
       try {
         if (!SQL) {
-          // Dynamic import to ensure it only runs in the browser,
-          // pull in the browser-compatible bundle via our alias above
-          const initSqlJsDefault = (await import(/* webpackChunkName: "sql.js" */ "sql.js"))
-            .default;
+          // Dynamic import with defensive error handling for Node.js 24.x compatibility
+          let initSqlJsDefault: typeof initSqlJs;
+
+          try {
+            // First attempt: dynamic import (preferred for code splitting)
+            const sqlModule = await import(/* webpackChunkName: "sql.js" */ "sql.js");
+            initSqlJsDefault = sqlModule.default;
+          } catch (importError) {
+            console.warn("Dynamic import failed, trying fallback:", importError);
+            try {
+              // Fallback: use require() for better Node.js 24.x compatibility
+              // Note: This fallback is mainly for server-side rendering scenarios
+              const sqlJs =
+                typeof require !== "undefined" ? require("sql.js/dist/sql-wasm.js") : null;
+              if (sqlJs) {
+                initSqlJsDefault = sqlJs.default || sqlJs;
+              } else {
+                throw new Error("require() not available in this environment");
+              }
+            } catch (requireError) {
+              console.error("Both import methods failed:", { importError, requireError });
+              const importMsg =
+                importError instanceof Error ? importError.message : String(importError);
+              const requireMsg =
+                requireError instanceof Error ? requireError.message : String(requireError);
+              throw new Error(
+                `Failed to load sql.js: ${importMsg}. Fallback also failed: ${requireMsg}`
+              );
+            }
+          }
+
           SQL = await initSqlJsDefault({
             // will load sql-wasm.wasm from sql.js.org CDN
             locateFile: (file: string) => `https://sql.js.org/dist/${file}`
