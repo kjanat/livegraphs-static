@@ -2,6 +2,17 @@
   "name": "livegraphs-static",
   "version": "0.1.0",
   "private": true,
+  "description": "A web dashboard for visualizing chatbot conversation analytics",
+  "homepage": "https://github.com/kjanat/livegraphs-static#readme",
+  "bugs": {
+    "url": "https://github.com/kjanat/livegraphs-static/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kjanat/livegraphs-static.git"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "Kaj Kowalski <dev@kajkowalski.nl>",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -34,10 +45,10 @@
     "chart.js": "^4.5.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^4.1.0",
-    "next": "15.4.1",
-    "react": "19.1.0",
+    "next": "^15.4.1",
+    "react": "^19.1.0",
     "react-chartjs-2": "^5.3.0",
-    "react-dom": "19.1.0",
+    "react-dom": "^19.1.0",
     "sql.js": "^1.13.0",
     "zod": "^4.0.5"
   },

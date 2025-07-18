@@ -1,5 +1,12 @@
+/**
+ * Notso AI - A web dashboard for visualizing chatbot conversation analytics
+ * Copyright (C) 2025  Kaj Kowalski
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Footer } from "@/components/Footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,7 +43,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col`}
+      >
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

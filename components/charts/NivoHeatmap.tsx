@@ -1,3 +1,9 @@
+/**
+ * Notso AI - A web dashboard for visualizing chatbot conversation analytics
+ * Copyright (C) 2025  Kaj Kowalski
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
 "use client";
 
 import { ResponsiveHeatMap } from "@nivo/heatmap";
