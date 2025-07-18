@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/notsoAI-black.svg",
+        url: "/notso-black.svg",
         media: "(prefers-color-scheme: light)"
       },
       {
-        url: "/notsoAI-white.svg",
+        url: "/notso-white.svg",
         media: "(prefers-color-scheme: dark)"
       }
     ]
@@ -42,10 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col`}
-      >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased flex min-h-screen flex-col">
         {children}
         <Footer />
       </body>

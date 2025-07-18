@@ -24,6 +24,7 @@
     "pre-commit": "lint-staged",
     "prepare": "husky",
     "start": "pnpm dlx serve out",
+    "start:fresh": "pnpm build && pnpm start",
     "start:next": "echo \"this option is not in use in this repo\" && next start",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
