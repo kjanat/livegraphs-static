@@ -18,19 +18,27 @@ const nextConfig: NextConfig = {
   // Copy schema.sql to public directory during build,
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer }) => {
+    // Always apply sql.js alias to use browser-compatible bundle
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "sql.js": "sql.js/dist/sql-wasm.js"
+    };
+
     if (!isServer) {
-      // polyfill/remove Node built-ins
+      // polyfill/remove Node built-ins for client-side bundle
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         path: false,
-        crypto: false
-      };
-
-      // point all "sql.js" imports at the WASM-capable bundle
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        "sql.js": "sql.js/dist/sql-wasm.js"
+        crypto: false,
+        stream: false,
+        buffer: false,
+        util: false,
+        assert: false,
+        http: false,
+        https: false,
+        os: false,
+        url: false
       };
 
       // enable async WebAssembly in Webpack
