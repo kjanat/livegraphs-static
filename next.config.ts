@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
   // Copy schema.sql to public directory during build,
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer, webpack }) => {
+    // For both server and client, ensure we use the browser version of sql.js
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Point directly to the browser-compatible bundle
+      "sql.js": "sql.js/dist/sql-wasm.js"
+    };
+
+    // Apply Node.js polyfills/fallbacks for client-side only
     if (!isServer) {
       // Provide empty modules for Node.js built-ins
       config.resolve.fallback = {
@@ -34,13 +42,14 @@ const nextConfig: NextConfig = {
         os: false,
         url: false,
         child_process: false,
-        worker_threads: false
+        worker_threads: false,
+        process: require.resolve("process/browser")
       };
 
-      // Override process to prevent sql.js from thinking it's in Node.js
+      // Provide process polyfill globally
       config.plugins.push(
         new webpack.ProvidePlugin({
-          process: ["process/browser"]
+          process: "process/browser"
         })
       );
 
@@ -55,6 +64,13 @@ const nextConfig: NextConfig = {
         test: /\.wasm$/,
         type: "webassembly/async"
       });
+    } else {
+      // For server-side, also disable Node.js modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false
+      };
     }
 
     return config;
