@@ -25,7 +25,7 @@ import { GaugeChart } from "@/components/charts/GaugeChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
 import { MultiLineChart } from "@/components/charts/MultiLineChart";
-import { Logo } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
