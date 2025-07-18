@@ -53,14 +53,13 @@ const nextConfig: NextConfig = {
       }
     };
 
-    // Add ignore plugin to completely prevent bundling of Node.js modules
-    config.plugins.push(
-      new webpack.IgnorePlugin({
-        resourceRegExp: /^(fs|path|crypto|os|util|stream|buffer)$/
-      })
-    );
-
     if (!isServer) {
+      // Add ignore plugin to completely prevent bundling of Node.js modules
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^(fs|path|crypto|os|util|stream|buffer)$/
+        })
+      );
       // Ignore sql.js on server-side completely, use browser bundle for client
       config.resolve.alias = {
         ...config.resolve.alias,
