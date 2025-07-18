@@ -222,7 +222,6 @@ export function useDatabase() {
         }
 
         db.run("COMMIT");
-        transactionStarted = false;
       } catch (error) {
         if (transactionStarted) {
           try {
