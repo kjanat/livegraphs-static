@@ -18,13 +18,20 @@ const nextConfig: NextConfig = {
   // Copy schema.sql to public directory during build,
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer, webpack }) => {
+    // Add more robust sql.js handling
+    config.externals = config.externals || [];
+    if (isServer) {
+      // Externalize sql.js on server-side to prevent bundling issues
+      config.externals.push({
+        'sql.js': 'sql.js'
+      });
+    }
+
     // Configure module resolution
     config.resolve = {
       ...config.resolve,
       alias: {
         ...config.resolve.alias,
-        // Always use the browser version of sql.js
-        "sql.js": "sql.js/dist/sql-wasm.js"
       },
       fallback: {
         ...config.resolve.fallback,
@@ -48,6 +55,15 @@ const nextConfig: NextConfig = {
         process: false
       }
     };
+
+    // Only set sql.js alias for client-side builds
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Use specific sql.js build for browser only
+        'sql.js$': 'sql.js/dist/sql-wasm.js'
+      };
+    }
 
     // Add ignore plugin to completely prevent bundling of Node.js modules
     config.plugins.push(
