@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -23,8 +24,8 @@ const nextConfig: NextConfig = {
       ...config.resolve,
       alias: {
         ...config.resolve.alias,
-        // Always use the browser version of sql.js
-        "sql.js": "sql.js/dist/sql-wasm.js"
+        // Provide a noop module on the server
+        ...(isServer ? { "sql.js": path.resolve(__dirname, "lib/noopSqlJs.ts") } : {})
       },
       fallback: {
         ...config.resolve.fallback,
@@ -55,6 +56,12 @@ const nextConfig: NextConfig = {
         resourceRegExp: /^(fs|path|crypto|os|util|stream|buffer)$/
       })
     );
+
+    if (isServer) {
+      // Don't bundle sql.js for the server build
+      config.externals = config.externals || [];
+      config.externals.push("sql.js");
+    }
 
     if (!isServer) {
       // enable async WebAssembly in Webpack
