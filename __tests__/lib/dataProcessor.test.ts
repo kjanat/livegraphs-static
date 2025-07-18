@@ -1,12 +1,21 @@
-import type { Database } from "sql.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { calculateMetrics, exportToCSV, prepareChartData } from "../../lib/dataProcessor";
 import type { DateRange } from "../../lib/types/session";
 
+interface SqlDatabase {
+  prepare(sql: string): {
+    bind(values: unknown[]): void;
+    step(): boolean;
+    getAsObject(): Record<string, unknown>;
+    free(): void;
+  };
+  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
+}
+
 vi.mock("sql.js");
 
 describe("dataProcessor", () => {
-  let mockDb: Database;
+  let mockDb: SqlDatabase;
   let mockStmt: {
     bind: ReturnType<typeof vi.fn>;
     step: ReturnType<typeof vi.fn>;
@@ -29,8 +38,9 @@ describe("dataProcessor", () => {
 
     mockPrepare = vi.fn(() => mockStmt);
     mockDb = {
-      prepare: mockPrepare
-    } as unknown as Database;
+      prepare: mockPrepare,
+      exec: vi.fn(() => [])
+    } as SqlDatabase;
   });
 
   describe("calculateMetrics", () => {

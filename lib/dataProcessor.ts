@@ -4,15 +4,21 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import type initSqlJs from "sql.js";
 import type { ChartData, DateRange, Metrics } from "./types/session";
 
-type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
+interface Statement {
+  bind(values: unknown[]): void;
+  step(): boolean;
+  getAsObject(): Record<string, unknown>;
+  free(): void;
+}
 
-export async function calculateMetrics(
-  db: InstanceType<Database>,
-  dateRange: DateRange
-): Promise<Metrics> {
+interface SqlDatabase {
+  prepare(sql: string): Statement;
+  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
+}
+
+export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): Promise<Metrics> {
   // Get basic metrics
   const stmt = db.prepare(`
     SELECT 
@@ -70,10 +76,7 @@ export async function calculateMetrics(
   };
 }
 
-export async function prepareChartData(
-  db: InstanceType<Database>,
-  dateRange: DateRange
-): Promise<ChartData> {
+export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
   const endStr = dateRange.end.toISOString();
 
@@ -345,7 +348,7 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 // Export data as CSV
-export function exportToCSV(db: InstanceType<Database>, dateRange: DateRange): string {
+export function exportToCSV(db: SqlDatabase, dateRange: DateRange): string {
   const stmt = db.prepare(`
     SELECT 
       session_id,

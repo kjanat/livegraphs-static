@@ -55,6 +55,13 @@ const nextConfig: NextConfig = {
         })
       );
 
+      // Define module as undefined to prevent sql.js from trying to use it
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          "typeof module": JSON.stringify("undefined")
+        })
+      );
+
       // enable async WebAssembly in Webpack
       config.experiments = {
         ...config.experiments,

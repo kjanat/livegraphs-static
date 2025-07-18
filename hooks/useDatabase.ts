@@ -5,14 +5,53 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type initSqlJs from "sql.js";
 import type { ChatSession } from "@/lib/types/session";
 
-type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
-type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+// Extend window interface for sql.js
+declare global {
+  interface Window {
+    initSqlJs?: (config?: { locateFile?: (file: string) => string }) => Promise<SqlJsStatic>;
+  }
+}
+
+// Define minimal types for sql.js
+interface SqlJsStatic {
+  Database: new (data?: Uint8Array) => SqlDatabase;
+}
+
+interface Statement {
+  bind(values: unknown[]): void;
+  step(): boolean;
+  getAsObject(): Record<string, unknown>;
+  free(): void;
+  run(values?: unknown[]): void;
+}
+
+interface ExecResult {
+  columns: string[];
+  values: unknown[][];
+}
+
+interface SqlDatabase {
+  run(sql: string): void;
+  prepare(sql: string): Statement;
+  exec(sql: string): ExecResult[];
+  export(): Uint8Array;
+  close(): void;
+  create_function(name: string, fn: (...args: unknown[]) => unknown): void;
+  each(
+    sql: string,
+    params: unknown[],
+    callback: (row: Record<string, unknown>) => void,
+    done: () => void
+  ): void;
+  getRowsModified(): number;
+  handleError(): void;
+  iterateStatements(sql: string): Generator<string, void, unknown>;
+}
 
 let SQL: SqlJsStatic | null = null;
-let db: InstanceType<Database> | null = null;
+let db: SqlDatabase | null = null;
 
 export function useDatabase() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -22,20 +61,34 @@ export function useDatabase() {
     const initDb = async () => {
       try {
         if (!SQL) {
-          let initSqlJsDefault: typeof initSqlJs;
-          if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-            // Dynamic import from CDN in the browser to avoid bundling issues
-            initSqlJsDefault = (
-              await import(/* webpackIgnore: true */ "https://sql.js.org/dist/sql-wasm.js")
-            ).default;
+          // Load sql.js from CDN to avoid bundling issues
+          if (typeof window !== "undefined") {
+            // Check if initSqlJs is already available globally
+            let initSqlJs = window.initSqlJs;
+
+            if (!initSqlJs) {
+              // Load sql.js script from CDN
+              await new Promise<void>((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = "https://sql.js.org/dist/sql-wasm.js";
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error("Failed to load sql.js from CDN"));
+                document.head.appendChild(script);
+              });
+
+              initSqlJs = window.initSqlJs;
+            }
+
+            if (!initSqlJs) {
+              throw new Error("initSqlJs not found after loading script");
+            }
+
+            SQL = await initSqlJs({
+              locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+            });
           } else {
-            // Use local package when running in Node (e.g., tests)
-            initSqlJsDefault = (await import("sql.js")).default;
+            throw new Error("sql.js can only be initialized in browser environment");
           }
-          SQL = await initSqlJsDefault({
-            // will load sql-wasm.wasm from sql.js.org CDN
-            locateFile: (file: string) => `https://sql.js.org/dist/${file}`
-          });
         }
 
         // guard against SQL being null after import
