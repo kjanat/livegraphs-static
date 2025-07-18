@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '22.x'
+  NODE_VERSION: '24'
 
 jobs:
   sonarcloud:
@@ -26,23 +26,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run tests with coverage
         run: pnpm test:coverage
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=livegraphs-static
-            -Dsonar.organization=${{ github.repository_owner }}
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.coverage.exclusions=**/*.test.*,**/*.spec.*,**/tests/**,**/node_modules/**
 
@@ -60,10 +59,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build application
         run: pnpm build
@@ -89,15 +87,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build and analyze bundle
         run: |
           pnpm build
-          pnpm dlx size-limit
+          pnpm exec size-limit
 
       - name: Upload bundle stats
         uses: actions/upload-artifact@v4
@@ -120,14 +117,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Check complexity
         run: |
-          pnpm dlx code-complexity . --limit 10 --format json > complexity-report.json
+          pnpm dlx code-complexity \
+            . \
+            --limit 10 \
+            --format json > complexity-report.json
 
       - name: Upload complexity report
         uses: actions/upload-artifact@v4
@@ -150,11 +149,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Check for unused exports
         run: |
-          pnpm dlx ts-prune --error
+          pnpm dlx ts-prune \
+            --error
