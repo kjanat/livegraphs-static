@@ -25,10 +25,9 @@ export function useDatabase() {
           let initSqlJsDefault: typeof initSqlJs;
           if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
             // Dynamic import from CDN in the browser to avoid bundling issues
-            // @ts-ignore - remote module has no TypeScript definitions
             initSqlJsDefault = (
               await import(/* webpackIgnore: true */ "https://sql.js.org/dist/sql-wasm.js")
-            ).default as unknown as typeof initSqlJs;
+            ).default;
           } else {
             // Use local package when running in Node (e.g., tests)
             initSqlJsDefault = (await import("sql.js")).default;
