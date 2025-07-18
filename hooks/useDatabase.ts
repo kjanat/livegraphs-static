@@ -22,25 +22,34 @@ export function useDatabase() {
     const initDb = async () => {
       try {
         if (!SQL) {
-          // Dynamic import to ensure it only runs in the browser
-          const initSqlJs = (await import("sql.js")).default;
-          SQL = await initSqlJs({
-            locateFile: (file) => `https://sql.js.org/dist/${file}`
+          // Dynamic import to ensure it only runs in the browser,
+          // pull in the browser-compatible bundle via our alias above
+          const initSqlJsDefault = (await import(/* webpackChunkName: "sql.js" */ "sql.js"))
+            .default;
+          SQL = await initSqlJsDefault({
+            // will load sql-wasm.wasm from sql.js.org CDN
+            locateFile: (file: string) => `https://sql.js.org/dist/${file}`
           });
         }
+
+        // guard against SQL being null after import
+        if (SQL === null) {
+          throw new Error("SQL.js failed to initialize");
+        }
+        const SQLStatic = SQL;
 
         // Try to load existing database from localStorage
         const savedDb = localStorage.getItem("livegraphs_db");
         if (savedDb && !db) {
           try {
             const data = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
-            db = new SQL.Database(data);
+            db = new SQLStatic.Database(data);
           } catch (error) {
             console.error("Failed to load saved database:", error);
-            db = new SQL.Database();
+            db = new SQLStatic.Database();
           }
         } else if (!db) {
-          db = new SQL.Database();
+          db = new SQLStatic.Database();
         }
 
         // Load schema

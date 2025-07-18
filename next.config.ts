@@ -15,9 +15,11 @@ const nextConfig: NextConfig = {
   // Enable strict mode
   reactStrictMode: true,
 
-  // Copy schema.sql to public directory during build
+  // Copy schema.sql to public directory during build,
+  // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // polyfill/remove Node built-ins
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -25,11 +27,23 @@ const nextConfig: NextConfig = {
         crypto: false
       };
 
-      // Force sql.js to use browser version for client builds
+      // point all "sql.js" imports at the WASM-capable bundle
       config.resolve.alias = {
         ...config.resolve.alias,
         "sql.js": "sql.js/dist/sql-wasm.js"
       };
+
+      // enable async WebAssembly in Webpack
+      config.experiments = {
+        ...config.experiments,
+        asyncWebAssembly: true
+      };
+
+      // tell Webpack how to handle .wasm files
+      config.module.rules.push({
+        test: /\.wasm$/,
+        type: "webassembly/async"
+      });
     }
 
     return config;
