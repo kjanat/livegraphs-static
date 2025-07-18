@@ -24,7 +24,14 @@ const nextConfig: NextConfig = {
         path: false,
         crypto: false
       };
+
+      // Force sql.js to use browser version for client builds
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "sql.js": "sql.js/dist/sql-wasm.js"
+      };
     }
+
     return config;
   }
 };
