@@ -89,7 +89,7 @@ global.HTMLCanvasElement.prototype.getContext = vi.fn(function (
     return new MockCanvas().getContext() as unknown as CanvasRenderingContext2D;
   }
   return null;
-}) as any;
+}) as typeof HTMLCanvasElement.prototype.getContext;
 
 // Mock localStorage
 const localStorageMock: Storage = {

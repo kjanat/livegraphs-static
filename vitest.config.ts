@@ -10,7 +10,7 @@ export default defineConfig({
     setupFiles: "./vitest.setup.ts",
     coverage: {
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules/", ".next/", "vitest.setup.ts"]
+      exclude: ["node_modules/", ".next/", "out/", "vitest.setup.ts"]
     }
   },
   resolve: {
