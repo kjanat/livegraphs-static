@@ -18,7 +18,7 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: '22.x'
+  NODE_VERSION: '24.x'
   PNPM_VERSION: '10'
 
 jobs:
@@ -126,7 +126,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     needs: build-and-release
-    if: false  # Enable when ready to publish to npm
+    if: false # Enable when ready to publish to npm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
