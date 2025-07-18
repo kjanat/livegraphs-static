@@ -1,6 +1,18 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm:*)", "Bash(pnpm:*)", "mcp__puppeteer__puppeteer_screenshot"],
+    "allow": [
+      "Bash(cat*)",
+      "Bash(cd*)",
+      "Bash(cp*)",
+      "Bash(echo*)",
+      "Bash(grep*)",
+      "Bash(ls*)",
+      "Bash(mkdir*)",
+      "Bash(mv*)",
+      "Bash(pnpm:*)",
+      "Bash(pwd*)",
+      "Bash(touch*)"
+    ],
     "deny": []
   }
 }

@@ -3,28 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDatabase } from "../../hooks/useDatabase";
 import type { ChatSession } from "../../lib/types/session";
 
-// Mock sql.js - Create separate instance for each test
-const createMockDatabase = () => ({
-  run: vi.fn(),
-  prepare: vi.fn(() => ({
-    run: vi.fn(),
-    free: vi.fn()
-  })),
-  exec: vi.fn(),
-  export: vi.fn(() => new Uint8Array([1, 2, 3]))
-});
-
-const createSqlMock = () =>
-  vi.fn(() =>
-    Promise.resolve({
-      Database: vi.fn().mockImplementation(createMockDatabase)
-    })
-  );
-
-vi.mock("sql.js", () => ({
-  default: createSqlMock()
-}));
-
 // Mock localStorage
 const localStorageMock = (() => {
   let store: { [key: string]: string } = {};
@@ -49,10 +27,35 @@ Object.defineProperty(window, "localStorage", {
 // Mock fetch
 global.fetch = vi.fn();
 
+// Mock window.initSqlJs for CDN loading
+const createMockDatabase = () => ({
+  run: vi.fn(),
+  prepare: vi.fn(() => ({
+    run: vi.fn(),
+    free: vi.fn()
+  })),
+  exec: vi.fn(),
+  export: vi.fn(() => new Uint8Array([1, 2, 3]))
+});
+
+const mockInitSqlJs = vi.fn(async (_config?: { locateFile?: (file: string) => string }) => ({
+  Database: vi.fn().mockImplementation(createMockDatabase)
+}));
+
+// Set up window.initSqlJs before tests - cast to unknown first to avoid type conflicts
+(window as unknown as { initSqlJs: typeof mockInitSqlJs }).initSqlJs = mockInitSqlJs;
+
 describe("useDatabase", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
+
+    // Reset window.initSqlJs mock
+    mockInitSqlJs.mockClear();
+    mockInitSqlJs.mockResolvedValue({
+      Database: vi.fn().mockImplementation(createMockDatabase)
+    });
+
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       text: async () => "CREATE TABLE sessions (...);"
