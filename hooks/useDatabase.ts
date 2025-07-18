@@ -22,10 +22,16 @@ export function useDatabase() {
     const initDb = async () => {
       try {
         if (!SQL) {
-          // Dynamic import to ensure it only runs in the browser,
-          // pull in the browser-compatible bundle via our alias above
-          const initSqlJsDefault = (await import(/* webpackChunkName: "sql.js" */ "sql.js"))
-            .default;
+          let initSqlJsDefault: typeof initSqlJs;
+          if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+            // Dynamic import from CDN in the browser to avoid bundling issues
+            initSqlJsDefault = (
+              await import(/* webpackIgnore: true */ "https://sql.js.org/dist/sql-wasm.js")
+            ).default;
+          } else {
+            // Use local package when running in Node (e.g., tests)
+            initSqlJsDefault = (await import("sql.js")).default;
+          }
           SQL = await initSqlJsDefault({
             // will load sql-wasm.wasm from sql.js.org CDN
             locateFile: (file: string) => `https://sql.js.org/dist/${file}`

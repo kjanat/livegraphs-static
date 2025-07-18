@@ -18,45 +18,43 @@ const nextConfig: NextConfig = {
   // Copy schema.sql to public directory during build,
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer, webpack }) => {
-    // Configure module resolution
-    config.resolve = {
-      ...config.resolve,
-      alias: {
-        ...config.resolve.alias,
-        // Always use the browser version of sql.js
-        "sql.js": "sql.js/dist/sql-wasm.js"
-      },
-      fallback: {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        crypto: false,
-        stream: false,
-        buffer: false,
-        util: false,
-        assert: false,
-        http: false,
-        https: false,
-        os: false,
-        url: false,
-        zlib: false,
-        http2: false,
-        net: false,
-        tls: false,
-        child_process: false,
-        worker_threads: false,
-        process: false
-      }
-    };
-
-    // Add ignore plugin to completely prevent bundling of Node.js modules
-    config.plugins.push(
-      new webpack.IgnorePlugin({
-        resourceRegExp: /^(fs|path|crypto|os|util|stream|buffer)$/
-      })
-    );
-
     if (!isServer) {
+      // Configure module resolution for browser environment
+      config.resolve = {
+        ...config.resolve,
+        alias: {
+          ...config.resolve.alias
+        },
+        fallback: {
+          ...config.resolve.fallback,
+          fs: false,
+          path: false,
+          crypto: false,
+          stream: false,
+          buffer: false,
+          util: false,
+          assert: false,
+          http: false,
+          https: false,
+          os: false,
+          url: false,
+          zlib: false,
+          http2: false,
+          net: false,
+          tls: false,
+          child_process: false,
+          worker_threads: false,
+          process: false
+        }
+      };
+
+      // Add ignore plugin to completely prevent bundling of Node.js modules
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^(fs|path|crypto|os|util|stream|buffer)$/
+        })
+      );
+
       // enable async WebAssembly in Webpack
       config.experiments = {
         ...config.experiments,
