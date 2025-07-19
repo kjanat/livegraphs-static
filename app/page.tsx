@@ -284,7 +284,12 @@ export default function Home() {
                     {
                       label: "Sessions",
                       data: chartData.sentiment_values,
-                      backgroundColor: ["#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#8B5CF6"]
+                      backgroundColor: chartData.sentiment_labels.map((label) => {
+                        if (label === "Positive") return "#10B981"; // Green
+                        if (label === "Negative") return "#EF4444"; // Red
+                        if (label === "Neutral") return "#F59E0B"; // Amber
+                        return "#3B82F6"; // Blue for other
+                      })
                     }
                   ]
                 }}
