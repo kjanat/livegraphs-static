@@ -25,7 +25,7 @@ export function HistogramChart({
   bins = 10,
   title = "Distribution",
   xLabel = "Value",
-  color
+  color = "#3b82f6"
 }: HistogramChartProps) {
   if (!data.length) {
     return (

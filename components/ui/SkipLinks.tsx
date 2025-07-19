@@ -8,7 +8,7 @@
 
 export function SkipLinks() {
   return (
-    <div className="sr-only focus-within:not-sr-only">
+    <nav className="sr-only focus-within:not-sr-only" aria-label="Skip links">
       <a
         href="#main-content"
         className="absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 m-3 rounded-md focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring"
@@ -27,6 +27,6 @@ export function SkipLinks() {
       >
         Skip to charts
       </a>
-    </div>
+    </nav>
   );
 }

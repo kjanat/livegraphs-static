@@ -62,8 +62,15 @@ export function InteractiveHeatmap({
 
   // Get text color based on background intensity
   const getTextColor = (count: number) => {
+    if (count === 0) return "text-muted-foreground/60";
     const intensity = count / maxCount;
-    return intensity > 0.6 ? "text-white" : "text-muted-foreground";
+    // Use white text for darker backgrounds (blue-400 and blue-500)
+    // This ensures WCAG AA compliance for contrast
+    if (intensity >= 0.8) return "text-white"; // bg-blue-500
+    if (intensity >= 0.6) return "text-white"; // bg-blue-400
+    if (intensity >= 0.4) return "text-blue-900"; // bg-blue-300
+    if (intensity >= 0.2) return "text-blue-900"; // bg-blue-200
+    return "text-blue-900"; // bg-blue-100
   };
 
   return (
@@ -108,7 +115,7 @@ export function InteractiveHeatmap({
                       transition-all duration-200 mx-0.5 min-w-[2.5rem]
                       ${getCellColor(count)} ${getHoverColor(count)}
                       ${isHovered ? "transform scale-110 shadow-lg z-10" : ""}
-                      ${count > 0 ? getTextColor(count) : "text-muted-foreground/60"}
+                      ${getTextColor(count)}
                     `}
                     onMouseEnter={() => setHoveredCell({ hour, day })}
                     onMouseLeave={() => setHoveredCell(null)}

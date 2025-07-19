@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -93,10 +101,6 @@ body {
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
-}
-
-* {
-  border-color: var(--border);
 }
 
 @keyframes fadeIn {

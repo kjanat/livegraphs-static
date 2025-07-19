@@ -11,23 +11,23 @@ import { createPortal } from "react-dom";
 
 interface FullscreenModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: () => void; // Parent components should wrap this with useCallback to prevent unnecessary re-renders
   children: ReactNode;
   title?: string;
 }
 
 export function FullscreenModal({ isOpen, onClose, children, title }: FullscreenModalProps) {
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
@@ -38,14 +38,16 @@ export function FullscreenModal({ isOpen, onClose, children, title }: Fullscreen
   if (!isOpen) return null;
 
   const modal = (
-    <div
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm animate-in fade-in duration-200"
-      role="presentation"
+    <button
+      type="button"
+      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm animate-in fade-in duration-200 cursor-default"
+      onClick={onClose}
+      aria-label="Close modal backdrop"
     >
       <div
         className="fixed inset-4 sm:inset-8 bg-card rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.key === "Escape" && onClose()}
+        onKeyDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
@@ -78,9 +80,14 @@ export function FullscreenModal({ isOpen, onClose, children, title }: Fullscreen
             </svg>
           </button>
         </div>
-        <div className="p-4 sm:p-6 h-[calc(100%-80px)] overflow-auto">{children}</div>
+        <div
+          className="p-4 sm:p-6 overflow-auto"
+          style={{ height: "calc(100% - var(--modal-header-height, 5rem))" }}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </button>
   );
 
   if (typeof document !== "undefined") {

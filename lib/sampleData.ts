@@ -4,7 +4,36 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-// No type import needed as we'll return the raw data structure
+// Type definitions for generated sample data
+interface SampleSession {
+  session_id: string;
+  start_time: string;
+  end_time: string;
+  transcript: Array<{
+    timestamp: string;
+    role: "User" | "Assistant";
+    content: string;
+  }>;
+  messages: {
+    response_time: { avg: number };
+    amount: { user: number; total: number };
+    tokens: number;
+    cost: { eur: { cent: number; full: number } };
+    source_url: string;
+  };
+  user: {
+    ip: string;
+    country: string;
+    language: string;
+  };
+  sentiment: "positive" | "neutral" | "negative";
+  escalated: boolean;
+  forwarded_hr: boolean;
+  category: string;
+  questions: string[];
+  summary: string;
+  user_rating: number;
+}
 
 const categories = [
   "Technical Support",
@@ -18,6 +47,18 @@ const categories = [
 ];
 
 const sentiments = ["Positive", "Neutral", "Negative"];
+
+const negativeKeywords = [
+  "trouble",
+  "problem",
+  "issue",
+  "can't",
+  "cannot",
+  "broken",
+  "error",
+  "failed",
+  "stuck"
+];
 
 const questions = [
   "How do I reset my password?",
@@ -41,30 +82,14 @@ const countries = ["NL", "DE", "FR", "GB", "US", "ES", "IT", "BE", "PL", "SE"];
 const languages = ["en", "nl", "de", "fr", "es", "it", "pl", "sv"];
 
 function randomElement<T>(array: T[]): T {
+  if (array.length === 0) {
+    throw new Error("Cannot select random element from empty array");
+  }
   return array[Math.floor(Math.random() * array.length)];
 }
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-interface SampleSession {
-  session_id: string;
-  start_time: string;
-  end_time: string;
-  questions: string;
-  category: string;
-  sentiment: string;
-  escalated: 0 | 1;
-  forwarded_hr: 0 | 1;
-  avg_response_time: number;
-  tokens_eur: number;
-  rating: number;
-  ip_address: string;
-  country: string;
-  language: string;
-  conversation_duration: number;
-  messages_count: number;
 }
 
 function generateSession(index: number, date: Date): SampleSession {
@@ -76,46 +101,108 @@ function generateSession(index: number, date: Date): SampleSession {
 
   const messagesCount = randomInt(2, 15);
   const responseTime = randomInt(1, 10);
-  const sentiment = randomElement(sentiments);
-  const escalated = sentiment === "Negative" && Math.random() > 0.5;
+  const sentimentValue = randomElement(sentiments);
+  const selectedQuestion = randomElement(questions);
+
+  // Enhanced escalation logic
+  const hasNegativeKeywords = negativeKeywords.some((keyword) =>
+    selectedQuestion.toLowerCase().includes(keyword)
+  );
+  const isSlowResponse = responseTime > 7;
+  const baseEscalationChance = sentimentValue === "Negative" ? 0.5 : 0.1;
+  const escalationModifier = (hasNegativeKeywords ? 0.3 : 0) + (isSlowResponse ? 0.2 : 0);
+  const escalated = Math.random() < baseEscalationChance + escalationModifier;
+
+  // Generate transcript
+  const transcript = [];
+
+  transcript.push({
+    timestamp: startTime.toISOString(),
+    role: "User" as const,
+    content: selectedQuestion
+  });
+
+  transcript.push({
+    timestamp: new Date(startTime.getTime() + responseTime * 1000).toISOString(),
+    role: "Assistant" as const,
+    content: "Thank you for your question. I'll help you with that..."
+  });
+
+  // Add more messages based on messagesCount
+  for (let i = 2; i < messagesCount; i++) {
+    const isUser = i % 2 === 0;
+    const msgTime = new Date(startTime.getTime() + duration * 60000 * (i / messagesCount));
+    transcript.push({
+      timestamp: msgTime.toISOString(),
+      role: (isUser ? "User" : "Assistant") as "User" | "Assistant",
+      content: isUser
+        ? "I see, can you provide more details?"
+        : "Certainly! Here's what you need to know..."
+    });
+  }
+
+  const tokensUsed = messagesCount * randomInt(50, 200);
+  const costInCents = Math.floor(tokensUsed * 0.002);
+  const costInEur = costInCents / 100;
 
   return {
-    session_id: `session_${date.toISOString().split("T")[0]}_${index}`,
+    session_id: `${date.toISOString().split("T")[0]}-${String(index).padStart(4, "0")}-${randomInt(1000, 9999)}-${randomInt(1000, 9999)}-${randomInt(100000000000, 999999999999)}`,
     start_time: startTime.toISOString(),
     end_time: endTime.toISOString(),
-    questions: randomElement(questions),
+    transcript,
+    messages: {
+      response_time: {
+        avg: responseTime
+      },
+      amount: {
+        user: Math.ceil(messagesCount / 2),
+        total: messagesCount
+      },
+      tokens: tokensUsed,
+      cost: {
+        eur: {
+          cent: costInCents,
+          full: costInEur
+        }
+      },
+      source_url: "https://example.com/chat"
+    },
+    user: {
+      ip: `${randomInt(1, 223)}.${randomInt(0, 255)}.${randomInt(0, 255)}.${randomInt(1, 254)}`,
+      country: randomElement(countries),
+      language: randomElement(languages)
+    },
+    sentiment: sentimentValue.toLowerCase() as "positive" | "neutral" | "negative",
+    escalated,
+    forwarded_hr: false,
     category: randomElement(categories),
-    sentiment,
-    escalated: escalated ? 1 : 0,
-    forwarded_hr: 0,
-    avg_response_time: responseTime,
-    tokens_eur: parseFloat((Math.random() * 0.5 + 0.1).toFixed(4)),
-    rating:
-      sentiment === "Positive"
+    questions: [selectedQuestion],
+    summary: `User asked about: ${selectedQuestion}. The conversation was ${sentimentValue.toLowerCase()} and ${escalated ? "was escalated" : "resolved successfully"}.`,
+    user_rating:
+      sentimentValue === "Positive"
         ? randomInt(4, 5)
-        : sentiment === "Negative"
+        : sentimentValue === "Negative"
           ? randomInt(1, 3)
-          : randomInt(3, 4),
-    ip_address: `${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`,
-    country: randomElement(countries),
-    language: randomElement(languages),
-    conversation_duration: duration,
-    messages_count: messagesCount
+          : randomInt(3, 4)
   };
 }
 
-export function generateSampleData() {
-  const sessions = [];
+export function generateSampleData(): SampleSession[] {
+  const sessions: SampleSession[] = [];
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 30); // 30 days of data
 
   // Generate 10-30 sessions per day
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+  let currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
     const sessionsPerDay = randomInt(10, 30);
     for (let i = 0; i < sessionsPerDay; i++) {
-      sessions.push(generateSession(i, new Date(d)));
+      sessions.push(generateSession(i, new Date(currentDate)));
     }
+    // Move to next day
+    currentDate = new Date(currentDate);
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return sessions; // Return array directly to match validation schema

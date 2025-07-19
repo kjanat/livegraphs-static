@@ -211,7 +211,13 @@ export default function Home() {
           >
             <h2 className="text-xl sm:text-2xl font-bold mb-4">Upload Data</h2>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <label className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded cursor-pointer transition-colors flex items-center gap-2">
+              <label
+                className={`bg-primary text-primary-foreground font-medium py-2 px-4 rounded transition-colors flex items-center gap-2 ${
+                  isUploading
+                    ? "opacity-50 cursor-not-allowed pointer-events-none"
+                    : "hover:bg-primary/90 cursor-pointer"
+                }`}
+              >
                 <UploadIcon size={18} />
                 Upload File
                 <input
