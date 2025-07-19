@@ -106,16 +106,16 @@ export function GaugeChart({
 
   if (value === null) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
-        <div className="text-center text-gray-500 py-12">No rating data available</div>
+      <div className="bg-card rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold mb-4">{title}</h3>
+        <div className="text-center text-muted-foreground py-12">No rating data available</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
       <canvas
         ref={canvasRef}
         width={300}

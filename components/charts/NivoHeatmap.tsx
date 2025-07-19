@@ -42,8 +42,8 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
   const maxValue = Math.max(...data.map((d) => d.count), 1);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
 
       <div style={{ height: "300px" }}>
         <ResponsiveHeatMap
@@ -73,7 +73,7 @@ export function NivoHeatmap({ data, title = "Weekly Usage Heatmap" }: NivoHeatma
         />
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+      <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
         <span>Click and drag to explore • Hover for details</span>
         <span>Peak: {maxValue} sessions/hour</span>
       </div>

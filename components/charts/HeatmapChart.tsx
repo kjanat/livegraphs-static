@@ -101,8 +101,8 @@ export function HeatmapChart({ data, title = "Usage Heatmap" }: HeatmapChartProp
   }, [data]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
       <canvas
         ref={canvasRef}
         width={800}

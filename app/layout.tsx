@@ -7,6 +7,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
+import { SkipLinks } from "@/components/ui/SkipLinks";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,8 +46,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased flex min-h-screen flex-col">
-        {children}
-        <Footer />
+        <ThemeProvider>
+          <SkipLinks />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

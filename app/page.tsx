@@ -25,14 +25,23 @@ import { GaugeChart } from "@/components/charts/GaugeChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
 import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ChartSkeleton, MetricsSkeleton } from "@/components/ui/LoadingSkeleton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useDatabase } from "@/hooks/useDatabase";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
+import { generateSampleData } from "@/lib/sampleData";
 import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
+import { getChartColors, hexToRgba } from "@/lib/utils/chartColors";
 import { validateSessionData } from "@/lib/validation/schema";
 
 export default function Home() {
+  useKeyboardNavigation();
+
   const {
     isInitialized,
     error: dbError,
@@ -145,58 +154,100 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const handleLoadSampleData = async () => {
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const sampleData = generateSampleData();
+      const count = await loadSessionsFromJSON(sampleData);
+
+      const stats = getDatabaseStats();
+      setDbStats(stats);
+
+      setMetrics(null);
+      setChartData(null);
+      setDateRange(null);
+
+      alert(`Successfully loaded ${count} sample sessions`);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to load sample data");
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main id="main-content" className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Logo size={48} className="text-blue-600" />
-          <h1 className="text-4xl font-bold text-gray-900">Notso AI Dashboard</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <Logo size={48} className="text-primary" />
+            <h1 className="text-4xl font-bold">Notso AI Dashboard</h1>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Database Status */}
         {!isInitialized && !dbError && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <p className="text-blue-700">Initializing database...</p>
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8">
+            <p className="text-primary">Initializing database...</p>
           </div>
         )}
 
         {dbError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-700">Database error: {dbError}</p>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-8">
+            <p className="text-destructive">Database error: {dbError}</p>
           </div>
         )}
 
         {/* Upload Section */}
         {isInitialized && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Upload Data</h2>
-            <div className="flex items-center gap-4">
-              <label className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded cursor-pointer">
-                Upload JSON File
+          <section
+            id="upload-section"
+            className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
+            aria-label="Data upload section"
+          >
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Upload Data</h2>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <label className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded cursor-pointer transition-colors flex items-center gap-2">
+                <UploadIcon size={18} />
+                Upload File
                 <input
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
                   className="hidden"
                   disabled={isUploading}
+                  aria-label="Upload JSON file"
                 />
               </label>
-              {isUploading && <span className="text-gray-600">Processing...</span>}
+              {isUploading && (
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <SpinnerIcon size={16} />
+                  Processing...
+                </span>
+              )}
               {dbStats && dbStats.totalSessions > 0 && (
                 <>
                   <button
                     type="button"
                     onClick={handleClearDatabase}
-                    className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded"
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium py-2 px-4 rounded transition-colors flex items-center gap-2"
+                    aria-label="Clear all data from database"
                   >
+                    <TrashIcon size={18} />
                     Clear Database
                   </button>
                   {dateRange && (
                     <button
                       type="button"
                       onClick={handleExportCSV}
-                      className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded"
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors flex items-center gap-2"
+                      aria-label="Export data as CSV file"
                     >
+                      <DownloadIcon size={18} />
                       Export CSV
                     </button>
                   )}
@@ -204,32 +255,35 @@ export default function Home() {
               )}
             </div>
             {uploadError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+              <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
                 {uploadError}
               </div>
             )}
-          </div>
+          </section>
         )}
 
         {/* Database Stats */}
         {dbStats && isInitialized && dbStats.totalSessions > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Database Statistics</h2>
+          <section
+            className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
+            aria-label="Database statistics"
+          >
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Database Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded">
-                <div className="text-sm text-gray-600">Total Sessions</div>
-                <div className="text-2xl font-bold text-blue-600">{dbStats.totalSessions}</div>
+              <div className="bg-primary/10 p-4 rounded transition-colors hover:bg-primary/15">
+                <div className="text-sm text-muted-foreground">Total Sessions</div>
+                <div className="text-2xl font-bold text-primary">{dbStats.totalSessions}</div>
               </div>
-              <div className="bg-green-50 p-4 rounded">
-                <div className="text-sm text-gray-600">Data Start Date</div>
+              <div className="bg-green-600/10 p-4 rounded transition-colors hover:bg-green-600/15">
+                <div className="text-sm text-muted-foreground">Data Start Date</div>
                 <div className="text-lg font-semibold text-green-600">
                   {dbStats.dateRange.min
                     ? new Date(dbStats.dateRange.min).toLocaleDateString()
                     : "No data"}
                 </div>
               </div>
-              <div className="bg-purple-50 p-4 rounded">
-                <div className="text-sm text-gray-600">Data End Date</div>
+              <div className="bg-purple-600/10 p-4 rounded transition-colors hover:bg-purple-600/15">
+                <div className="text-sm text-muted-foreground">Data End Date</div>
                 <div className="text-lg font-semibold text-purple-600">
                   {dbStats.dateRange.max
                     ? new Date(dbStats.dateRange.max).toLocaleDateString()
@@ -237,7 +291,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
         {/* Date Range Picker */}
@@ -250,278 +304,299 @@ export default function Home() {
         )}
 
         {/* Metrics */}
-        {metrics && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Key Metrics</h2>
-            {isLoadingData ? (
-              <p className="text-gray-600">Loading metrics...</p>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(metrics).map(([key, value]) => (
-                  <div key={key} className="bg-gray-50 p-4 rounded">
-                    <div className="text-sm text-gray-600">{key}</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {typeof value === "number" ? value.toLocaleString() : value}
-                    </div>
+        {isLoadingData && dateRange && <MetricsSkeleton />}
+        {metrics && !isLoadingData && (
+          <div className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg animate-in">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Key Metrics</h2>
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              {Object.entries(metrics).map(([key, value], index) => (
+                <div
+                  key={key}
+                  className="bg-secondary p-4 rounded transition-all hover:bg-secondary/80 hover:scale-105"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="text-sm text-muted-foreground">{key}</div>
+                  <div className="text-xl font-semibold">
+                    {typeof value === "number" ? value.toLocaleString() : value}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Charts Loading State */}
+        {isLoadingData && dateRange && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <ChartSkeleton />
+              <ChartSkeleton />
+              <ChartSkeleton />
+            </div>
+            <ChartSkeleton />
           </div>
         )}
 
         {/* Charts Dashboard */}
-        {chartData && !isLoadingData && (
-          <>
-            {/* Primary Insights Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              <AnalyticsChart
-                type="doughnut"
-                title="Sentiment Distribution"
-                data={{
-                  labels: chartData.sentiment_labels,
-                  datasets: [
-                    {
-                      label: "Sessions",
-                      data: chartData.sentiment_values,
-                      backgroundColor: chartData.sentiment_labels.map((label) => {
-                        if (label === "Positive") return "#10B981"; // Green
-                        if (label === "Negative") return "#EF4444"; // Red
-                        if (label === "Neutral") return "#F59E0B"; // Amber
-                        return "#3B82F6"; // Blue for other
-                      })
-                    }
-                  ]
-                }}
-              />
-              <AnalyticsChart
-                type="doughnut"
-                title="Resolution Status"
-                data={{
-                  labels: chartData.resolution_labels,
-                  datasets: [
-                    {
-                      label: "Sessions",
-                      data: chartData.resolution_values,
-                      backgroundColor: ["#10B981", "#EF4444", "#F59E0B"]
-                    }
-                  ]
-                }}
-              />
-              <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
-            </div>
+        {chartData &&
+          !isLoadingData &&
+          (() => {
+            const colors = getChartColors();
 
-            {/* Time Series Analysis */}
-            <div className="mb-8">
-              <MultiLineChart
-                title="Performance Trends Over Time"
-                labels={chartData.dates_labels}
-                datasets={[
-                  {
-                    label: "Sessions",
-                    data: chartData.dates_values,
-                    borderColor: "#3B82F6",
-                    backgroundColor: "#3B82F640",
-                    fill: true
-                  },
-                  {
-                    label: "Avg Response Time (sec)",
-                    data: chartData.response_time_values,
-                    borderColor: "#F59E0B",
-                    yAxisID: "y1"
-                  }
-                ]}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  interaction: {
-                    mode: "index" as const,
-                    intersect: false
-                  },
-                  scales: {
-                    x: {
-                      grid: {
-                        display: false
-                      }
-                    },
-                    y: {
-                      type: "linear" as const,
-                      display: true,
-                      position: "left" as const,
-                      title: {
-                        display: true,
-                        text: "Number of Sessions"
-                      }
-                    },
-                    y1: {
-                      type: "linear" as const,
-                      display: true,
-                      position: "right" as const,
-                      title: {
-                        display: true,
-                        text: "Response Time (sec)"
-                      },
-                      grid: {
-                        drawOnChartArea: false
-                      }
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            {/* Usage Patterns */}
-            <div className="mb-8">
-              <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
-            </div>
-
-            {/* Geographic & Language Insights */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <AnalyticsChart
-                type="bar"
-                title="Sessions by Country"
-                data={{
-                  labels: chartData.country_labels,
-                  datasets: [
-                    {
-                      label: "Sessions",
-                      data: chartData.country_values,
-                      backgroundColor: "#3B82F6"
-                    }
-                  ]
-                }}
-                options={{
-                  indexAxis: "y" as const,
-                  scales: {
-                    x: {
-                      beginAtZero: true
-                    }
-                  }
-                }}
-              />
-              <AnalyticsChart
-                type="bar"
-                title="Language Distribution"
-                data={{
-                  labels: chartData.language_labels,
-                  datasets: [
-                    {
-                      label: "Sessions",
-                      data: chartData.language_values,
-                      backgroundColor: "#10B981"
-                    }
-                  ]
-                }}
-                options={{
-                  scales: {
-                    y: {
-                      beginAtZero: true
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            {/* Category Analysis */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <AnalyticsChart
-                type="bar"
-                title="Top Categories"
-                data={{
-                  labels: chartData.category_labels.slice(0, 8),
-                  datasets: [
-                    {
-                      label: "Sessions",
-                      data: chartData.category_values.slice(0, 8),
-                      backgroundColor: "#8B5CF6"
-                    }
-                  ]
-                }}
-                options={{
-                  indexAxis: "y" as const,
-                  scales: {
-                    x: {
-                      beginAtZero: true
-                    }
-                  }
-                }}
-              />
-              <BubbleChart data={chartData.category_costs} title="Cost Analysis by Category" />
-            </div>
-
-            {/* Performance Distributions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <HistogramChart
-                data={chartData.conversation_durations}
-                title="Conversation Duration Distribution"
-                xLabel="Duration (minutes)"
-                bins={15}
-                color="#14B8A6"
-              />
-              <HistogramChart
-                data={chartData.messages_per_conversation}
-                title="Messages per Conversation"
-                xLabel="Number of Messages"
-                bins={10}
-                color="#EC4899"
-              />
-            </div>
-
-            {/* Cost Analysis */}
-            <div className="mb-8">
-              <MultiLineChart
-                title="Daily Cost Trend"
-                labels={chartData.cost_dates}
-                datasets={[
-                  {
-                    label: "Daily Cost (€)",
-                    data: chartData.cost_values,
-                    borderColor: "#F59E0B",
-                    backgroundColor: "#F59E0B40",
-                    fill: true
-                  }
-                ]}
-                options={{
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      ticks: {
-                        callback: (value) => `€${Number(value).toFixed(2)}`
-                      }
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            {/* Top Questions */}
-            {chartData.questions_labels.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Top Questions</h3>
-                <div className="space-y-3">
-                  {chartData.questions_labels.map((question, index) => (
-                    <div
-                      key={`question-${index}-${question.slice(0, 20)}`}
-                      className="flex justify-between items-center p-3 bg-gray-50 rounded"
-                    >
-                      <span className="text-gray-700 flex-1 mr-4">{question}</span>
-                      <span className="text-gray-600 font-semibold whitespace-nowrap">
-                        {chartData.questions_values[index]} times
-                      </span>
-                    </div>
-                  ))}
+            return (
+              <section
+                id="charts-section"
+                className="animate-in"
+                style={{ animationDelay: "200ms" }}
+                aria-label="Analytics charts dashboard"
+              >
+                {/* Primary Insights Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                  <AnalyticsChart
+                    type="doughnut"
+                    title="Sentiment Distribution"
+                    data={{
+                      labels: chartData.sentiment_labels,
+                      datasets: [
+                        {
+                          label: "Sessions",
+                          data: chartData.sentiment_values,
+                          backgroundColor: chartData.sentiment_labels.map((label) => {
+                            if (label === "Positive") return colors.green;
+                            if (label === "Negative") return colors.red;
+                            if (label === "Neutral") return colors.yellow;
+                            return colors.blue;
+                          })
+                        }
+                      ]
+                    }}
+                  />
+                  <AnalyticsChart
+                    type="doughnut"
+                    title="Resolution Status"
+                    data={{
+                      labels: chartData.resolution_labels,
+                      datasets: [
+                        {
+                          label: "Sessions",
+                          data: chartData.resolution_values,
+                          backgroundColor: [colors.green, colors.red, colors.yellow]
+                        }
+                      ]
+                    }}
+                  />
+                  <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
                 </div>
-              </div>
-            )}
-          </>
-        )}
+
+                {/* Time Series Analysis */}
+                <div className="mb-8">
+                  <MultiLineChart
+                    title="Performance Trends Over Time"
+                    labels={chartData.dates_labels}
+                    datasets={[
+                      {
+                        label: "Sessions",
+                        data: chartData.dates_values,
+                        borderColor: colors.blue,
+                        backgroundColor: hexToRgba(colors.blue, 0.25),
+                        fill: true
+                      },
+                      {
+                        label: "Avg Response Time (sec)",
+                        data: chartData.response_time_values,
+                        borderColor: colors.yellow,
+                        yAxisID: "y1"
+                      }
+                    ]}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      interaction: {
+                        mode: "index" as const,
+                        intersect: false
+                      },
+                      scales: {
+                        x: {
+                          grid: {
+                            display: false
+                          }
+                        },
+                        y: {
+                          type: "linear" as const,
+                          display: true,
+                          position: "left" as const,
+                          title: {
+                            display: true,
+                            text: "Number of Sessions"
+                          }
+                        },
+                        y1: {
+                          type: "linear" as const,
+                          display: true,
+                          position: "right" as const,
+                          title: {
+                            display: true,
+                            text: "Response Time (sec)"
+                          },
+                          grid: {
+                            drawOnChartArea: false
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Usage Patterns */}
+                <div className="mb-8">
+                  <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
+                </div>
+
+                {/* Geographic & Language Insights */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
+                  <AnalyticsChart
+                    type="bar"
+                    title="Sessions by Country"
+                    data={{
+                      labels: chartData.country_labels,
+                      datasets: [
+                        {
+                          label: "Sessions",
+                          data: chartData.country_values,
+                          backgroundColor: colors.blue
+                        }
+                      ]
+                    }}
+                    options={{
+                      indexAxis: "y" as const,
+                      scales: {
+                        x: {
+                          beginAtZero: true
+                        }
+                      }
+                    }}
+                  />
+                  <AnalyticsChart
+                    type="bar"
+                    title="Language Distribution"
+                    data={{
+                      labels: chartData.language_labels,
+                      datasets: [
+                        {
+                          label: "Sessions",
+                          data: chartData.language_values,
+                          backgroundColor: colors.green
+                        }
+                      ]
+                    }}
+                    options={{
+                      scales: {
+                        y: {
+                          beginAtZero: true
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Category Analysis */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
+                  <AnalyticsChart
+                    type="bar"
+                    title="Top Categories"
+                    data={{
+                      labels: chartData.category_labels.slice(0, 8),
+                      datasets: [
+                        {
+                          label: "Sessions",
+                          data: chartData.category_values.slice(0, 8),
+                          backgroundColor: colors.purple
+                        }
+                      ]
+                    }}
+                    options={{
+                      indexAxis: "y" as const,
+                      scales: {
+                        x: {
+                          beginAtZero: true
+                        }
+                      }
+                    }}
+                  />
+                  <BubbleChart data={chartData.category_costs} title="Cost Analysis by Category" />
+                </div>
+
+                {/* Performance Distributions */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
+                  <HistogramChart
+                    data={chartData.conversation_durations}
+                    title="Conversation Duration Distribution"
+                    xLabel="Duration (minutes)"
+                    bins={15}
+                    color={colors.teal}
+                  />
+                  <HistogramChart
+                    data={chartData.messages_per_conversation}
+                    title="Messages per Conversation"
+                    xLabel="Number of Messages"
+                    bins={10}
+                    color={colors.pink}
+                  />
+                </div>
+
+                {/* Cost Analysis */}
+                <div className="mb-8">
+                  <MultiLineChart
+                    title="Daily Cost Trend"
+                    labels={chartData.cost_dates}
+                    datasets={[
+                      {
+                        label: "Daily Cost (€)",
+                        data: chartData.cost_values,
+                        borderColor: colors.yellow,
+                        backgroundColor: hexToRgba(colors.yellow, 0.25),
+                        fill: true
+                      }
+                    ]}
+                    options={{
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          ticks: {
+                            callback: (value) => `€${Number(value).toFixed(2)}`
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Top Questions */}
+                {chartData.questions_labels.length > 0 && (
+                  <div className="bg-card rounded-lg shadow-md p-6 mb-8 transition-all duration-200 hover:shadow-lg">
+                    <h3 className="text-xl font-bold mb-4">Top Questions</h3>
+                    <div className="space-y-3">
+                      {chartData.questions_labels.map((question, index) => (
+                        <div
+                          key={`question-${index}-${question.slice(0, 20)}`}
+                          className="flex justify-between items-center p-3 bg-secondary rounded transition-colors hover:bg-secondary/80"
+                        >
+                          <span className="flex-1 mr-4">{question}</span>
+                          <span className="text-muted-foreground font-semibold whitespace-nowrap">
+                            {chartData.questions_values[index]} times
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
 
         {/* Empty State */}
         {(!dbStats || dbStats.totalSessions === 0) && isInitialized && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Get Started</h2>
-            <p className="text-gray-600">Upload a JSON file to start analyzing your chat data.</p>
-          </div>
+          <EmptyState onSampleData={handleLoadSampleData} />
         )}
       </div>
     </main>

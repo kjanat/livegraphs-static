@@ -81,45 +81,48 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Date Range</h2>
+    <div className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Date Range</h2>
 
       {/* Preset buttons */}
       <div className="flex flex-wrap gap-2 mb-4">
         <button
           type="button"
           onClick={() => handlePresetRange("lastWeek")}
-          className="px-3 py-1 text-sm text-gray-700 font-medium bg-gray-100 hover:bg-gray-200 rounded"
+          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
         >
           Last Week
         </button>
         <button
           type="button"
           onClick={() => handlePresetRange("lastMonth")}
-          className="px-3 py-1 text-sm text-gray-700 font-medium bg-gray-100 hover:bg-gray-200 rounded"
+          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
         >
           Last Month
         </button>
         <button
           type="button"
           onClick={() => handlePresetRange("last3Months")}
-          className="px-3 py-1 text-sm text-gray-700 font-medium bg-gray-100 hover:bg-gray-200 rounded"
+          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
         >
           Last 3 Months
         </button>
         <button
           type="button"
           onClick={() => handlePresetRange("all")}
-          className="px-3 py-1 text-sm text-gray-700 font-medium bg-gray-100 hover:bg-gray-200 rounded"
+          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
         >
           All Data
         </button>
       </div>
 
-      {/* Date inputs */}
-      <div className="flex items-center gap-4">
-        <div>
-          <label htmlFor="start-date" className="block text-sm text-gray-700 font-medium mb-1">
+      {/* Date inputs - responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <label
+            htmlFor="start-date"
+            className="block text-sm font-medium mb-1 text-muted-foreground"
+          >
             Start Date
           </label>
           <input
@@ -129,12 +132,15 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
             onChange={handleStartDateChange}
             min={minDate}
             max={maxDate}
-            className="px-3 py-2 text-gray-800 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
           />
         </div>
 
-        <div>
-          <label htmlFor="end-date" className="block text-sm text-gray-700 font-medium mb-1">
+        <div className="flex-1">
+          <label
+            htmlFor="end-date"
+            className="block text-sm font-medium mb-1 text-muted-foreground"
+          >
             End Date
           </label>
           <input
@@ -144,7 +150,7 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
             onChange={handleEndDateChange}
             min={startDate || minDate}
             max={maxDate}
-            className="px-3 py-2 text-gray-800 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
           />
         </div>
 
@@ -152,14 +158,14 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
           type="button"
           onClick={handleApply}
           disabled={!startDate || !endDate}
-          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
         >
           Apply
         </button>
       </div>
 
       {startDate && endDate && (
-        <p className="mt-4 text-sm text-gray-700">
+        <p className="mt-4 text-sm text-muted-foreground">
           Showing data from {format(new Date(startDate), "MMM d, yyyy")} to{" "}
           {format(new Date(endDate), "MMM d, yyyy")}
         </p>

@@ -25,13 +25,13 @@ export function HistogramChart({
   bins = 10,
   title = "Distribution",
   xLabel = "Value",
-  color = "#3B82F6"
+  color
 }: HistogramChartProps) {
   if (!data.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
-        <div className="text-center text-gray-500 py-12">No data available</div>
+      <div className="bg-card rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold mb-4">{title}</h3>
+        <div className="text-center text-muted-foreground py-12">No data available</div>
       </div>
     );
   }
@@ -118,19 +118,19 @@ export function HistogramChart({
   const median = sorted[Math.floor(sorted.length / 2)];
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
       <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
         <div className="text-center">
-          <div className="text-gray-600">Mean</div>
+          <div className="text-muted-foreground">Mean</div>
           <div className="font-semibold">{mean.toFixed(1)}</div>
         </div>
         <div className="text-center">
-          <div className="text-gray-600">Median</div>
+          <div className="text-muted-foreground">Median</div>
           <div className="font-semibold">{median.toFixed(1)}</div>
         </div>
         <div className="text-center">
-          <div className="text-gray-600">Total</div>
+          <div className="text-muted-foreground">Total</div>
           <div className="font-semibold">{data.length}</div>
         </div>
       </div>

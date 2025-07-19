@@ -6,7 +6,7 @@
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-200 bg-gray-50 py-6 text-center text-sm text-gray-600">
+    <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground">
       <div className="container mx-auto px-4">
         <p className="mb-2">
           © 2025 Kaj Kowalski - Licensed under{" "}
@@ -14,7 +14,7 @@ export function Footer() {
             href="https://www.gnu.org/licenses/agpl-3.0.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 underline"
+            className="text-primary hover:text-primary/80 underline transition-colors"
           >
             AGPLv3
           </a>
@@ -24,7 +24,7 @@ export function Footer() {
             href="https://github.com/kjanat/livegraphs-static"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 underline"
+            className="text-primary hover:text-primary/80 underline transition-colors"
           >
             View Source Code
           </a>
@@ -33,7 +33,7 @@ export function Footer() {
             href="https://github.com/kjanat/livegraphs-static/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 underline"
+            className="text-primary hover:text-primary/80 underline transition-colors"
           >
             Report Issues
           </a>

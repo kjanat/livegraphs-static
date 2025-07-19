@@ -25,9 +25,11 @@ interface BubbleChartProps {
 export function BubbleChart({ data, title = "Cost Analysis by Category" }: BubbleChartProps) {
   if (!data.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
-        <div className="text-center text-gray-500 py-12">No category cost data available</div>
+      <div className="bg-card rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold mb-4">{title}</h3>
+        <div className="text-center text-muted-foreground py-12">
+          No category cost data available
+        </div>
       </div>
     );
   }
@@ -114,9 +116,11 @@ export function BubbleChart({ data, title = "Cost Analysis by Category" }: Bubbl
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
-      <div className="text-sm text-gray-600 mb-4">Bubble size represents number of sessions</div>
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <div className="text-sm text-muted-foreground mb-4">
+        Bubble size represents number of sessions
+      </div>
       <div className="relative h-96">
         <Bubble data={chartData} options={options} />
       </div>
