@@ -135,7 +135,16 @@ export function useDatabase() {
     if (!db) return;
 
     const data = db.export();
-    const binary = String.fromCharCode(...new Uint8Array(data));
+    // Convert Uint8Array to base64 in chunks to avoid stack overflow
+    const uint8Array = new Uint8Array(data);
+    let binary = "";
+    const chunkSize = 0x8000; // 32KB chunks
+
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+
     localStorage.setItem("livegraphs_db", btoa(binary));
   }, []);
 
