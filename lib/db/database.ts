@@ -6,6 +6,7 @@
 
 import type initSqlJs from "sql.js";
 import type { ChatSession } from "../types/session";
+import { schema } from "./schema";
 
 type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
 type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
@@ -44,11 +45,6 @@ export async function initializeDatabase(): Promise<InstanceType<Database>> {
 
   // Load the schema
   try {
-    const schemaResponse = await fetch("/schema.sql");
-    if (!schemaResponse.ok) {
-      throw new Error(`Failed to load schema: ${schemaResponse.status}`);
-    }
-    const schema = await schemaResponse.text();
     db.run(schema);
   } catch (error) {
     console.error("Failed to load schema:", error);

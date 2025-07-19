@@ -21,18 +21,21 @@ LiveGraphs Static is a Next.js-based web application for visualizing chatbot con
 ## Key Commands
 
 ### Development
+
 ```bash
 pnpm dev          # Run Next.js dev server (http://localhost:3000)
 pnpm dev:turbo    # Run with Turbopack (experimental faster bundler)
 ```
 
 ### Build & Production
+
 ```bash
 pnpm build        # Build for production (creates .next and out directories)
 pnpm start        # Serve static files using 'serve' package
 ```
 
 ### Code Quality
+
 ```bash
 pnpm lint         # Run Next.js linting
 pnpm lint:strict  # Run Biome checks
@@ -42,6 +45,7 @@ pnpm validate     # Run all checks (lint, format, type-check)
 ```
 
 ### Testing
+
 ```bash
 pnpm test          # Run tests once
 pnpm test:watch    # Run tests in watch mode
@@ -50,6 +54,7 @@ pnpm test:ui       # Open Vitest UI
 ```
 
 ### Single Test Execution
+
 ```bash
 pnpm test path/to/test.test.ts    # Run specific test file
 pnpm test -t "test name"          # Run tests matching pattern
@@ -73,7 +78,7 @@ pnpm test -t "test name"          # Run tests matching pattern
 
 3. **Database Layer**:
    - Uses SQL.js for client-side SQLite
-   - Schema defined in `lib/db/schema.sql`
+   - Schema defined in `lib/db/schema.ts` (imported as module)
    - `useDatabase` hook provides React integration
    - All processing happens in the browser
 
@@ -105,6 +110,7 @@ pnpm test -t "test name"          # Run tests matching pattern
 ## JSON Data Format
 
 Expected structure (validated by Zod):
+
 ```typescript
 {
   sessions: Array<{
@@ -134,6 +140,7 @@ Expected structure (validated by Zod):
 ## CI/CD Pipeline
 
 GitHub Actions workflows:
+
 - `ci.yml` - Main pipeline (lint, test, build, type-check)
 - `code-quality.yml` - Biome and ESLint checks
 - `security.yml` - Security scanning
@@ -148,6 +155,7 @@ GitHub Actions workflows:
 ## Common Development Tasks
 
 ### Adding a New Chart Type
+
 1. Create component in `components/charts/`
 2. Add data preparation logic in `lib/dataProcessor.ts`
 3. Import and render in `app/page.tsx`
@@ -155,12 +163,14 @@ GitHub Actions workflows:
 5. Write tests in `components/charts/__tests__/`
 
 ### Modifying Data Schema
+
 1. Update Zod schema in `lib/validation/schema.ts`
-2. Update SQL schema in `lib/db/schema.sql`
+2. Update SQL schema in `lib/db/schema.ts`
 3. Update TypeScript types in `lib/types.ts`
 4. Update data processing in `lib/dataProcessor.ts`
 
 ### Performance Considerations
+
 - All data processing happens client-side
 - Large datasets may impact browser performance
 - Charts use React.memo for optimization
@@ -169,21 +179,25 @@ GitHub Actions workflows:
 ## Important Patterns
 
 ### State Management
+
 - React hooks for local state
 - No external state management library
 - Database state managed via `useDatabase` hook
 
 ### Error Handling
+
 - File upload errors shown via toast/alert
 - Data validation errors from Zod schemas
 - Chart rendering errors caught with error boundaries
 
 ### Code Style
+
 - Biome for consistent formatting
 - Functional components with hooks
 - TypeScript strict mode enabled
 - Tailwind CSS for styling
 
 ### Branding
+
 - Logo component at `/components/Logo.tsx` - reusable SVG with theme support
 - Favicons in `/public/notsoAI-{black,white}.svg` for static export compatibility

@@ -8,14 +8,10 @@ import {
 } from "@/lib/db/database";
 import type { ChatSession } from "@/lib/types/session";
 
-// Mock fetch for schema
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    status: 200,
-    text: () => Promise.resolve("CREATE TABLE sessions (session_id TEXT PRIMARY KEY);")
-  } as Response)
-);
+// Mock the schema import
+vi.mock("@/lib/db/schema", () => ({
+  schema: "CREATE TABLE sessions (session_id TEXT PRIMARY KEY);"
+}));
 
 describe("Database Module", () => {
   const mockSession: ChatSession = {
@@ -75,7 +71,7 @@ describe("Database Module", () => {
       const db = await initializeDatabase();
       expect(db).toBeDefined();
       expect(db.run).toBeDefined();
-      expect(fetch).toHaveBeenCalledWith("/schema.sql");
+      // Schema is now imported, not fetched
     });
 
     it("should attempt to load existing database from localStorage", async () => {

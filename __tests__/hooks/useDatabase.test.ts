@@ -24,8 +24,10 @@ Object.defineProperty(window, "localStorage", {
   value: localStorageMock
 });
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock the schema import
+vi.mock("@/lib/db/schema", () => ({
+  schema: "CREATE TABLE sessions (...);"
+}));
 
 // Mock window.initSqlJs for CDN loading
 const createMockDatabase = () => ({
@@ -54,11 +56,6 @@ describe("useDatabase", () => {
     mockInitSqlJs.mockClear();
     mockInitSqlJs.mockResolvedValue({
       Database: vi.fn().mockImplementation(createMockDatabase)
-    });
-
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      text: async () => "CREATE TABLE sessions (...);"
     });
   });
 
@@ -103,17 +100,29 @@ describe("useDatabase", () => {
     });
   });
 
-  it("should load schema from file", async () => {
+  it("should load schema", async () => {
     const { result } = renderHook(() => useDatabase());
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true);
-      expect(global.fetch).toHaveBeenCalledWith("/schema.sql");
+      // Schema is now imported, not fetched
     });
   });
 
   it("should handle schema loading failure", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Network error"));
+    // Mock the database run method to throw an error
+    const mockDbWithError = {
+      ...createMockDatabase(),
+      run: vi.fn().mockImplementation((sql: string) => {
+        if (sql.includes("CREATE TABLE")) {
+          throw new Error("Schema error");
+        }
+      })
+    };
+
+    mockInitSqlJs.mockResolvedValueOnce({
+      Database: vi.fn().mockImplementation(() => mockDbWithError)
+    });
 
     const { result } = renderHook(() => useDatabase());
 

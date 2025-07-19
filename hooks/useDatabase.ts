@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { schema } from "@/lib/db/schema";
 import type { ChatSession } from "@/lib/types/session";
 
 // Extend window interface for sql.js
@@ -113,11 +114,7 @@ export function useDatabase() {
 
         // Load schema
         try {
-          const schemaResponse = await fetch("/schema.sql");
-          if (schemaResponse.ok) {
-            const schema = await schemaResponse.text();
-            db.run(schema);
-          }
+          db.run(schema);
         } catch (error) {
           console.error("Failed to load schema:", error);
         }
@@ -142,72 +139,7 @@ export function useDatabase() {
     localStorage.setItem("livegraphs_db", btoa(binary));
   }, []);
 
-  const _insertSession = useCallback(
-    async (session: ChatSession): Promise<void> => {
-      if (!db) throw new Error("Database not initialized");
-
-      const startTime = new Date(session.start_time);
-      const endTime = new Date(session.end_time);
-      const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-
-      const stmt = db.prepare(`
-      INSERT INTO sessions (
-        session_id, start_time, end_time, ip_hash, country, language,
-        sentiment, escalated, forwarded_hr, category, summary, user_rating,
-        conversation_duration_seconds, total_messages, user_messages,
-        avg_response_time, total_tokens, cost_eur_cents, source_url
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-    `);
-
-      stmt.run([
-        session.session_id,
-        session.start_time,
-        session.end_time,
-        session.user.ip,
-        session.user.country,
-        session.user.language,
-        session.sentiment,
-        session.escalated ? 1 : 0,
-        session.forwarded_hr ? 1 : 0,
-        session.category,
-        session.summary,
-        session.user_rating || null,
-        durationSeconds,
-        session.messages.amount.total,
-        session.messages.amount.user,
-        session.messages.response_time.avg,
-        session.messages.tokens,
-        session.messages.cost.eur.cent,
-        session.messages.source_url
-      ]);
-      stmt.free();
-
-      // Insert transcript messages
-      const msgStmt = db.prepare(
-        "INSERT INTO messages (session_id, timestamp, role, content) VALUES (?, ?, ?, ?)"
-      );
-
-      session.transcript.forEach((msg) => {
-        msgStmt.run([session.session_id, msg.timestamp, msg.role, msg.content]);
-      });
-      msgStmt.free();
-
-      // Insert questions
-      const qStmt = db.prepare("INSERT INTO questions (session_id, question) VALUES (?, ?)");
-
-      session.questions.forEach((question) => {
-        qStmt.run([session.session_id, question]);
-      });
-      qStmt.free();
-
-      saveDatabase();
-    },
-    [saveDatabase]
-  );
-
-  // Need to define insertSessionSync before using it in loadSessionsFromJSON
+  // Define insertSessionSync for use in loadSessionsFromJSON
   const insertSessionSync = useCallback((session: ChatSession): void => {
     if (!db) throw new Error("Database not initialized");
 

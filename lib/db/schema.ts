@@ -1,6 +1,12 @@
--- SQLite schema for Notso AI
--- This schema is designed to efficiently store and query chat session data
+/**
+ * Notso AI - A web dashboard for visualizing chatbot conversation analytics
+ * Copyright (C) 2025  Kaj Kowalski
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
 
+// SQLite schema for Notso AI
+// This schema is designed to efficiently store and query chat session data
+export const schema = `
 -- Main sessions table
 CREATE TABLE IF NOT EXISTS sessions (
     session_id TEXT PRIMARY KEY,
@@ -66,3 +72,4 @@ SELECT
     SUM(cost_eur_cents) / 100.0 as total_cost_eur
 FROM sessions
 GROUP BY DATE(start_time);
+`;
