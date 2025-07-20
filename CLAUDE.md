@@ -23,8 +23,8 @@ LiveGraphs Static is a Next.js-based web application for visualizing chatbot con
 ### Development
 
 ```bash
-pnpm dev          # Run Next.js dev server (http://localhost:3000)
-pnpm dev:turbo    # Run with Turbopack (experimental faster bundler)
+pnpm dev          # Run Next.js dev server (http://localhost:3000) The user usually has it running in the background
+pnpm dev:turbo    # Run with Turbopack (experimental faster bundler, kinda broken)
 ```
 
 ### Build & Production
@@ -37,11 +37,12 @@ pnpm start        # Serve static files using 'serve' package
 ### Code Quality
 
 ```bash
-pnpm lint         # Run Next.js linting
-pnpm lint:strict  # Run Biome checks
-pnpm format       # Format code with Biome
-pnpm type-check   # TypeScript type checking
-pnpm validate     # Run all checks (lint, format, type-check)
+pnpm lint                # Run Next.js linting (eslint)
+pnpm lint:strict         # Run Biome checks
+pnpm lint:strict --write # Run Biome checks and fix the fixable issues
+pnpm format              # Format code with Biome
+pnpm type-check          # TypeScript type checking
+pnpm validate            # Run all checks (lint, lint:strict, format:check, type-check)
 ```
 
 ### Testing
@@ -214,4 +215,5 @@ GitHub Actions workflows:
 ### Branding
 
 - Logo component at `/components/Logo.tsx` - reusable SVG with theme support
-- Favicons in `/public/notsoAI-{black,white}.svg` for static export compatibility
+- Logo as SVG in `/public/notso-{black,white}.svg`
+- Favicons in `/public/favicon{,16,32,64,128,256}{,x}{,16,32,64,128,256}.{svg,png}` for static export compatibility

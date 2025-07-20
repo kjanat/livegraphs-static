@@ -19,12 +19,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AnalyticsChart } from "@/components/charts/AnalyticsChart";
-import { BubbleChart } from "@/components/charts/BubbleChart";
+import { CostAnalysisChart } from "@/components/charts/CostAnalysisChart";
+import { DailyCostTrendChart } from "@/components/charts/DailyCostTrendChart";
 import { GaugeChart } from "@/components/charts/GaugeChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
-import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { LanguageDistributionChart } from "@/components/charts/LanguageDistributionChart";
+import { PerformanceTrendsChart } from "@/components/charts/PerformanceTrendsChart";
+import { ResolutionStatusChart } from "@/components/charts/ResolutionStatusChart";
+import { SentimentDistributionChart } from "@/components/charts/SentimentDistributionChart";
+import { SessionsByCountryChart } from "@/components/charts/SessionsByCountryChart";
+import { TopCategoriesChart } from "@/components/charts/TopCategoriesChart";
+import { TopQuestionsSection } from "@/components/charts/TopQuestionsSection";
 import { DarkModeTest } from "@/components/DarkModeTest";
 import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import Logo from "@/components/Logo";
@@ -37,7 +43,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
 import { generateSampleData } from "@/lib/sampleData";
 import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
-import { getChartColors, hexToRgba } from "@/lib/utils/chartColors";
+import { getChartColors } from "@/lib/utils/chartColors";
 import { validateSessionData } from "@/lib/validation/schema";
 
 export default function Home() {
@@ -359,41 +365,16 @@ export default function Home() {
               >
                 {/* Primary Insights Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                  <AnalyticsChart
-                    type="doughnut"
-                    title="Sentiment Distribution"
+                  <SentimentDistributionChart
                     data={{
                       labels: chartData.sentiment_labels,
-                      datasets: [
-                        {
-                          label: "Sessions",
-                          data: chartData.sentiment_values,
-                          backgroundColor: chartData.sentiment_labels.map((label) => {
-                            if (label === "Positive") return colors.green;
-                            if (label === "Negative") return colors.red;
-                            if (label === "Neutral") return colors.yellow;
-                            return colors.blue;
-                          })
-                        }
-                      ]
+                      values: chartData.sentiment_values
                     }}
                   />
-                  <AnalyticsChart
-                    type="doughnut"
-                    title="Resolution Status"
+                  <ResolutionStatusChart
                     data={{
                       labels: chartData.resolution_labels,
-                      datasets: [
-                        {
-                          label: "Sessions",
-                          data: chartData.resolution_values,
-                          backgroundColor: chartData.resolution_labels.map((label) => {
-                            if (label === "Resolved") return colors.green;
-                            if (label === "Escalated") return colors.red;
-                            return colors.blue;
-                          })
-                        }
-                      ]
+                      values: chartData.resolution_values
                     }}
                   />
                   <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
@@ -401,59 +382,11 @@ export default function Home() {
 
                 {/* Time Series Analysis */}
                 <div className="mb-8">
-                  <MultiLineChart
-                    title="Performance Trends Over Time"
-                    labels={chartData.dates_labels}
-                    datasets={[
-                      {
-                        label: "Sessions",
-                        data: chartData.dates_values,
-                        borderColor: colors.blue,
-                        backgroundColor: hexToRgba(colors.blue, 0.25),
-                        fill: true
-                      },
-                      {
-                        label: "Avg Response Time (sec)",
-                        data: chartData.response_time_values,
-                        borderColor: colors.yellow,
-                        yAxisID: "y1"
-                      }
-                    ]}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      interaction: {
-                        mode: "index" as const,
-                        intersect: false
-                      },
-                      scales: {
-                        x: {
-                          grid: {
-                            display: false
-                          }
-                        },
-                        y: {
-                          type: "linear" as const,
-                          display: true,
-                          position: "left" as const,
-                          title: {
-                            display: true,
-                            text: "Number of Sessions"
-                          }
-                        },
-                        y1: {
-                          type: "linear" as const,
-                          display: true,
-                          position: "right" as const,
-                          title: {
-                            display: true,
-                            text: "Response Time (sec)"
-                          },
-                          grid: {
-                            drawOnChartArea: false
-                          }
-                        }
-                      }
+                  <PerformanceTrendsChart
+                    data={{
+                      dates_labels: chartData.dates_labels,
+                      dates_values: chartData.dates_values,
+                      response_time_values: chartData.response_time_values
                     }}
                   />
                 </div>
@@ -465,76 +398,29 @@ export default function Home() {
 
                 {/* Geographic & Language Insights */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                  <AnalyticsChart
-                    type="bar"
-                    title="Sessions by Country"
+                  <SessionsByCountryChart
                     data={{
                       labels: chartData.country_labels,
-                      datasets: [
-                        {
-                          label: "Sessions",
-                          data: chartData.country_values,
-                          backgroundColor: colors.blue
-                        }
-                      ]
-                    }}
-                    options={{
-                      indexAxis: "y" as const,
-                      scales: {
-                        x: {
-                          beginAtZero: true
-                        }
-                      }
+                      values: chartData.country_values
                     }}
                   />
-                  <AnalyticsChart
-                    type="bar"
-                    title="Language Distribution"
+                  <LanguageDistributionChart
                     data={{
                       labels: chartData.language_labels,
-                      datasets: [
-                        {
-                          label: "Sessions",
-                          data: chartData.language_values,
-                          backgroundColor: colors.green
-                        }
-                      ]
-                    }}
-                    options={{
-                      scales: {
-                        y: {
-                          beginAtZero: true
-                        }
-                      }
+                      values: chartData.language_values
                     }}
                   />
                 </div>
 
                 {/* Category Analysis */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                  <AnalyticsChart
-                    type="bar"
-                    title="Top Categories"
+                  <TopCategoriesChart
                     data={{
-                      labels: chartData.category_labels.slice(0, 8),
-                      datasets: [
-                        {
-                          label: "Sessions",
-                          data: chartData.category_values.slice(0, 8),
-                          backgroundColor: colors.purple
-                        }
-                      ]
-                    }}
-                    options={{
-                      indexAxis: "y" as const,
-                      scales: {
-                        x: {
-                          beginAtZero: true
-                        }
-                      }
+                      labels: chartData.category_labels,
+                      values: chartData.category_values
                     }}
                   />
-                  <BubbleChart data={chartData.category_costs} title="Cost Analysis by Category" />
+                  <CostAnalysisChart data={chartData.category_costs} />
                 </div>
 
                 {/* Performance Distributions */}
@@ -557,50 +443,21 @@ export default function Home() {
 
                 {/* Cost Analysis */}
                 <div className="mb-8">
-                  <MultiLineChart
-                    title="Daily Cost Trend"
-                    labels={chartData.cost_dates}
-                    datasets={[
-                      {
-                        label: "Daily Cost (€)",
-                        data: chartData.cost_values,
-                        borderColor: colors.yellow,
-                        backgroundColor: hexToRgba(colors.yellow, 0.25),
-                        fill: true
-                      }
-                    ]}
-                    options={{
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            callback: (value) => `€${Number(value).toFixed(2)}`
-                          }
-                        }
-                      }
+                  <DailyCostTrendChart
+                    data={{
+                      dates: chartData.cost_dates,
+                      values: chartData.cost_values
                     }}
                   />
                 </div>
 
                 {/* Top Questions */}
-                {chartData.questions_labels.length > 0 && (
-                  <div className="bg-card rounded-lg shadow-md p-6 mb-8 transition-all duration-200 hover:shadow-lg">
-                    <h3 className="text-xl font-bold mb-4">Top Questions</h3>
-                    <div className="space-y-3">
-                      {chartData.questions_labels.map((question, index) => (
-                        <div
-                          key={`question-${index}-${question.slice(0, 20)}`}
-                          className="flex justify-between items-center p-3 bg-secondary rounded transition-colors hover:bg-secondary/80"
-                        >
-                          <span className="flex-1 mr-4">{question}</span>
-                          <span className="text-muted-foreground font-semibold whitespace-nowrap">
-                            {chartData.questions_values[index]} times
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <TopQuestionsSection
+                  data={{
+                    labels: chartData.questions_labels,
+                    values: chartData.questions_values
+                  }}
+                />
               </section>
             );
           })()}
