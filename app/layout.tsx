@@ -26,15 +26,14 @@ export const metadata: Metadata = {
   description: "Visualize and analyze chatbot conversation data with interactive charts",
   icons: {
     icon: [
-      {
-        url: "notso-black.svg",
-        media: "(prefers-color-scheme: light)"
-      },
-      {
-        url: "notso-white.svg",
-        media: "(prefers-color-scheme: dark)"
-      }
-    ]
+      { url: "./favicon.svg", type: "image/svg+xml" },
+      { url: "./favicon-256x256.png", sizes: "256x256" },
+      { url: "./favicon-128x128.png", sizes: "128x128" },
+      { url: "./favicon-64x64.png", sizes: "64x64" },
+      { url: "./favicon-32x32.png", sizes: "32x32" },
+      { url: "./favicon-16x16.png", sizes: "16x16" }
+    ],
+    apple: [{ url: "./apple-touch-icon.png", sizes: "180x180" }]
   }
 };
 

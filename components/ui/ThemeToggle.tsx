@@ -12,13 +12,10 @@ export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () => {
-    if (theme === "light") {
-      setTheme("dark");
-    } else if (theme === "dark") {
-      setTheme("system");
-    } else {
-      setTheme("light");
-    }
+    const themeOrder = ["light", "dark", "system"] as const;
+    const currentIndex = themeOrder.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    setTheme(themeOrder[nextIndex]);
   };
 
   return (

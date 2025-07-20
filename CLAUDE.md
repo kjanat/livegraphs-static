@@ -8,13 +8,13 @@ LiveGraphs Static is a Next.js-based web application for visualizing chatbot con
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.4.1 with React 19.1.0
-- **Language**: TypeScript 5.8.3
+- **Framework**: Next.js ≥ 15 with React ≥ 19
+- **Language**: TypeScript ≥ 5.8
 - **Database**: SQL.js (in-browser SQLite)
-- **Charts**: Chart.js 4.5.0, React-ChartJS-2, Nivo
+- **Charts**: Chart.js ≥ 4, React-ChartJS-2, Nivo
 - **Styling**: Tailwind CSS v4
 - **Package Manager**: pnpm v10
-- **Node Version**: 22.x (20.x also supported)
+- **Node Version**: 24 (22 also supported)
 - **Testing**: Vitest with React Testing Library
 - **Code Quality**: Biome (formatter/linter), ESLint, Husky, lint-staged
 
@@ -125,10 +125,24 @@ Expected structure (validated by Zod):
     avg_response_time: number
     tokens_eur: number
     rating?: number
-    ip_address?: string
+    ip_address?: string  // ⚠️ PII - See privacy notice below
   }>
 }
 ```
+
+### ⚠️ Privacy & Compliance Notice for `ip_address` Field
+
+The `ip_address` field contains **Personally Identifiable Information (PII)** subject to GDPR, CCPA, and other privacy regulations:
+
+- **Collection**: Should be optional and require explicit user consent
+- **Anonymization**: Consider storing only a hash or partial IP (e.g., `192.168.x.x`)
+- **Processing**: Anonymization should occur BEFORE data enters the application:
+  - Best: Anonymize in the data source before export
+  - Alternative: Add anonymization in `lib/validation/schema.ts` during import
+- **Retention**: Define and document retention policy (e.g., 90 days)
+- **Access Control**: Ensure proper access controls for any stored IP data
+
+**Recommendation**: Unless IP addresses are essential for analytics, consider removing this field entirely or replacing with anonymized geographic data (country/region only).
 
 ## Testing Strategy
 

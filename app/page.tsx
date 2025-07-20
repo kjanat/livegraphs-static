@@ -25,6 +25,7 @@ import { GaugeChart } from "@/components/charts/GaugeChart";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
 import { MultiLineChart } from "@/components/charts/MultiLineChart";
+import { DarkModeTest } from "@/components/DarkModeTest";
 import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
@@ -605,6 +606,7 @@ export default function Home() {
           <EmptyState onSampleData={handleLoadSampleData} />
         )}
       </div>
+      <DarkModeTest />
     </main>
   );
 }

@@ -118,9 +118,9 @@ export function BubbleChart({ data, title = "Cost Analysis by Category" }: Bubbl
   return (
     <div className="bg-card rounded-lg shadow-md p-6">
       <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <div className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         Bubble size represents number of sessions
-      </div>
+      </p>
       <div className="relative h-96">
         <Bubble data={chartData} options={options} />
       </div>

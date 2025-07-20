@@ -6,17 +6,31 @@
 
 "use client";
 
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface FullscreenModalProps {
   isOpen: boolean;
   onClose: () => void; // Parent components should wrap this with useCallback to prevent unnecessary re-renders
   children: ReactNode;
   title?: string;
+  triggerRef?: React.RefObject<HTMLElement>; // Reference to the element that triggered the modal
 }
 
-export function FullscreenModal({ isOpen, onClose, children, title }: FullscreenModalProps) {
+export function FullscreenModal({
+  isOpen,
+  onClose,
+  children,
+  title,
+  triggerRef
+}: FullscreenModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstFocusableRef = useRef<HTMLElement | null>(null);
+
+  // Use focus trap hook to manage focus within the modal
+  useFocusTrap(modalRef, isOpen);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -26,14 +40,41 @@ export function FullscreenModal({ isOpen, onClose, children, title }: Fullscreen
       }
     };
 
+    // Focus management when modal opens
+    const focusFirstElement = () => {
+      if (!modalRef.current) return;
+
+      // Find the first focusable element
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (focusableElements.length > 0) {
+        const firstElement = focusableElements[0] as HTMLElement;
+        firstFocusableRef.current = firstElement;
+        firstElement.focus();
+      }
+    };
+
+    // Capture the trigger element reference to avoid stale closure
+    const triggerElement = triggerRef?.current;
+
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
+
+    // Focus the first element after a brief delay to ensure modal is rendered
+    setTimeout(focusFirstElement, 100);
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
+
+      // Restore focus to trigger element when modal closes
+      if (triggerElement) {
+        triggerElement.focus();
+      }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, triggerRef]);
 
   if (!isOpen) return null;
 
@@ -45,6 +86,7 @@ export function FullscreenModal({ isOpen, onClose, children, title }: Fullscreen
       aria-label="Close modal backdrop"
     >
       <div
+        ref={modalRef}
         className="fixed inset-4 sm:inset-8 bg-card rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}

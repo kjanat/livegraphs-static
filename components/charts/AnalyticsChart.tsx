@@ -74,7 +74,7 @@ const ChartComponent = <T extends ChartType>({
 export const AnalyticsChart = ({ type, data, options, title }: AnalyticsChartProps) => {
   return (
     <div className="bg-card rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <h3 className="text-xl font-bold mb-4 text-card-foreground">{title}</h3>
       <div className="relative h-96">
         <ChartComponent type={type} data={data} options={options} />
       </div>

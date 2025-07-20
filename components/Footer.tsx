@@ -4,39 +4,41 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+export function FooterLink({
+  href,
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary hover:text-primary/80 underline transition-colors"
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function Footer() {
+  const year = new Date().getFullYear();
   return (
     <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground">
       <div className="container mx-auto px-4">
         <p className="mb-2">
-          © 2025 Kaj Kowalski - Licensed under{" "}
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 underline transition-colors"
-          >
-            AGPLv3
-          </a>
+          © {year} Kaj Kowalski - Licensed under{" "}
+          <FooterLink href="https://www.gnu.org/licenses/agpl-3.0.html">AGPLv3</FooterLink>
         </p>
         <p>
-          <a
-            href="https://github.com/kjanat/livegraphs-static"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 underline transition-colors"
-          >
+          <FooterLink href="https://github.com/kjanat/livegraphs-static">
             View Source Code
-          </a>
+          </FooterLink>
           {" | "}
-          <a
-            href="https://github.com/kjanat/livegraphs-static/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 underline transition-colors"
-          >
+          <FooterLink href="https://github.com/kjanat/livegraphs-static/issues">
             Report Issues
-          </a>
+          </FooterLink>
         </p>
       </div>
     </footer>

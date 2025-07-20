@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   *,
   ::before,
@@ -9,6 +11,7 @@
 }
 
 :root {
+  color-scheme: light dark;
   --background: #ffffff;
   --foreground: #171717;
   --card: #ffffff;
@@ -67,32 +70,13 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --radius: var(--radius);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #1a1a1a;
-    --card-foreground: #ededed;
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --secondary: #262626;
-    --secondary-foreground: #ededed;
-    --muted: #262626;
-    --muted-foreground: #a3a3a3;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --destructive: #dc2626;
-    --destructive-foreground: #ffffff;
-    --border: #404040;
-    --input: #404040;
-    --ring: #3b82f6;
-  }
-}
+/* Media query removed - dark mode is now handled entirely by the .dark class */
 
 body {
   background: var(--background);
@@ -137,8 +121,8 @@ body {
   animation: slideIn var(--animation-duration, 0.3s) ease-out;
 }
 
-.keyboard-navigation *:focus {
-  outline: 2px solid var(--ring);
+.keyboard-navigation :focus-visible {
+  outline: 2px solid var(--ring, #0066cc);
   outline-offset: 2px;
 }
 

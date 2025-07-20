@@ -22,6 +22,35 @@
 
 import { type RefObject, useCallback, useEffect } from "react";
 
+// Throttle utility function for performance optimization
+function throttle<Args extends readonly unknown[], Return>(
+  func: (...args: Args) => Return,
+  limit: number
+): (...args: Args) => void {
+  let inThrottle: boolean;
+  return (...args: Args) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+// Debounce utility function for performance optimization
+function debounce<Args extends readonly unknown[], Return>(
+  func: (...args: Args) => Return,
+  delay: number
+): (...args: Args) => void {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+}
+
 export interface KeyboardNavigationOptions {
   // Element refs or selectors for keyboard shortcuts
   uploadRef?: RefObject<HTMLInputElement> | string;
@@ -119,12 +148,16 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
       document.body.classList.remove("keyboard-navigation");
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleMouseDown);
+    // Apply performance optimizations
+    const throttledKeyDown = throttle(handleKeyDown, 100); // Throttle to max 10 calls per second
+    const debouncedMouseDown = debounce(handleMouseDown, 50); // Debounce with 50ms delay
+
+    document.addEventListener("keydown", throttledKeyDown);
+    document.addEventListener("mousedown", debouncedMouseDown);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", throttledKeyDown);
+      document.removeEventListener("mousedown", debouncedMouseDown);
     };
   }, [
     uploadRef,
@@ -137,9 +170,3 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
     onShortcut
   ]);
 }
-
-// Add to globals.css:
-// .keyboard-navigation *:focus {
-//   outline: 2px solid var(--ring);
-//   outline-offset: 2px;
-// }

@@ -15,6 +15,15 @@ interface GaugeChartProps {
   label?: string;
 }
 
+function GaugeCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-card rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 export function GaugeChart({
   value,
   max = 5,
@@ -106,16 +115,14 @@ export function GaugeChart({
 
   if (value === null) {
     return (
-      <div className="bg-card rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <GaugeCard title={title}>
         <div className="text-center text-muted-foreground py-12">No rating data available</div>
-      </div>
+      </GaugeCard>
     );
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
+    <GaugeCard title={title}>
       <canvas
         ref={canvasRef}
         width={300}
@@ -123,6 +130,6 @@ export function GaugeChart({
         className="w-full"
         style={{ maxWidth: "300px", margin: "0 auto", display: "block" }}
       />
-    </div>
+    </GaugeCard>
   );
 }

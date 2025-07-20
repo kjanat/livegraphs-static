@@ -51,6 +51,9 @@ interface SqlDatabase {
   iterateStatements(sql: string): Generator<string, void, unknown>;
 }
 
+// Configurable CDN URL - can be overridden via environment variable
+const SQL_JS_CDN_URL = process.env.NEXT_PUBLIC_SQL_JS_CDN_URL || "https://sql.js.org/dist";
+
 let SQL: SqlJsStatic | null = null;
 let db: SqlDatabase | null = null;
 
@@ -69,15 +72,32 @@ export function useDatabase() {
 
             if (!initSqlJs) {
               // Load sql.js script from CDN
+              const script = document.createElement("script");
+              script.src = `${SQL_JS_CDN_URL}/sql-wasm.js`;
+
               await new Promise<void>((resolve, reject) => {
-                const script = document.createElement("script");
-                script.src = "https://sql.js.org/dist/sql-wasm.js";
-                script.onload = () => resolve();
-                script.onerror = () => reject(new Error("Failed to load sql.js from CDN"));
+                script.onload = () => {
+                  // Clean up script element after successful load
+                  script.onload = null;
+                  script.onerror = null;
+                  resolve();
+                };
+                script.onerror = () => {
+                  // Clean up script element on error
+                  script.onload = null;
+                  script.onerror = null;
+                  document.head.removeChild(script);
+                  reject(new Error("Failed to load sql.js from CDN"));
+                };
                 document.head.appendChild(script);
               });
 
               initSqlJs = window.initSqlJs;
+
+              // Remove script element after successful initialization
+              if (script.parentNode) {
+                document.head.removeChild(script);
+              }
             }
 
             if (!initSqlJs) {
@@ -85,7 +105,7 @@ export function useDatabase() {
             }
 
             SQL = await initSqlJs({
-              locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+              locateFile: (file: string) => `${SQL_JS_CDN_URL}/${file}`
             });
           } else {
             throw new Error("sql.js can only be initialized in browser environment");
