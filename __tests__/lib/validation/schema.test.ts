@@ -46,7 +46,13 @@ describe("ChatSessionSchema", () => {
   describe("Valid session validation", () => {
     it("should validate a complete valid session", () => {
       const result = ChatSessionSchema.parse(validSession);
-      expect(result).toEqual(validSession);
+      expect(result).toEqual({
+        ...validSession,
+        user: {
+          ...validSession.user,
+          ip: "ANONYMIZED" // IP is transformed since "hash123" is not a valid IP format
+        }
+      });
     });
 
     it("should validate session without optional user_rating", () => {
@@ -54,8 +60,27 @@ describe("ChatSessionSchema", () => {
       delete sessionWithoutRating.user_rating;
 
       const result = ChatSessionSchema.parse(sessionWithoutRating);
-      expect(result).toEqual(sessionWithoutRating);
+      expect(result).toEqual({
+        ...sessionWithoutRating,
+        user: {
+          ...sessionWithoutRating.user,
+          ip: "ANONYMIZED" // IP is transformed since "hash123" is not a valid IP format
+        }
+      });
       expect(result.user_rating).toBeUndefined();
+    });
+
+    it("should anonymize real IP addresses", () => {
+      const sessionWithRealIP = {
+        ...validSession,
+        user: {
+          ...validSession.user,
+          ip: "192.168.1.100"
+        }
+      };
+
+      const result = ChatSessionSchema.parse(sessionWithRealIP);
+      expect(result.user.ip).toBe("192.168.XXX.XXX");
     });
 
     it("should validate all sentiment values", () => {
@@ -241,7 +266,15 @@ describe("validateSessionData", () => {
   it("should validate and return valid data", () => {
     const data = [validSession];
     const result = validateSessionData(data);
-    expect(result).toEqual(data);
+    expect(result).toEqual([
+      {
+        ...validSession,
+        user: {
+          ...validSession.user,
+          ip: "ANONYMIZED" // IP is transformed since "hash123" is not a valid IP format
+        }
+      }
+    ]);
   });
 
   it("should throw formatted error for validation failures", () => {

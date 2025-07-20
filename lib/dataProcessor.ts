@@ -18,6 +18,23 @@ interface SqlDatabase {
   exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
 }
 
+// Type guards for safer type assertions
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && !Number.isNaN(value);
+}
+
+function safeString(value: unknown, defaultValue = ""): string {
+  return isString(value) ? value : defaultValue;
+}
+
+function safeNumber(value: unknown, defaultValue = 0): number {
+  return isNumber(value) ? value : defaultValue;
+}
+
 export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): Promise<Metrics> {
   // Get basic metrics
   const stmt = db.prepare(`
@@ -38,12 +55,12 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
 
   const metrics = metricsRow
     ? [
-        metricsRow.total_conversations,
-        metricsRow.unique_users,
-        metricsRow.avg_conversation_minutes,
-        metricsRow.avg_response_seconds,
-        metricsRow.resolved_percentage,
-        metricsRow.avg_daily_cost
+        metricsRow.total_conversations ?? 0,
+        metricsRow.unique_users ?? 0,
+        metricsRow.avg_conversation_minutes ?? 0,
+        metricsRow.avg_response_seconds ?? 0,
+        metricsRow.resolved_percentage ?? 0,
+        metricsRow.avg_daily_cost ?? 0
       ]
     : [0, 0, 0, 0, 0, 0];
 
@@ -100,8 +117,8 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
     GROUP BY sentiment
   `);
 
-  const sentiment_labels = sentimentData.map((row) => capitalizeFirst(row.sentiment as string));
-  const sentiment_values = sentimentData.map((row) => row.count as number);
+  const sentiment_labels = sentimentData.map((row) => capitalizeFirst(safeString(row.sentiment)));
+  const sentiment_values = sentimentData.map((row) => safeNumber(row.count));
 
   // Resolution data
   const resolutionData = executeQuery(`
@@ -117,8 +134,8 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
     GROUP BY status
   `);
 
-  const resolution_labels = resolutionData.map((row) => row.status as string);
-  const resolution_values = resolutionData.map((row) => row.count as number);
+  const resolution_labels = resolutionData.map((row) => safeString(row.status));
+  const resolution_values = resolutionData.map((row) => safeNumber(row.count));
 
   // Category data
   const categoryData = executeQuery(`
@@ -130,8 +147,8 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
     ORDER BY count DESC
   `);
 
-  const category_labels = categoryData.map((row) => row.category as string);
-  const category_values = categoryData.map((row) => row.count as number);
+  const category_labels = categoryData.map((row) => safeString(row.category));
+  const category_values = categoryData.map((row) => safeNumber(row.count));
 
   // Top questions
   const questionsData = executeQuery(`
@@ -144,7 +161,11 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
     LIMIT 5
   `);
 
-  const questions_labels = questionsData.map((row) => truncateText(row.question as string, 50));
+  const questions_labels = questionsData.map((row) => {
+    const question = safeString(row.question);
+    const escaped = question.replace(/[<>]/g, ""); // Remove HTML tags
+    return truncateText(escaped, 50);
+  });
   const questions_values = questionsData.map((row) => row.count as number);
 
   // Time series data
@@ -400,8 +421,11 @@ export function exportToCSV(db: SqlDatabase, dateRange: DateRange): string {
       .map((col) => {
         const val = row[col];
         if (val === null || val === undefined) return "";
-        if (typeof val === "string" && val.includes(",")) {
-          return `"${val.replace(/"/g, '""')}"`;
+        if (typeof val === "string") {
+          // Quote fields that contain commas, quotes, or newlines
+          if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
         }
         return val;
       })

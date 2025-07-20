@@ -27,7 +27,20 @@ const MessageMetricsSchema = z.object({
 });
 
 const UserInfoSchema = z.object({
-  ip: z.string(),
+  ip: z.string().transform((ip) => {
+    // Anonymize IP address for privacy compliance
+    const parts = ip.split(".");
+    if (parts.length === 4) {
+      // IPv4: Keep first two octets, anonymize last two
+      return `${parts[0]}.${parts[1]}.XXX.XXX`;
+    }
+    // IPv6: Keep first 48 bits (3 groups)
+    const v6Parts = ip.split(":");
+    if (v6Parts.length > 3) {
+      return `${v6Parts.slice(0, 3).join(":")}:XXXX:XXXX:XXXX:XXXX:XXXX`;
+    }
+    return "ANONYMIZED";
+  }),
   country: z.string(),
   language: z.string()
 });

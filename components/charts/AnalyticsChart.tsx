@@ -21,6 +21,7 @@ import {
   TimeScale,
   Tooltip
 } from "chart.js";
+import { memo } from "react";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 
 // Register all necessary Chart.js components
@@ -71,7 +72,7 @@ const ChartComponent = <T extends ChartType>({
   }
 };
 
-export const AnalyticsChart = ({ type, data, options, title }: AnalyticsChartProps) => {
+export const AnalyticsChart = memo(({ type, data, options, title }: AnalyticsChartProps) => {
   return (
     <div className="bg-card rounded-lg shadow-md p-6">
       <h3 className="text-xl font-bold mb-4 text-card-foreground">{title}</h3>
@@ -80,4 +81,6 @@ export const AnalyticsChart = ({ type, data, options, title }: AnalyticsChartPro
       </div>
     </div>
   );
-};
+});
+
+AnalyticsChart.displayName = "AnalyticsChart";

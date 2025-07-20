@@ -102,7 +102,7 @@ describe("AnalyticsChart", () => {
     );
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.className).toContain("bg-white");
+    expect(wrapper.className).toContain("bg-card");
     expect(wrapper.className).toContain("rounded-lg");
     expect(wrapper.className).toContain("shadow-md");
   });

@@ -165,7 +165,27 @@ export function useDatabase() {
       binary += String.fromCharCode.apply(null, Array.from(chunk));
     }
 
-    localStorage.setItem("livegraphs_db", btoa(binary));
+    const encoded = btoa(binary);
+
+    // Check localStorage quota (5MB typical limit)
+    const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5MB to leave some buffer
+    if (encoded.length > MAX_SIZE) {
+      console.warn(
+        `Database size (${(encoded.length / 1024 / 1024).toFixed(2)}MB) exceeds safe localStorage limit`
+      );
+      // Consider implementing IndexedDB fallback here
+      return;
+    }
+
+    try {
+      localStorage.setItem("livegraphs_db", encoded);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "QuotaExceededError") {
+        console.error("LocalStorage quota exceeded. Consider using IndexedDB.");
+        // Optionally clear old data or implement cleanup strategy
+      }
+      throw e;
+    }
   }, []);
 
   // Define insertSessionSync for use in loadSessionsFromJSON
