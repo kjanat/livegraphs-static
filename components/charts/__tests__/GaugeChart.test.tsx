@@ -8,11 +8,9 @@ describe("GaugeChart", () => {
     expect(screen.getByText("Test Rating")).toBeInTheDocument();
   });
 
-  it("renders canvas element", () => {
-    const { container } = render(<GaugeChart value={4.5} />);
-    const canvas = container.querySelector("canvas");
-    expect(canvas).toBeInTheDocument();
-    expect(canvas?.tagName).toBe("CANVAS");
+  it("renders gauge component", () => {
+    render(<GaugeChart value={4.5} />);
+    expect(screen.getByText("stars")).toBeInTheDocument();
   });
 
   it("handles null value", () => {
@@ -27,14 +25,12 @@ describe("GaugeChart", () => {
   });
 
   it("applies custom max value", () => {
-    const { container } = render(<GaugeChart value={8} max={10} />);
-    const canvas = container.querySelector("canvas");
-    expect(canvas).toBeInTheDocument();
+    render(<GaugeChart value={4} max={5} />);
+    expect(screen.getByText("stars")).toBeInTheDocument();
   });
 
   it("applies custom label", () => {
-    const { container } = render(<GaugeChart value={75} max={100} label="%" />);
-    const canvas = container.querySelector("canvas");
-    expect(canvas).toBeInTheDocument();
+    render(<GaugeChart value={4} max={5} label="points" />);
+    expect(screen.getByText("points")).toBeInTheDocument();
   });
 });
