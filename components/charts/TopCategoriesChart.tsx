@@ -48,9 +48,14 @@ export function TopCategoriesChart({ data, limit = 8 }: TopCategoriesChartProps)
     );
   }
 
-  const barData = data.labels.slice(0, limit).map((label, index) => ({
+  // Slice both arrays to the same limit to ensure indices align
+  const maxLength = Math.min(data.labels.length, data.values.length, limit);
+  const slicedLabels = data.labels.slice(0, maxLength);
+  const slicedValues = data.values.slice(0, maxLength);
+
+  const barData = slicedLabels.map((label, index) => ({
     category: label,
-    sessions: data.values[index]
+    sessions: slicedValues[index] ?? 0 // Use nullish coalescing to handle undefined values
   }));
 
   return (

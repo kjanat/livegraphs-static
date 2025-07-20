@@ -14,8 +14,20 @@ interface TopQuestionsSectionProps {
 }
 
 export function TopQuestionsSection({ data }: TopQuestionsSectionProps) {
-  if (data.labels.length === 0) {
+  // Validate that both arrays exist and have data
+  if (!data.labels || !data.values || data.labels.length === 0) {
     return null;
+  }
+
+  // Validate that labels and values arrays have equal length
+  if (data.labels.length !== data.values.length) {
+    console.error("TopQuestionsSection: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 mb-8">
+        <h3 className="text-xl font-bold mb-4">Top Questions</h3>
+        <p className="text-muted-foreground">Unable to display questions: Invalid data format</p>
+      </div>
+    );
   }
 
   return (
@@ -29,7 +41,7 @@ export function TopQuestionsSection({ data }: TopQuestionsSectionProps) {
           >
             <span className="flex-1 mr-4">{question}</span>
             <span className="text-muted-foreground font-semibold whitespace-nowrap">
-              {data.values[index]} times
+              {data.values[index] ?? 0} times
             </span>
           </div>
         ))}

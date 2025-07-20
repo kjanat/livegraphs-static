@@ -45,12 +45,14 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
     );
   }
 
-  const pieData = data.labels.map((label, index) => ({
-    id: label,
-    label: label,
-    value: data.values[index],
-    color: getColorForSentiment(label)
-  }));
+  const pieData = data.labels
+    .map((label, index) => ({
+      id: label,
+      label: label,
+      value: data.values[index] ?? 0, // Use nullish coalescing to handle undefined values
+      color: getColorForSentiment(label)
+    }))
+    .filter((item) => item.value > 0); // Filter out items with zero or invalid values
 
   function getColorForSentiment(sentiment: string): string {
     if (sentiment === "Positive") return "#22C55E";

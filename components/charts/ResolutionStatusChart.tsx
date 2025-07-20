@@ -45,10 +45,12 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
     );
   }
 
-  const pieData = data.labels.map((label, index) => ({
+  // Create pieData with safe mapping to prevent undefined values
+  const maxLength = Math.min(data.labels.length, data.values.length);
+  const pieData = data.labels.slice(0, maxLength).map((label, index) => ({
     id: label,
     label: label,
-    value: data.values[index],
+    value: data.values[index] ?? 0, // Use nullish coalescing to handle undefined values
     color: getColorForResolution(label)
   }));
 

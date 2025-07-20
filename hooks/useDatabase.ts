@@ -51,13 +51,14 @@ interface SqlDatabase {
   iterateStatements(sql: string): Generator<string, void, unknown>;
 }
 
-// Configurable CDN URL - can be overridden via environment variable
-const SQL_JS_CDN_URL = process.env.NEXT_PUBLIC_SQL_JS_CDN_URL || "https://sql.js.org/dist";
+// Configurable CDN URL - can be overridden via environment variable or parameter
+const DEFAULT_SQL_JS_CDN_URL = "https://sql.js.org/dist";
 
 let SQL: SqlJsStatic | null = null;
 let db: SqlDatabase | null = null;
 
-export function useDatabase() {
+export function useDatabase(cdnUrl?: string) {
+  const SQL_JS_CDN_URL = cdnUrl || process.env.NEXT_PUBLIC_SQL_JS_CDN_URL || DEFAULT_SQL_JS_CDN_URL;
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -149,7 +150,7 @@ export function useDatabase() {
     if (typeof window !== "undefined") {
       initDb();
     }
-  }, []);
+  }, [SQL_JS_CDN_URL]);
 
   const saveDatabase = useCallback(() => {
     if (!db) return;

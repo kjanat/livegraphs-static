@@ -10,7 +10,16 @@ import { ResponsiveBar } from "@nivo/bar";
 import { useEffect, useState } from "react";
 import { getChartColors } from "@/lib/utils/chartColors";
 
+/**
+ * Props for SessionsByCountryChart component
+ * @interface SessionsByCountryChartProps
+ */
 interface SessionsByCountryChartProps {
+  /**
+   * Chart data containing country labels and corresponding session values
+   * @property {string[]} labels - Array of country names (must match length of values array)
+   * @property {number[]} values - Array of session counts (must match length of labels array)
+   */
   data: {
     labels: string[];
     values: number[];
@@ -47,9 +56,11 @@ export function SessionsByCountryChart({ data }: SessionsByCountryChartProps) {
     );
   }
 
-  const barData = data.labels.map((label, index) => ({
+  // Create barData with safe mapping to prevent undefined values
+  const maxLength = Math.min(data.labels.length, data.values.length);
+  const barData = data.labels.slice(0, maxLength).map((label, index) => ({
     country: label,
-    sessions: data.values[index]
+    sessions: data.values[index] ?? 0 // Use nullish coalescing to handle undefined values
   }));
 
   return (
