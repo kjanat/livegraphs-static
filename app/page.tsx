@@ -387,7 +387,11 @@ export default function Home() {
                         {
                           label: "Sessions",
                           data: chartData.resolution_values,
-                          backgroundColor: [colors.green, colors.red, colors.yellow]
+                          backgroundColor: chartData.resolution_labels.map((label) => {
+                            if (label === "Resolved") return colors.green;
+                            if (label === "Escalated") return colors.red;
+                            return colors.blue;
+                          })
                         }
                       ]
                     }}
