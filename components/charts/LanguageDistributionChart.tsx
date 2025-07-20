@@ -37,14 +37,34 @@ export function LanguageDistributionChart({ data }: LanguageDistributionChartPro
     return () => observer.disconnect();
   }, []);
 
+  // Validate that labels and values arrays have equal length
+  if (!data.labels || !data.values || data.labels.length !== data.values.length) {
+    console.error("LanguageDistributionChart: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
+        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+      </div>
+    );
+  }
+
   const barData = data.labels.map((label, index) => ({
     language: label,
     sessions: data.values[index]
   }));
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">Language Distribution</h3>
+    <div
+      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
+      role="img"
+      aria-labelledby="language-chart-title"
+      aria-describedby="language-chart-desc"
+    >
+      <h3 id="language-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
+        Language Distribution
+      </h3>
+      <div id="language-chart-desc" className="sr-only">
+        Bar chart showing the distribution of chatbot sessions across different languages
+      </div>
       <div className="flex-1" style={{ minHeight: "300px" }}>
         <ResponsiveBar
           data={barData}

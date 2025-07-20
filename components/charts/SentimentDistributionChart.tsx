@@ -35,6 +35,16 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
     return () => observer.disconnect();
   }, []);
 
+  // Validate that labels and values arrays have equal length
+  if (!data.labels || !data.values || data.labels.length !== data.values.length) {
+    console.error("SentimentDistributionChart: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
+        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+      </div>
+    );
+  }
+
   const pieData = data.labels.map((label, index) => ({
     id: label,
     label: label,
@@ -50,8 +60,19 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">Sentiment Distribution</h3>
+    <div
+      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
+      role="img"
+      aria-labelledby="sentiment-chart-title"
+      aria-describedby="sentiment-chart-desc"
+    >
+      <h3 id="sentiment-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
+        Sentiment Distribution
+      </h3>
+      <div id="sentiment-chart-desc" className="sr-only">
+        Donut chart showing the distribution of positive, negative, and neutral sentiment in chatbot
+        sessions
+      </div>
       <div className="flex-1" style={{ minHeight: "300px" }}>
         <ResponsivePie
           data={pieData}

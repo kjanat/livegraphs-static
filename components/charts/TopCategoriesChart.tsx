@@ -38,14 +38,34 @@ export function TopCategoriesChart({ data, limit = 8 }: TopCategoriesChartProps)
     return () => observer.disconnect();
   }, []);
 
+  // Validate that labels and values arrays have equal length
+  if (!data.labels || !data.values || data.labels.length !== data.values.length) {
+    console.error("TopCategoriesChart: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
+        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+      </div>
+    );
+  }
+
   const barData = data.labels.slice(0, limit).map((label, index) => ({
     category: label,
     sessions: data.values[index]
   }));
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">Top Categories</h3>
+    <div
+      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
+      role="img"
+      aria-labelledby="categories-chart-title"
+      aria-describedby="categories-chart-desc"
+    >
+      <h3 id="categories-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
+        Top Categories
+      </h3>
+      <div id="categories-chart-desc" className="sr-only">
+        Horizontal bar chart showing the most common categories of chatbot sessions
+      </div>
       <div className="flex-1" style={{ minHeight: "300px" }}>
         <ResponsiveBar
           data={barData}

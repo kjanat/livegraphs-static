@@ -37,14 +37,34 @@ export function SessionsByCountryChart({ data }: SessionsByCountryChartProps) {
     return () => observer.disconnect();
   }, []);
 
+  // Validate that labels and values arrays have equal length
+  if (!data.labels || !data.values || data.labels.length !== data.values.length) {
+    console.error("SessionsByCountryChart: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
+        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+      </div>
+    );
+  }
+
   const barData = data.labels.map((label, index) => ({
     country: label,
     sessions: data.values[index]
   }));
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">Sessions by Country</h3>
+    <div
+      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
+      role="img"
+      aria-labelledby="country-chart-title"
+      aria-describedby="country-chart-desc"
+    >
+      <h3 id="country-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
+        Sessions by Country
+      </h3>
+      <div id="country-chart-desc" className="sr-only">
+        Horizontal bar chart showing the number of chatbot sessions by country
+      </div>
       <div className="flex-1" style={{ minHeight: "300px" }}>
         <ResponsiveBar
           data={barData}

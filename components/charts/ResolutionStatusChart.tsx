@@ -35,6 +35,16 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
     return () => observer.disconnect();
   }, []);
 
+  // Validate that labels and values arrays have equal length
+  if (!data.labels || !data.values || data.labels.length !== data.values.length) {
+    console.error("ResolutionStatusChart: labels and values arrays must have equal length");
+    return (
+      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
+        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+      </div>
+    );
+  }
+
   const pieData = data.labels.map((label, index) => ({
     id: label,
     label: label,
@@ -49,8 +59,19 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">Resolution Status</h3>
+    <div
+      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
+      role="img"
+      aria-labelledby="resolution-chart-title"
+      aria-describedby="resolution-chart-desc"
+    >
+      <h3 id="resolution-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
+        Resolution Status
+      </h3>
+      <div id="resolution-chart-desc" className="sr-only">
+        Donut chart showing the resolution status of chatbot sessions, including resolved and
+        escalated cases
+      </div>
       <div className="flex-1" style={{ minHeight: "300px" }}>
         <ResponsivePie
           data={pieData}
