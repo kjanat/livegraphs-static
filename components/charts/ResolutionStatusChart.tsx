@@ -18,13 +18,19 @@ interface ResolutionStatusChartProps {
 
 export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains("dark"));
     };
 
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+    };
+
     checkDarkMode();
+    checkMobile();
 
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
@@ -32,7 +38,12 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
       attributeFilter: ["class"]
     });
 
-    return () => observer.disconnect();
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   // Validate that labels and values arrays have equal length
@@ -118,31 +129,35 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
               }
             }
           }}
-          legends={[
-            {
-              anchor: "bottom",
-              direction: "row",
-              justify: false,
-              translateX: 0,
-              translateY: 56,
-              itemsSpacing: 0,
-              itemWidth: 100,
-              itemHeight: 18,
-              itemTextColor: isDarkMode ? "#9ca3af" : "#6b7280",
-              itemDirection: "left-to-right",
-              itemOpacity: 1,
-              symbolSize: 18,
-              symbolShape: "circle",
-              effects: [
-                {
-                  on: "hover",
-                  style: {
-                    itemTextColor: isDarkMode ? "#e5e7eb" : "#1f2937"
+          legends={
+            isMobile
+              ? []
+              : [
+                  {
+                    anchor: "bottom",
+                    direction: "row",
+                    justify: false,
+                    translateX: 0,
+                    translateY: 56,
+                    itemsSpacing: 0,
+                    itemWidth: 100,
+                    itemHeight: 18,
+                    itemTextColor: isDarkMode ? "#9ca3af" : "#6b7280",
+                    itemDirection: "left-to-right",
+                    itemOpacity: 1,
+                    symbolSize: 18,
+                    symbolShape: "circle",
+                    effects: [
+                      {
+                        on: "hover",
+                        style: {
+                          itemTextColor: isDarkMode ? "#e5e7eb" : "#1f2937"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-          ]}
+                ]
+          }
         />
       </div>
     </div>

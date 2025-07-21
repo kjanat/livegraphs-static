@@ -45,6 +45,10 @@ const metricExplanations = {
   "Peak Usage Time": {
     explanation: "The hour of day with the highest conversation volume",
     calculation: "Hour with maximum session count across all days"
+  },
+  "Avg. User Rating": {
+    explanation: "Average satisfaction rating given by users after conversations",
+    calculation: "Sum of all ratings divided by number of rated sessions (1-5 scale)"
   }
 };
 
@@ -86,7 +90,7 @@ export function MetricTooltip({
 
         {/* Tooltip */}
         {isVisible && (
-          <div className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-popover border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
             <div className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>

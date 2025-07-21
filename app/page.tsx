@@ -18,7 +18,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CostAnalysisChart } from "@/components/charts/CostAnalysisChart";
 import { DailyCostTrendChart } from "@/components/charts/DailyCostTrendChart";
@@ -71,6 +71,8 @@ export default function Home() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
 
   useEffect(() => {
     if (isInitialized && !dbError) {
@@ -103,9 +105,11 @@ export default function Home() {
     [db]
   );
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const processFile = async (file: File) => {
+    if (!file || (!file.type.includes("json") && !file.name.endsWith(".json"))) {
+      setUploadError("Please upload a valid JSON file");
+      return;
+    }
 
     setIsUploading(true);
     setUploadError(null);
@@ -137,8 +141,56 @@ export default function Home() {
       console.error(err);
     } finally {
       setIsUploading(false);
-      // Clear the input
-      event.target.value = "";
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    await processFile(file);
+    // Clear the input
+    event.target.value = "";
+  };
+
+  const handleDragEnter = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounter.current++;
+    if (event.dataTransfer.items && event.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    const files = Array.from(event.dataTransfer.files);
+    const jsonFile = files.find(
+      (file) => file.type === "application/json" || file.name.endsWith(".json")
+    );
+
+    if (jsonFile) {
+      await processFile(jsonFile);
+    } else {
+      setUploadError("Please drop a valid JSON file");
     }
   };
 
@@ -196,10 +248,10 @@ export default function Home() {
   return (
     <main id="main-content" className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Logo size={48} className="text-primary" />
-            <h1 className="text-4xl font-bold">Notso AI Dashboard</h1>
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 mb-8">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Logo size={48} className="text-primary flex-shrink-0" />
+            <h1 className="text-2xl sm:text-4xl font-bold">Notso AI Dashboard</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -221,10 +273,21 @@ export default function Home() {
         {isInitialized && (
           <section
             id="upload-section"
-            className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
+            className={`bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg ${
+              isDragging ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : ""
+            }`}
             aria-label="Data upload section"
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
             <h2 className="text-xl sm:text-2xl font-bold mb-4">Upload Data</h2>
+            {isDragging && (
+              <div className="mb-4 p-4 border-2 border-dashed border-primary rounded-lg bg-primary/10 text-center">
+                <p className="text-lg font-medium text-primary">Drop your JSON file here</p>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <label
                 className={`bg-primary text-primary-foreground font-medium py-2 px-4 rounded transition-colors flex items-center gap-2 ${
@@ -515,7 +578,16 @@ export default function Home() {
 
         {/* Empty State */}
         {(!dbStats || dbStats.totalSessions === 0) && isInitialized && (
-          <EmptyState onSampleData={handleLoadSampleData} />
+          <section
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`${isDragging ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""}`}
+            aria-label="Drop zone for JSON files"
+          >
+            <EmptyState onSampleData={handleLoadSampleData} />
+          </section>
         )}
       </div>
     </main>

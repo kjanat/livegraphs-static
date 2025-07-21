@@ -44,7 +44,8 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
       AVG(conversation_duration_seconds) / 60.0 as avg_conversation_minutes,
       AVG(avg_response_time) as avg_response_seconds,
       SUM(CASE WHEN escalated = 0 AND forwarded_hr = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as resolved_percentage,
-      SUM(cost_eur_cents) / 100.0 / COUNT(DISTINCT DATE(start_time)) as avg_daily_cost
+      SUM(cost_eur_cents) / 100.0 / COUNT(DISTINCT DATE(start_time)) as avg_daily_cost,
+      AVG(user_rating) as avg_user_rating
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
   `);
@@ -60,9 +61,10 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
         metricsRow.avg_conversation_minutes ?? 0,
         metricsRow.avg_response_seconds ?? 0,
         metricsRow.resolved_percentage ?? 0,
-        metricsRow.avg_daily_cost ?? 0
+        metricsRow.avg_daily_cost ?? 0,
+        metricsRow.avg_user_rating ?? null
       ]
-    : [0, 0, 0, 0, 0, 0];
+    : [0, 0, 0, 0, 0, 0, null];
 
   // Get peak usage time
   const peakStmt = db.prepare(`
@@ -82,6 +84,10 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
 
   const peakHour = peakRow?.hour || "N/A";
 
+  const avgRating = metrics[6];
+  const formattedRating =
+    avgRating !== null && isNumber(avgRating) ? Number(avgRating.toFixed(1)) : "N/A";
+
   return {
     "Total Conversations": Math.round(metrics[0] as number),
     "Unique Users": Math.round(metrics[1] as number),
@@ -89,7 +95,8 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
     "Avg. Response Time (sec)": Number(((metrics[3] as number) || 0).toFixed(1)),
     "Resolved Chats (%)": Number(((metrics[4] as number) || 0).toFixed(1)),
     "Average Daily Cost (€)": Number(((metrics[5] as number) || 0).toFixed(2)),
-    "Peak Usage Time": peakHour as string
+    "Peak Usage Time": peakHour as string,
+    "Avg. User Rating": formattedRating
   };
 }
 

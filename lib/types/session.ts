@@ -115,4 +115,5 @@ export interface Metrics {
   "Resolved Chats (%)": number;
   "Average Daily Cost (€)": number;
   "Peak Usage Time": string;
+  "Avg. User Rating": number | string;
 }
