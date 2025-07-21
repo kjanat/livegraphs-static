@@ -141,6 +141,33 @@ export function MetricTooltip({
             className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200 select-text"
             style={{ userSelect: "text" }}
           >
+            {/* Close button - only show in click mode */}
+            {isClickMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsVisible(false);
+                  setIsClickMode(false);
+                }}
+                className="absolute top-2 right-2 p-1 rounded hover:bg-secondary transition-colors"
+                aria-label="Close tooltip"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            )}
             <div className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
