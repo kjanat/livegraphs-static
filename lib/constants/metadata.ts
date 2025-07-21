@@ -37,11 +37,13 @@ export const FONT_CONFIG = {
 export const ICON_SIZES = [16, 32, 64, 128, 256] as const;
 
 export const generateMetadata = (): Metadata => ({
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || SITE_CONFIG.url),
   title: SITE_CONFIG.title,
   description: SITE_CONFIG.description,
   keywords: [...SITE_CONFIG.keywords],
   authors: [{ name: SITE_CONFIG.creator }],
   creator: SITE_CONFIG.creator,
+  manifest: "/manifest.json",
   openGraph: {
     type: "website",
     title: SITE_CONFIG.title,

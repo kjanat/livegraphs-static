@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   // Enable strict mode
   reactStrictMode: true,
 
+  // Note: Security headers need to be configured at the hosting level
+  // for static exports (e.g., in nginx, Vercel, Netlify configs)
+  // See: https://nextjs.org/docs/messages/export-no-custom-routes
+
   // Copy schema.sql to public directory during build,
   // enable WebAssembly support and force sql.js to its browser bundle
   webpack: (config, { isServer, webpack }) => {

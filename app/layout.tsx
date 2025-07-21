@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { SkipLinks } from "@/components/ui/SkipLinks";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { generateMetadata } from "@/lib/constants/metadata";
+import { generateViewport } from "@/lib/constants/viewport";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,6 +24,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = generateMetadata();
+export const viewport = generateViewport();
 
 export default function RootLayout({
   children
