@@ -162,10 +162,9 @@ export function calculateMetricTrends(chartData: ChartData, useWeekOverWeek = tr
 /**
  * Format trend value for display
  * @param trend The trend object
- * @param metric The metric type for context-specific formatting
  * @returns Formatted string for display
  */
-export function formatTrendText(trend: TrendResult | undefined, metric: string): string {
+export function formatTrendText(trend: TrendResult | undefined): string {
   if (!trend) return "";
 
   const arrow = trend.isPositive ? "↑" : "↓";

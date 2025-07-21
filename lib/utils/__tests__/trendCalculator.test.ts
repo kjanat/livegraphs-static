@@ -167,23 +167,23 @@ describe("trendCalculator", () => {
   describe("formatTrendText", () => {
     it("should format positive trends correctly", () => {
       const trend = { value: 25, isPositive: true };
-      expect(formatTrendText(trend, "totalConversations")).toBe("↑ +25%");
+      expect(formatTrendText(trend)).toBe("↑ +25%");
     });
 
     it("should format negative trends correctly", () => {
       const trend = { value: 15, isPositive: false };
-      expect(formatTrendText(trend, "totalConversations")).toBe("↓ -15%");
+      expect(formatTrendText(trend)).toBe("↓ -15%");
     });
 
     it("should handle undefined trends", () => {
-      expect(formatTrendText(undefined, "totalConversations")).toBe("");
+      expect(formatTrendText(undefined)).toBe("");
     });
 
     it("should format trends for metrics where decrease is good", () => {
       const trend = { value: 10, isPositive: false };
       // For response time, a decrease (isPositive: false in raw calculation)
       // is inverted to isPositive: true in calculateMetricTrends
-      expect(formatTrendText(trend, "responseTime")).toBe("↓ -10%");
+      expect(formatTrendText(trend)).toBe("↓ -10%");
     });
   });
 });
