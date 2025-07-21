@@ -32,11 +32,15 @@ import { SentimentDistributionChart } from "@/components/charts/SentimentDistrib
 import { SessionsByCountryChart } from "@/components/charts/SessionsByCountryChart";
 import { TopCategoriesChart } from "@/components/charts/TopCategoriesChart";
 import { TopQuestionsSection } from "@/components/charts/TopQuestionsSection";
+import { DataQualityIndicator } from "@/components/DataQualityIndicator";
+import { InsightsSummary } from "@/components/InsightsSummary";
 import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ChartSkeleton, MetricsSkeleton } from "@/components/ui/LoadingSkeleton";
+import { EnhancedLoadingState } from "@/components/ui/EnhancedLoadingState";
+import { ExpandableSection } from "@/components/ui/ExpandableSection";
+import { EnhancedMetricsDisplay } from "@/components/ui/MetricTooltip";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
@@ -321,148 +325,191 @@ export default function Home() {
         )}
 
         {/* Metrics */}
-        {isLoadingData && dateRange && <MetricsSkeleton />}
+        {isLoadingData && dateRange && (
+          <EnhancedLoadingState
+            stage="metrics"
+            totalSessions={dbStats?.totalSessions}
+            className="mb-8"
+          />
+        )}
         {metrics && !isLoadingData && (
-          <div className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg animate-in">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Key Metrics</h2>
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              {Object.entries(metrics).map(([key, value], index) => (
-                <div
-                  key={key}
-                  className="bg-secondary p-4 rounded transition-all hover:bg-secondary/80 hover:scale-105"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="text-sm text-muted-foreground">{key}</div>
-                  <div className="text-xl font-semibold">
-                    {typeof value === "number" ? value.toLocaleString() : value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <EnhancedMetricsDisplay
+            metrics={metrics as unknown as { [key: string]: string | number }}
+          />
         )}
 
         {/* Charts Loading State */}
         {isLoadingData && dateRange && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              <ChartSkeleton />
-              <ChartSkeleton />
-              <ChartSkeleton />
-            </div>
-            <ChartSkeleton />
-          </div>
+          <EnhancedLoadingState
+            stage="charts"
+            totalSessions={dbStats?.totalSessions}
+            className="mb-8"
+          />
         )}
 
-        {/* Charts Dashboard */}
+        {/* Data Quality Assessment */}
+        {metrics && chartData && dateRange && !isLoadingData && (
+          <DataQualityIndicator
+            metrics={metrics}
+            totalSessions={metrics["Total Conversations"]}
+            dateRange={dateRange}
+          />
+        )}
+
+        {/* Key Insights Summary */}
+        {metrics && chartData && dateRange && !isLoadingData && (
+          <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />
+        )}
+
+        {/* Progressive Charts Dashboard */}
         {chartData &&
           !isLoadingData &&
           (() => {
             const colors = getChartColors();
+            const totalSessions = metrics?.["Total Conversations"] || 0;
+
+            // Smart visibility logic
+            const hasRatings = chartData.avg_rating && chartData.avg_rating > 0;
+            const hasCountryData = chartData.country_labels && chartData.country_labels.length > 1;
+            const hasLanguageData =
+              chartData.language_labels && chartData.language_labels.length > 1;
+            const hasSufficientData = totalSessions >= 10;
 
             return (
-              <section
-                id="charts-section"
-                className="animate-in"
-                style={{ animationDelay: "200ms" }}
-                aria-label="Analytics charts dashboard"
-              >
-                {/* Primary Insights Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                  <SentimentDistributionChart
-                    data={{
-                      labels: chartData.sentiment_labels,
-                      values: chartData.sentiment_values
-                    }}
-                  />
-                  <ResolutionStatusChart
-                    data={{
-                      labels: chartData.resolution_labels,
-                      values: chartData.resolution_values
-                    }}
-                  />
-                  <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
-                </div>
+              <div className="space-y-6">
+                {/* Essential Overview - Always visible */}
+                <ExpandableSection
+                  title="Essential Overview"
+                  subtitle="Key performance indicators and user satisfaction"
+                  defaultExpanded={true}
+                  priority="high"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <SentimentDistributionChart
+                      data={{
+                        labels: chartData.sentiment_labels,
+                        values: chartData.sentiment_values
+                      }}
+                    />
+                    <ResolutionStatusChart
+                      data={{
+                        labels: chartData.resolution_labels,
+                        values: chartData.resolution_values
+                      }}
+                    />
+                    {hasRatings && (
+                      <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
+                    )}
+                  </div>
+                </ExpandableSection>
 
-                {/* Time Series Analysis */}
-                <div className="mb-8">
-                  <PerformanceTrendsChart
-                    data={{
-                      dates_labels: chartData.dates_labels,
-                      dates_values: chartData.dates_values,
-                      response_time_values: chartData.response_time_values
-                    }}
-                  />
-                </div>
+                {/* Performance Trends - Expanded by default if sufficient data */}
+                <ExpandableSection
+                  title="Performance Trends"
+                  subtitle="Response times and activity patterns over time"
+                  defaultExpanded={hasSufficientData}
+                  priority="high"
+                >
+                  <div className="space-y-6">
+                    <PerformanceTrendsChart
+                      data={{
+                        dates_labels: chartData.dates_labels,
+                        dates_values: chartData.dates_values,
+                        response_time_values: chartData.response_time_values
+                      }}
+                    />
+                    <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
+                  </div>
+                </ExpandableSection>
 
-                {/* Usage Patterns */}
-                <div className="mb-8">
-                  <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
-                </div>
+                {/* Geographic & Language Analysis - Only show if diverse data */}
+                {(hasCountryData || hasLanguageData) && (
+                  <ExpandableSection
+                    title="Geographic & Language Analysis"
+                    subtitle="User distribution across regions and languages"
+                    defaultExpanded={false}
+                    priority="medium"
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                      {hasCountryData && (
+                        <SessionsByCountryChart
+                          data={{
+                            labels: chartData.country_labels,
+                            values: chartData.country_values
+                          }}
+                        />
+                      )}
+                      {hasLanguageData && (
+                        <LanguageDistributionChart
+                          data={{
+                            labels: chartData.language_labels,
+                            values: chartData.language_values
+                          }}
+                        />
+                      )}
+                    </div>
+                  </ExpandableSection>
+                )}
 
-                {/* Geographic & Language Insights */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                  <SessionsByCountryChart
-                    data={{
-                      labels: chartData.country_labels,
-                      values: chartData.country_values
-                    }}
-                  />
-                  <LanguageDistributionChart
-                    data={{
-                      labels: chartData.language_labels,
-                      values: chartData.language_values
-                    }}
-                  />
-                </div>
+                {/* Category & Cost Analysis */}
+                <ExpandableSection
+                  title="Category & Cost Analysis"
+                  subtitle="Conversation topics and operational costs"
+                  defaultExpanded={false}
+                  priority="medium"
+                >
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                      <TopCategoriesChart
+                        data={{
+                          labels: chartData.category_labels,
+                          values: chartData.category_values
+                        }}
+                      />
+                      <CostAnalysisChart data={chartData.category_costs} />
+                    </div>
+                    <DailyCostTrendChart
+                      data={{
+                        dates: chartData.cost_dates,
+                        values: chartData.cost_values
+                      }}
+                    />
+                  </div>
+                </ExpandableSection>
 
-                {/* Category Analysis */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                  <TopCategoriesChart
-                    data={{
-                      labels: chartData.category_labels,
-                      values: chartData.category_values
-                    }}
-                  />
-                  <CostAnalysisChart data={chartData.category_costs} />
-                </div>
-
-                {/* Performance Distributions */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                  <HistogramChart
-                    data={chartData.conversation_durations}
-                    title="Conversation Duration Distribution"
-                    xLabel="Duration (minutes)"
-                    bins={15}
-                    color={colors.teal}
-                  />
-                  <HistogramChart
-                    data={chartData.messages_per_conversation}
-                    title="Messages per Conversation"
-                    xLabel="Number of Messages"
-                    bins={10}
-                    color={colors.pink}
-                  />
-                </div>
-
-                {/* Cost Analysis */}
-                <div className="mb-8">
-                  <DailyCostTrendChart
-                    data={{
-                      dates: chartData.cost_dates,
-                      values: chartData.cost_values
-                    }}
-                  />
-                </div>
-
-                {/* Top Questions */}
-                <TopQuestionsSection
-                  data={{
-                    labels: chartData.questions_labels,
-                    values: chartData.questions_values
-                  }}
-                />
-              </section>
+                {/* Detailed Statistics - Advanced users only */}
+                <ExpandableSection
+                  title="Detailed Statistics"
+                  subtitle="Distribution analysis and conversation patterns"
+                  defaultExpanded={false}
+                  priority="low"
+                >
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                      <HistogramChart
+                        data={chartData.conversation_durations}
+                        title="Conversation Duration Distribution"
+                        xLabel="Duration (minutes)"
+                        bins={15}
+                        color={colors.teal}
+                      />
+                      <HistogramChart
+                        data={chartData.messages_per_conversation}
+                        title="Messages per Conversation"
+                        xLabel="Number of Messages"
+                        bins={10}
+                        color={colors.pink}
+                      />
+                    </div>
+                    <TopQuestionsSection
+                      data={{
+                        labels: chartData.questions_labels,
+                        values: chartData.questions_values
+                      }}
+                    />
+                  </div>
+                </ExpandableSection>
+              </div>
             );
           })()}
 
