@@ -51,6 +51,13 @@ jumbo*.json
 charts-overhaul.md
 issues-found.md
 
+# screenshots
 /image.png
 /image?*.png
 screenshots/
+
+# backup files
+*.bak
+
+# next.js docs
+docs/next-js/
