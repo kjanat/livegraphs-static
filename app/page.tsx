@@ -309,11 +309,12 @@ export default function Home() {
   return (
     <main
       id="main-content"
-      className="min-h-screen bg-background px-4 py-6 sm:p-6 lg:p-8 overflow-x-hidden"
+      className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10 overflow-x-hidden"
       style={{
-        paddingLeft: "env(safe-area-inset-left, 1rem)",
-        paddingRight: "env(safe-area-inset-right, 1rem)",
-        paddingBottom: "env(safe-area-inset-bottom, 1rem)"
+        paddingLeft: "max(env(safe-area-inset-left, 1rem), 1rem)",
+        paddingRight: "max(env(safe-area-inset-right, 1rem), 1rem)",
+        paddingTop: "max(env(safe-area-inset-top, 1.5rem), 1.5rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 1.5rem), 1.5rem)"
       }}
     >
       <div className="max-w-7xl mx-auto">

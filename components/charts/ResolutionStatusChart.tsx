@@ -56,14 +56,21 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
     );
   }
 
+  // Calculate total for percentage calculation
+  const total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
+
   // Create pieData with safe mapping to prevent undefined values
   const maxLength = Math.min(data.labels.length, data.values.length);
-  const pieData = data.labels.slice(0, maxLength).map((label, index) => ({
-    id: label,
-    label: label,
-    value: data.values[index] ?? 0, // Use nullish coalescing to handle undefined values
-    color: getColorForResolution(label)
-  }));
+  const pieData = data.labels
+    .slice(0, maxLength)
+    .map((label, index) => ({
+      id: label,
+      label: label,
+      value: total > 0 ? (data.values[index] ?? 0) / total : 0, // Convert to percentage as decimal
+      rawValue: data.values[index] ?? 0, // Keep raw value for tooltip
+      color: getColorForResolution(label)
+    }))
+    .filter((item) => item.rawValue > 0); // Filter out items with zero values
 
   function getColorForResolution(resolution: string): string {
     if (resolution === "Resolved") return "#22C55E";
@@ -108,6 +115,8 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
             from: "color",
             modifiers: [["darker", 2]]
           }}
+          arcLabel="formattedValue"
+          valueFormat=">-.1%"
           theme={{
             text: {
               fontSize: 12,
@@ -129,6 +138,19 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
               }
             }
           }}
+          tooltip={({ datum }) => (
+            <div
+              style={{
+                background: isDarkMode ? "#1f2937" : "#ffffff",
+                color: isDarkMode ? "#e5e7eb" : "#1f2937",
+                padding: "9px 12px",
+                borderRadius: "4px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              }}
+            >
+              <strong>{datum.id}:</strong> {datum.data.rawValue} ({(datum.value * 100).toFixed(1)}%)
+            </div>
+          )}
           legends={
             isMobile
               ? []

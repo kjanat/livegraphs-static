@@ -56,14 +56,18 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
     );
   }
 
+  // Calculate total for percentage calculation
+  const total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
+
   const pieData = data.labels
     .map((label, index) => ({
       id: label,
       label: label,
-      value: data.values[index] ?? 0, // Use nullish coalescing to handle undefined values
+      value: total > 0 ? (data.values[index] ?? 0) / total : 0, // Convert to percentage as decimal
+      rawValue: data.values[index] ?? 0, // Keep raw value for tooltip
       color: getColorForSentiment(label)
     }))
-    .filter((item) => item.value > 0); // Filter out items with zero or invalid values
+    .filter((item) => item.rawValue > 0); // Filter out items with zero or invalid values
 
   function getColorForSentiment(sentiment: string): string {
     if (sentiment === "Positive") return "#22C55E";
@@ -109,6 +113,8 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
             from: "color",
             modifiers: [["darker", 2]]
           }}
+          arcLabel="formattedValue"
+          valueFormat=">-.1%"
           theme={{
             text: {
               fontSize: 12,
@@ -130,6 +136,19 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
               }
             }
           }}
+          tooltip={({ datum }) => (
+            <div
+              style={{
+                background: isDarkMode ? "#1f2937" : "#ffffff",
+                color: isDarkMode ? "#e5e7eb" : "#1f2937",
+                padding: "9px 12px",
+                borderRadius: "4px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              }}
+            >
+              <strong>{datum.id}:</strong> {datum.data.rawValue} ({(datum.value * 100).toFixed(1)}%)
+            </div>
+          )}
           legends={
             isMobile
               ? []

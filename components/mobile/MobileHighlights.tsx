@@ -6,11 +6,13 @@
 
 "use client";
 
+import { useState } from "react";
 import {
   AlertCircleIcon,
   CheckCircleIcon,
   InfoIcon,
-  TrendingUpIcon
+  TrendingUpIcon,
+  XIcon
 } from "@/components/icons/index";
 import type { Metrics } from "@/lib/types/session";
 
@@ -19,7 +21,9 @@ interface MobileHighlightsProps {
 }
 
 export function MobileHighlights({ metrics }: MobileHighlightsProps) {
+  const [isDismissed, setIsDismissed] = useState(false);
   const highlights = [];
+  const lastUpdated = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   // Calculate resolution rate
   const totalConversations = metrics["Total Conversations"];
@@ -90,9 +94,24 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
     }
   };
 
+  if (isDismissed) return null;
+
   return (
     <div className="mb-4 space-y-2">
-      <h2 className="text-base font-semibold mb-2">Key Insights</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-base font-semibold">Key Insights</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Updated {lastUpdated}</span>
+          <button
+            type="button"
+            onClick={() => setIsDismissed(true)}
+            className="p-1 hover:bg-muted rounded-md transition-colors"
+            aria-label="Dismiss insights"
+          >
+            <XIcon size={14} className="text-muted-foreground" />
+          </button>
+        </div>
+      </div>
       {highlights.map((highlight) => (
         <div
           key={`${highlight.type}-${highlight.title}`}

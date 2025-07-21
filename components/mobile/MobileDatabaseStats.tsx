@@ -51,7 +51,11 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
         </svg>
       </button>
 
-      {isExpanded && (
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
         <div className="px-3 pb-3 border-t border-border/50">
           <div className="mt-3 space-y-3">
             <div className="bg-primary/10 p-3 rounded-md">
@@ -98,7 +102,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
             </div>
           </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

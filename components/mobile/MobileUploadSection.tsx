@@ -80,7 +80,11 @@ export function MobileUploadSection({
         </svg>
       </button>
 
-      {isExpanded && (
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
         <div className="px-3 pb-3 border-t border-border/50">
           {isDragging && (
             <div className="mt-3 p-3 border-2 border-dashed border-primary rounded-lg bg-primary/10 text-center">
@@ -149,7 +153,7 @@ export function MobileUploadSection({
             </div>
           )}
         </div>
-      )}
+      </div>
     </section>
   );
 }

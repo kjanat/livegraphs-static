@@ -125,7 +125,11 @@ export function MobileDateRangePicker({
       </button>
 
       {/* Expandable content */}
-      {isExpanded && (
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
         <div className="px-3 pb-3 space-y-3 border-t border-border/50">
           {/* Quick presets - horizontal scroll on mobile */}
           <div className="flex gap-2 overflow-x-auto py-2 scrollbar-hide">
@@ -207,7 +211,7 @@ export function MobileDateRangePicker({
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -46,7 +46,7 @@ export function MobileMetricCard({
   };
 
   return (
-    <div className="bg-card rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border border-border/50">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-xs font-medium text-muted-foreground truncate">{title}</h3>
@@ -58,12 +58,12 @@ export function MobileMetricCard({
                 trend.isPositive ? "text-green-600" : "text-red-600"
               }`}
             >
-              {trend.isPositive ? <TrendingUpIcon size={12} /> : <TrendingDownIcon size={12} />}
+              {trend.isPositive ? <TrendingUpIcon size={14} /> : <TrendingDownIcon size={14} />}
               <span>{Math.abs(trend.value)}%</span>
             </div>
           )}
         </div>
-        {icon && <div className={`p-1.5 rounded-md ${getColorClasses()}`}>{icon}</div>}
+        {icon && <div className={`p-2 rounded-md ${getColorClasses()}`}>{icon}</div>}
       </div>
     </div>
   );

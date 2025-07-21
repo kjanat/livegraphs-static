@@ -575,3 +575,29 @@ export function UsersIcon({ size = 20, className = "", decorative = false, ...pr
     </svg>
   );
 }
+
+export function XIcon({ size = 20, className = "", decorative = false, ...props }: IconProps) {
+  const titleId = decorative ? undefined : "x-icon-title";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? undefined : "img"}
+      aria-labelledby={titleId}
+      aria-hidden={decorative ? "true" : undefined}
+      {...props}
+    >
+      {!decorative && <title id={titleId}>Close</title>}
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}

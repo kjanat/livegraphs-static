@@ -45,7 +45,13 @@ export function MobileCollapsibleSection({
         />
       </button>
 
-      {isExpanded && <div className="p-3 pt-0 border-t border-border/50">{children}</div>}
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
+        <div className="p-3 pt-0 border-t border-border/50">{children}</div>
+      </div>
     </div>
   );
 }

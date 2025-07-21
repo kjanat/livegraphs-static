@@ -13,6 +13,7 @@ import {
   UsersIcon
 } from "@/components/icons/index";
 import type { ChartData, Metrics } from "@/lib/types/session";
+import { calculateMetricTrends } from "@/lib/utils/trendCalculator";
 import { MobileCollapsibleSection } from "./MobileCollapsibleSection";
 import { MobileFooter } from "./MobileFooter";
 import { MobileHighlights } from "./MobileHighlights";
@@ -54,6 +55,9 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
   const avgRating =
     typeof metrics["Avg. User Rating"] === "number" ? metrics["Avg. User Rating"] : null;
 
+  // Calculate trends (week-over-week by default, can be changed to day-over-day)
+  const trends = calculateMetricTrends(chartData, true);
+
   return (
     <div className="w-full">
       {/* Highlights Section */}
@@ -72,26 +76,29 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                       title="Total Conversations"
                       value={metrics["Total Conversations"]}
                       color="primary"
-                      icon={<MessageSquareIcon size={18} />}
+                      icon={<MessageSquareIcon size={20} />}
+                      trend={trends.totalConversations}
                     />
                     <MobileMetricCard
                       title="Resolved"
                       value={resolvedCount}
                       subtitle={`${resolutionRate.toFixed(0)}% resolution rate`}
                       color="green"
-                      icon={<BarChart3Icon size={18} />}
+                      icon={<BarChart3Icon size={20} />}
                     />
                     <MobileMetricCard
                       title="Avg Response Time"
                       value={`${metrics["Avg. Response Time (sec)"]}s`}
                       color="blue"
-                      icon={<TrendingUpIcon size={18} />}
+                      icon={<TrendingUpIcon size={20} />}
+                      trend={trends.responseTime}
                     />
                     <MobileMetricCard
                       title="Avg Daily Cost"
                       value={`€${metrics["Average Daily Cost (€)"]}`}
                       color="purple"
-                      icon={<BarChart3Icon size={18} />}
+                      icon={<BarChart3Icon size={20} />}
+                      trend={trends.dailyCost}
                     />
                   </div>
 
@@ -99,17 +106,27 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                   <div className="bg-card rounded-lg p-3 shadow-sm">
                     <h3 className="font-semibold text-sm mb-3">Sentiment Distribution</h3>
                     <div className="space-y-2.5">
-                      {chartData.sentiment_labels.map((label, index) => (
-                        <MobileProgressBar
-                          key={label}
-                          label={label}
-                          value={chartData.sentiment_values[index]}
-                          max={Math.max(...chartData.sentiment_values)}
-                          color={
-                            label === "positive" ? "green" : label === "negative" ? "red" : "blue"
-                          }
-                        />
-                      ))}
+                      {(() => {
+                        const totalSentiments = chartData.sentiment_values.reduce(
+                          (sum, val) => sum + val,
+                          0
+                        );
+                        return chartData.sentiment_labels.map((label, index) => (
+                          <MobileProgressBar
+                            key={label}
+                            label={label}
+                            value={chartData.sentiment_values[index]}
+                            max={totalSentiments}
+                            color={
+                              label.toLowerCase() === "positive"
+                                ? "green"
+                                : label.toLowerCase() === "negative"
+                                  ? "red"
+                                  : "blue"
+                            }
+                          />
+                        ));
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -170,7 +187,7 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                     <MobileMetricCard
                       title="Unique Users"
                       value={metrics["Unique Users"]}
-                      icon={<UsersIcon size={18} />}
+                      icon={<UsersIcon size={20} />}
                       color="blue"
                     />
                     <MobileMetricCard
@@ -184,15 +201,23 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                   <div className="bg-card rounded-lg p-3 shadow-sm">
                     <h3 className="font-semibold text-sm mb-3">Top Countries</h3>
                     <div className="space-y-2.5">
-                      {chartData.country_labels.slice(0, 5).map((country, index) => (
-                        <MobileProgressBar
-                          key={country}
-                          label={country}
-                          value={chartData.country_values[index]}
-                          max={Math.max(...chartData.country_values)}
-                          color="blue"
-                        />
-                      ))}
+                      {(() => {
+                        const totalCountrySessions = chartData.country_values.reduce(
+                          (sum, val) => sum + val,
+                          0
+                        );
+                        return chartData.country_labels
+                          .slice(0, 5)
+                          .map((country, index) => (
+                            <MobileProgressBar
+                              key={country}
+                              label={country}
+                              value={chartData.country_values[index]}
+                              max={totalCountrySessions}
+                              color="blue"
+                            />
+                          ));
+                      })()}
                     </div>
                   </div>
 
@@ -200,15 +225,23 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                   <div className="bg-card rounded-lg p-3 shadow-sm">
                     <h3 className="font-semibold text-sm mb-3">Top Languages</h3>
                     <div className="space-y-2.5">
-                      {chartData.language_labels.slice(0, 5).map((lang, index) => (
-                        <MobileProgressBar
-                          key={lang}
-                          label={lang}
-                          value={chartData.language_values[index]}
-                          max={Math.max(...chartData.language_values)}
-                          color="purple"
-                        />
-                      ))}
+                      {(() => {
+                        const totalLanguageSessions = chartData.language_values.reduce(
+                          (sum, val) => sum + val,
+                          0
+                        );
+                        return chartData.language_labels
+                          .slice(0, 5)
+                          .map((lang, index) => (
+                            <MobileProgressBar
+                              key={lang}
+                              label={lang}
+                              value={chartData.language_values[index]}
+                              max={totalLanguageSessions}
+                              color="purple"
+                            />
+                          ));
+                      })()}
                     </div>
                   </div>
                 </div>
