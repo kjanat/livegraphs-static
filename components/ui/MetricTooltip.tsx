@@ -60,7 +60,7 @@ export function MetricTooltip({
   className = ""
 }: MetricTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [isClickMode, setIsClickMode] = useState(false);
+  const [isPersistent, setIsPersistent] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -70,7 +70,7 @@ export function MetricTooltip({
 
   // Handle click outside to close tooltip
   useEffect(() => {
-    if (isClickMode && isVisible) {
+    if (isPersistent && isVisible) {
       const handleClickOutside = (event: MouseEvent) => {
         if (
           tooltipRef.current &&
@@ -79,14 +79,14 @@ export function MetricTooltip({
           !buttonRef.current.contains(event.target as Node)
         ) {
           setIsVisible(false);
-          setIsClickMode(false);
+          setIsPersistent(false);
         }
       };
 
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [isClickMode, isVisible]);
+  }, [isPersistent, isVisible]);
 
   return (
     <div className={`relative ${className}`}>
@@ -98,26 +98,33 @@ export function MetricTooltip({
               ref={buttonRef}
               type="button"
               onClick={() => {
-                setIsClickMode(true);
-                setIsVisible(!isVisible);
+                if (isPersistent) {
+                  // If already persistent, close it
+                  setIsVisible(false);
+                  setIsPersistent(false);
+                } else {
+                  // Make it persistent
+                  setIsVisible(true);
+                  setIsPersistent(true);
+                }
               }}
               onMouseEnter={() => {
-                if (!isClickMode) {
+                if (!isPersistent) {
                   setIsVisible(true);
                 }
               }}
               onMouseLeave={() => {
-                if (!isClickMode) {
+                if (!isPersistent) {
                   setIsVisible(false);
                 }
               }}
               onFocus={() => {
-                if (!isClickMode) {
+                if (!isPersistent) {
                   setIsVisible(true);
                 }
               }}
               onBlur={() => {
-                if (!isClickMode) {
+                if (!isPersistent) {
                   setIsVisible(false);
                 }
               }}
@@ -141,13 +148,13 @@ export function MetricTooltip({
             className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200 select-text"
             style={{ userSelect: "text" }}
           >
-            {/* Close button - only show in click mode */}
-            {isClickMode && (
+            {/* Close button - only show in persistent mode */}
+            {isPersistent && (
               <button
                 type="button"
                 onClick={() => {
                   setIsVisible(false);
-                  setIsClickMode(false);
+                  setIsPersistent(false);
                 }}
                 className="absolute top-2 right-2 p-1 rounded hover:bg-secondary transition-colors"
                 aria-label="Close tooltip"
