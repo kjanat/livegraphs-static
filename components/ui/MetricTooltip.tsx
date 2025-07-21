@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InfoIcon } from "@/components/icons";
 
 interface MetricTooltipProps {
@@ -60,10 +60,33 @@ export function MetricTooltip({
   className = ""
 }: MetricTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isClickMode, setIsClickMode] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const metricInfo = metricExplanations[metric as keyof typeof metricExplanations];
   const displayExplanation = explanation || metricInfo?.explanation || "No explanation available";
   const displayCalculation = calculation || metricInfo?.calculation;
+
+  // Handle click outside to close tooltip
+  useEffect(() => {
+    if (isClickMode && isVisible) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          tooltipRef.current &&
+          !tooltipRef.current.contains(event.target as Node) &&
+          buttonRef.current &&
+          !buttonRef.current.contains(event.target as Node)
+        ) {
+          setIsVisible(false);
+          setIsClickMode(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isClickMode, isVisible]);
 
   return (
     <div className={`relative ${className}`}>
@@ -72,13 +95,36 @@ export function MetricTooltip({
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             {metric}
             <button
+              ref={buttonRef}
               type="button"
-              onMouseEnter={() => setIsVisible(true)}
-              onMouseLeave={() => setIsVisible(false)}
-              onFocus={() => setIsVisible(true)}
-              onBlur={() => setIsVisible(false)}
+              onClick={() => {
+                setIsClickMode(true);
+                setIsVisible(!isVisible);
+              }}
+              onMouseEnter={() => {
+                if (!isClickMode) {
+                  setIsVisible(true);
+                }
+              }}
+              onMouseLeave={() => {
+                if (!isClickMode) {
+                  setIsVisible(false);
+                }
+              }}
+              onFocus={() => {
+                if (!isClickMode) {
+                  setIsVisible(true);
+                }
+              }}
+              onBlur={() => {
+                if (!isClickMode) {
+                  setIsVisible(false);
+                }
+              }}
               className="opacity-60 hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 rounded focus:outline-none focus:ring-1 focus:ring-primary/50"
               aria-label={`Help for ${metric}`}
+              aria-expanded={isVisible}
+              aria-haspopup="true"
             >
               <InfoIcon size={14} className="text-muted-foreground" />
             </button>
@@ -90,7 +136,11 @@ export function MetricTooltip({
 
         {/* Tooltip */}
         {isVisible && (
-          <div className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div
+            ref={tooltipRef}
+            className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200 select-text"
+            style={{ userSelect: "text" }}
+          >
             <div className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
