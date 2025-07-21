@@ -6,6 +6,7 @@
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import { Footer } from "@/components/Footer";
 import { SkipLinks } from "@/components/ui/SkipLinks";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -49,6 +50,7 @@ export default function RootLayout({
           <SkipLinks />
           {children}
           <Footer />
+          <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>

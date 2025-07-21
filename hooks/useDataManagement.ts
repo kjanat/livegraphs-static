@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { calculateMetrics, prepareChartData } from "@/lib/dataProcessor";
 import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
 import { validateSessionData } from "@/lib/validation/schema";
@@ -76,9 +77,11 @@ export function useDataManagement() {
         setChartData(null);
         setDateRange(null);
 
-        alert(`Successfully loaded ${count} sessions`);
+        toast.success(`Successfully loaded ${count} sessions`);
       } catch (err) {
-        setUploadError(err instanceof Error ? err.message : "Failed to load file");
+        const errorMessage = err instanceof Error ? err.message : "Failed to load file";
+        setUploadError(errorMessage);
+        toast.error(errorMessage);
         console.error(err);
       } finally {
         setIsUploading(false);

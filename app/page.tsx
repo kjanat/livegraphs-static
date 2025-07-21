@@ -19,6 +19,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { CostAnalysisChart } from "@/components/charts/CostAnalysisChart";
 import { DailyCostTrendChart } from "@/components/charts/DailyCostTrendChart";
 import { GaugeChart } from "@/components/charts/GaugeChart";
@@ -31,7 +32,6 @@ import { SentimentDistributionChart } from "@/components/charts/SentimentDistrib
 import { SessionsByCountryChart } from "@/components/charts/SessionsByCountryChart";
 import { TopCategoriesChart } from "@/components/charts/TopCategoriesChart";
 import { TopQuestionsSection } from "@/components/charts/TopQuestionsSection";
-import { DarkModeTest } from "@/components/DarkModeTest";
 import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
@@ -125,9 +125,11 @@ export default function Home() {
       setChartData(null);
       setDateRange(null);
 
-      alert(`Successfully loaded ${count} sessions`);
+      toast.success(`Successfully loaded ${count} sessions`);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Failed to load file");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load file";
+      setUploadError(errorMessage);
+      toast.error(errorMessage);
       console.error(err);
     } finally {
       setIsUploading(false);
@@ -176,9 +178,11 @@ export default function Home() {
       setChartData(null);
       setDateRange(null);
 
-      alert(`Successfully loaded ${count} sample sessions`);
+      toast.success(`Successfully loaded ${count} sample sessions`);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Failed to load sample data");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load sample data";
+      setUploadError(errorMessage);
+      toast.error(errorMessage);
       console.error(err);
     } finally {
       setIsUploading(false);
@@ -467,7 +471,6 @@ export default function Home() {
           <EmptyState onSampleData={handleLoadSampleData} />
         )}
       </div>
-      <DarkModeTest />
     </main>
   );
 }
