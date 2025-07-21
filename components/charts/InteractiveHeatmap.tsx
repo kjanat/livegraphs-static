@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface HeatmapData {
   hour: number;
@@ -24,15 +24,49 @@ export function InteractiveHeatmap({
   title = "Weekly Usage Heatmap"
 }: InteractiveHeatmapProps) {
   const [hoveredCell, setHoveredCell] = useState<{ hour: number; day: string } | null>(null);
+  const [hourStep, setHourStep] = useState(1);
 
-  // Days and hours for the grid
+  // Days for the grid
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  // Create a map for quick lookups
+  // Responsive hour step calculation
+  useEffect(() => {
+    const calculateHourStep = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        // Mobile: show every 4 hours
+        setHourStep(4);
+      } else if (width < 1216) {
+        // Tablet: show every 2 hours
+        setHourStep(2);
+      } else {
+        // Desktop: show all hours (only when viewport is wide enough)
+        setHourStep(1);
+      }
+    };
+
+    calculateHourStep();
+    window.addEventListener("resize", calculateHourStep);
+    return () => window.removeEventListener("resize", calculateHourStep);
+  }, []);
+
+  // Generate hours based on step
+  const hours = Array.from({ length: Math.ceil(24 / hourStep) }, (_, i) => i * hourStep);
+
+  // Create a map for quick lookups with aggregation for grouped hours
   const dataMap = new Map<string, number>();
+
+  // When hours are grouped, aggregate the counts
   data.forEach(({ hour, day, count }) => {
-    dataMap.set(`${day}-${hour}`, count);
+    if (hourStep === 1) {
+      // No grouping needed
+      dataMap.set(`${day}-${hour}`, count);
+    } else {
+      // Group hours and sum counts
+      const groupedHour = Math.floor(hour / hourStep) * hourStep;
+      const key = `${day}-${groupedHour}`;
+      dataMap.set(key, (dataMap.get(key) || 0) + count);
+    }
   });
 
   // Find max value for color scaling
@@ -87,7 +121,7 @@ export function InteractiveHeatmap({
                 key={hour}
                 className="flex-1 text-center text-xs text-muted-foreground min-w-[2.5rem]"
               >
-                {hour}
+                {hourStep === 1 ? hour : `${hour}-${Math.min(hour + hourStep - 1, 23)}`}
               </div>
             ))}
           </div>
@@ -119,8 +153,16 @@ export function InteractiveHeatmap({
                     `}
                     onMouseEnter={() => setHoveredCell({ hour, day })}
                     onMouseLeave={() => setHoveredCell(null)}
-                    title={`${day} ${hour}:00 - ${count} sessions`}
-                    aria-label={`${day} ${hour}:00 - ${count} sessions`}
+                    title={
+                      hourStep === 1
+                        ? `${day} ${hour}:00 - ${count} sessions`
+                        : `${day} ${hour}:00-${Math.min(hour + hourStep - 1, 23)}:59 - ${count} sessions`
+                    }
+                    aria-label={
+                      hourStep === 1
+                        ? `${day} ${hour}:00 - ${count} sessions`
+                        : `${day} ${hour}:00-${Math.min(hour + hourStep - 1, 23)}:59 - ${count} sessions`
+                    }
                   >
                     {count > 0 && <span className={isHovered ? "font-bold" : ""}>{count}</span>}
                   </button>
@@ -151,7 +193,11 @@ export function InteractiveHeatmap({
       {/* Hover tooltip */}
       {hoveredCell && (
         <div className="mt-2 text-sm text-muted-foreground text-center">
-          {hoveredCell.day} at {hoveredCell.hour}:00 -{" "}
+          {hoveredCell.day} at{" "}
+          {hourStep === 1
+            ? `${hoveredCell.hour}:00`
+            : `${hoveredCell.hour}:00-${Math.min(hoveredCell.hour + hourStep - 1, 23)}:59`}{" "}
+          -{" "}
           <span className="font-semibold">
             {dataMap.get(`${hoveredCell.day}-${hoveredCell.hour}`) || 0} sessions
           </span>
