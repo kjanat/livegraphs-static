@@ -92,12 +92,17 @@ export function MultiLineChart({
     }
   };
 
-  const options = customOptions || defaultOptions;
+  const options = {
+    ...defaultOptions,
+    ...customOptions,
+    responsive: true,
+    maintainAspectRatio: false
+  } as ChartOptions<"line">;
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-6">
+    <div className="bg-card rounded-lg shadow-md p-6 w-full">
       <h3 className="text-xl font-bold mb-4 text-card-foreground">{title}</h3>
-      <div className="relative h-64 sm:h-80">
+      <div className="relative h-64 sm:h-80 w-full">
         <Line data={chartData} options={options} />
       </div>
     </div>
