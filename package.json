@@ -19,8 +19,9 @@
     "dev:turbo": "next dev --turbopack",
     "format": "biome format --write",
     "format:check": "biome format",
-    "lint": "next lint",
-    "lint:strict": "biome check",
+    "lint": "pnpm lint:next && pnpm lint:biome",
+    "lint:biome": "biome check",
+    "lint:next": "next lint",
     "pre-commit": "lint-staged",
     "prepare": "husky",
     "start": "pnpm dlx serve out",
@@ -31,7 +32,7 @@
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit",
-    "validate": "pnpm lint && pnpm lint:strict && pnpm format:check && pnpm type-check"
+    "validate": "pnpm lint && pnpm format:check && pnpm type-check"
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

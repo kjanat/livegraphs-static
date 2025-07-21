@@ -102,7 +102,8 @@ pnpm start            # Serve built files locally
 
 # Code Quality
 pnpm validate         # Run all checks (lint, format, type-check)
-pnpm lint:strict      # Biome code quality checks
+pnpm lint:next        # Next.js linting (eslint)
+pnpm lint:biome       # Biome code quality checks
 pnpm format           # Format code with Biome
 pnpm type-check       # TypeScript validation
 

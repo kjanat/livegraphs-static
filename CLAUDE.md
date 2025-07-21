@@ -37,12 +37,13 @@ pnpm start        # Serve static files using 'serve' package
 ### Code Quality
 
 ```bash
-pnpm lint                # Run Next.js linting (eslint)
-pnpm lint:strict         # Run Biome checks
-pnpm lint:strict --write # Run Biome checks and fix the fixable issues
+pnpm lint                     # Run all (Next's eslint + biome) linting
+pnpm lint:next                # Run Next.js linting (eslint)
+pnpm lint:biome         # Run Biome checks
+pnpm lint:biome --write # Run Biome checks and fix the fixable issues
 pnpm format              # Format code with Biome
 pnpm type-check          # TypeScript type checking
-pnpm validate            # Run all checks (lint, lint:strict, format:check, type-check)
+pnpm validate            # Run all checks (lint, format:check, type-check)
 ```
 
 ### Testing

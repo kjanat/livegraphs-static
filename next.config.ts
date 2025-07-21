@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
 
   // devIndicators: false,
 
+  allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev", "propc", "192.168.1.2"],
+
   // // Base path for GitHub Pages deployment
   // basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
   // assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
@@ -16,6 +18,11 @@ const nextConfig: NextConfig = {
 
   // Enable strict mode
   reactStrictMode: true,
+
+  // Optimize imports for better tree shaking
+  // experimental: {
+  //   optimizePackageImports: ["chart.js", "react-chartjs-2", "@nivo/core", "@nivo/geo", "date-fns"]
+  // },
 
   // Note: Security headers need to be configured at the hosting level
   // for static exports (e.g., in nginx, Vercel, Netlify configs)

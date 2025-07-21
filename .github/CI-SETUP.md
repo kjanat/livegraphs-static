@@ -125,8 +125,8 @@ pnpm dev
 pnpm test
 
 # Run linting
-pnpm lint
-pnpm lint:strict
+pnpm lint:next
+pnpm lint:biome
 
 # Format code
 pnpm format
