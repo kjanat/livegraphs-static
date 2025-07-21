@@ -82,7 +82,7 @@ export function SessionsByCountryChart({ data }: SessionsByCountryChartProps) {
           keys={["sessions"]}
           indexBy="country"
           layout="horizontal"
-          margin={{ top: 10, right: 30, bottom: 50, left: 100 }}
+          margin={{ top: 10, right: 30, bottom: 50, left: 60 }}
           padding={0.3}
           colors={[colors.blue]}
           borderColor={{
