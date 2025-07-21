@@ -35,7 +35,7 @@
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --write --unsafe --no-errors-on-unmatched"
+      "biome check --write --no-errors-on-unmatched"
     ],
     "package.json": [
       "pnpm dlx sort-package-json"

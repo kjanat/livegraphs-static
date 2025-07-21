@@ -25,7 +25,7 @@ export function FooterLink({
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground">
+    <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground hidden md:block">
       <div className="container mx-auto px-4">
         <p className="mb-2">
           © {year} Kaj Kowalski - Licensed under{" "}

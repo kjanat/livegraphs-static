@@ -10,9 +10,10 @@ import { ChartIcon, FileIcon } from "@/components/icons";
 
 interface EmptyStateProps {
   onSampleData?: () => void;
+  onUploadClick?: () => void;
 }
 
-export function EmptyState({ onSampleData }: EmptyStateProps) {
+export function EmptyState({ onSampleData, onUploadClick }: EmptyStateProps) {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -53,7 +54,17 @@ export function EmptyState({ onSampleData }: EmptyStateProps) {
               >
                 Try Sample Data
               </button>
-              <span className="text-muted-foreground">or scroll down to upload your own</span>
+              {onUploadClick ? (
+                <button
+                  type="button"
+                  onClick={onUploadClick}
+                  className="text-primary hover:text-primary/80 underline transition-colors"
+                >
+                  or upload your own data
+                </button>
+              ) : (
+                <span className="text-muted-foreground">or upload your own data</span>
+              )}
             </div>
           )}
         </div>

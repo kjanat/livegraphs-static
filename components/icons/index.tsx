@@ -453,3 +453,125 @@ export function ChevronUpIcon({
     </svg>
   );
 }
+
+export function AlertCircleIcon({
+  size = 20,
+  className = "",
+  decorative = false,
+  ...props
+}: IconProps) {
+  const titleId = decorative ? undefined : "alert-circle-icon-title";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? undefined : "img"}
+      aria-labelledby={titleId}
+      aria-hidden={decorative ? "true" : undefined}
+      {...props}
+    >
+      {!decorative && <title id={titleId}>Alert Circle</title>}
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+export function BarChart3Icon({
+  size = 20,
+  className = "",
+  decorative = false,
+  ...props
+}: IconProps) {
+  const titleId = decorative ? undefined : "bar-chart-3-icon-title";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? undefined : "img"}
+      aria-labelledby={titleId}
+      aria-hidden={decorative ? "true" : undefined}
+      {...props}
+    >
+      {!decorative && <title id={titleId}>Bar Chart</title>}
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}
+
+export function MessageSquareIcon({
+  size = 20,
+  className = "",
+  decorative = false,
+  ...props
+}: IconProps) {
+  const titleId = decorative ? undefined : "message-square-icon-title";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? undefined : "img"}
+      aria-labelledby={titleId}
+      aria-hidden={decorative ? "true" : undefined}
+      {...props}
+    >
+      {!decorative && <title id={titleId}>Message Square</title>}
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ size = 20, className = "", decorative = false, ...props }: IconProps) {
+  const titleId = decorative ? undefined : "users-icon-title";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? undefined : "img"}
+      aria-labelledby={titleId}
+      aria-hidden={decorative ? "true" : undefined}
+      {...props}
+    >
+      {!decorative && <title id={titleId}>Users</title>}
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}

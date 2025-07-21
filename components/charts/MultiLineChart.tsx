@@ -81,12 +81,25 @@ export function MultiLineChart({
       x: {
         grid: {
           display: false
+        },
+        ticks: {
+          autoSkip: true,
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: window.innerWidth < 768 ? 10 : 12
+          }
         }
       },
       y: {
         beginAtZero: true,
         grid: {
           color: "rgba(0, 0, 0, 0.05)"
+        },
+        ticks: {
+          font: {
+            size: window.innerWidth < 768 ? 10 : 12
+          }
         }
       }
     }
@@ -101,7 +114,7 @@ export function MultiLineChart({
 
   return (
     <div className="bg-card rounded-lg shadow-md p-6 w-full">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">{title}</h3>
+      <h3 className="text-[1.125rem] sm:text-xl font-bold mb-4 text-card-foreground">{title}</h3>
       <div className="relative h-64 sm:h-80 w-full">
         <Line data={chartData} options={options} />
       </div>

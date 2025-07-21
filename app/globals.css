@@ -159,3 +159,22 @@ body {
   clip: auto;
   white-space: normal;
 }
+
+/* Minimal mobile-specific rules that can't be achieved with Tailwind */
+@media (max-width: 768px) {
+  /* Chart.js canvas text size (can't be controlled via Tailwind) */
+  .recharts-cartesian-axis-tick text,
+  .chart-container text {
+    font-size: 12px !important;
+  }
+}
+
+/* Hide scrollbar for tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

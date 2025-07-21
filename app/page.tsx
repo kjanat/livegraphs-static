@@ -34,8 +34,12 @@ import { TopCategoriesChart } from "@/components/charts/TopCategoriesChart";
 import { TopQuestionsSection } from "@/components/charts/TopQuestionsSection";
 import { DataQualityIndicator } from "@/components/DataQualityIndicator";
 import { InsightsSummary } from "@/components/InsightsSummary";
-import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
+import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons/index";
 import Logo from "@/components/Logo";
+import { MobileDashboard } from "@/components/mobile/MobileDashboard";
+import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
+import { MobileDateRangePicker } from "@/components/mobile/MobileDateRangePicker";
+import { MobileUploadSection } from "@/components/mobile/MobileUploadSection";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EnhancedLoadingState } from "@/components/ui/EnhancedLoadingState";
@@ -72,7 +76,19 @@ export default function Home() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dragCounter = useRef(0);
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (isInitialized && !dbError) {
@@ -195,13 +211,45 @@ export default function Home() {
   };
 
   const handleClearDatabase = () => {
-    if (confirm("Are you sure you want to clear all data?")) {
-      clearDatabase();
-      setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
-      setMetrics(null);
-      setChartData(null);
-      setDateRange(null);
-    }
+    toast.custom(
+      (t) => (
+        <div className="bg-card rounded-lg p-4 shadow-lg border border-border max-w-md">
+          <h3 className="font-semibold text-base mb-2">Clear All Data?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            This will permanently delete all sessions from the database. This action cannot be
+            undone.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(t)}
+              className="px-3 py-1.5 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                clearDatabase();
+                setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
+                setMetrics(null);
+                setChartData(null);
+                setDateRange(null);
+                toast.dismiss(t);
+                toast.success("Database cleared successfully");
+              }}
+              className="px-3 py-1.5 text-sm font-medium bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md transition-colors"
+            >
+              Clear Database
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 60000, // 1 minute timeout
+        position: "top-center"
+      }
+    );
   };
 
   const handleExportCSV = () => {
@@ -217,6 +265,19 @@ export default function Home() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleTriggerFileUpload = () => {
+    // Try to find any visible file input (works for both mobile and desktop)
+    const fileInputs = document.querySelectorAll('input[type="file"][accept=".json"]');
+    for (const input of fileInputs) {
+      const element = input as HTMLInputElement;
+      // Check if the input is not disabled and is in the DOM
+      if (!element.disabled && element.offsetParent !== null) {
+        element.click();
+        break;
+      }
+    }
   };
 
   const handleLoadSampleData = async () => {
@@ -246,12 +307,20 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <main
+      id="main-content"
+      className="min-h-screen bg-background px-4 py-6 sm:p-6 lg:p-8 overflow-x-hidden"
+      style={{
+        paddingLeft: "env(safe-area-inset-left, 1rem)",
+        paddingRight: "env(safe-area-inset-right, 1rem)",
+        paddingBottom: "env(safe-area-inset-bottom, 1rem)"
+      }}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 mb-8">
           <div className="flex items-center gap-2 sm:gap-4">
             <Logo size={48} className="text-primary flex-shrink-0" />
-            <h1 className="text-2xl sm:text-4xl font-bold">Notso AI Dashboard</h1>
+            <h1 className="text-[1.75rem] sm:text-3xl md:text-4xl font-bold">Notso AI Dashboard</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -270,132 +339,166 @@ export default function Home() {
         )}
 
         {/* Upload Section */}
-        {isInitialized && (
-          <section
-            id="upload-section"
-            className={`bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg ${
-              isDragging ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : ""
-            }`}
-            aria-label="Data upload section"
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Upload Data</h2>
-            {isDragging && (
-              <div className="mb-4 p-4 border-2 border-dashed border-primary rounded-lg bg-primary/10 text-center">
-                <p className="text-lg font-medium text-primary">Drop your JSON file here</p>
-              </div>
-            )}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <label
-                className={`bg-primary text-primary-foreground font-medium py-2 px-4 rounded transition-colors flex items-center gap-2 ${
-                  isUploading
-                    ? "opacity-50 cursor-not-allowed pointer-events-none"
-                    : "hover:bg-primary/90 cursor-pointer"
-                }`}
-              >
-                <UploadIcon size={18} />
-                Upload File
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={isUploading}
-                  aria-label="Upload JSON file"
-                />
-              </label>
-              {isUploading && (
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <SpinnerIcon size={16} />
-                  Processing...
-                </span>
+        {isInitialized &&
+          (isMobile ? (
+            <MobileUploadSection
+              isUploading={isUploading}
+              uploadError={uploadError}
+              hasData={(dbStats?.totalSessions ?? 0) > 0}
+              hasDateRange={!!dateRange}
+              onFileUpload={handleFileUpload}
+              onClearDatabase={handleClearDatabase}
+              onExportCSV={handleExportCSV}
+              isDragging={isDragging}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            />
+          ) : (
+            <section
+              id="upload-section"
+              className={`bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg ${
+                isDragging ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : ""
+              }`}
+              aria-label="Data upload section"
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <h2 className="text-[1.25rem] sm:text-2xl font-bold mb-4">
+                {dbStats && dbStats.totalSessions > 0 ? "Manage Data" : "Upload Data"}
+              </h2>
+              {isDragging && (
+                <div className="mb-4 p-4 border-2 border-dashed border-primary rounded-lg bg-primary/10 text-center">
+                  <p className="text-lg font-medium text-primary">Drop your JSON file here</p>
+                </div>
               )}
-              {dbStats && dbStats.totalSessions > 0 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleClearDatabase}
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium py-2 px-4 rounded transition-colors flex items-center gap-2"
-                    aria-label="Clear all data from database"
-                  >
-                    <TrashIcon size={18} />
-                    Clear Database
-                  </button>
-                  {dateRange && (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <label
+                  className={`bg-primary text-primary-foreground font-medium py-3 px-4 sm:py-2 rounded transition-colors flex items-center gap-2 min-h-[44px] ${
+                    isUploading
+                      ? "opacity-50 cursor-not-allowed pointer-events-none"
+                      : "hover:bg-primary/90 cursor-pointer"
+                  }`}
+                >
+                  <UploadIcon size={18} />
+                  {dbStats && dbStats.totalSessions > 0 ? "Upload New File" : "Upload File"}
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                    aria-label="Upload JSON file"
+                  />
+                </label>
+                {isUploading && (
+                  <span className="text-muted-foreground flex items-center gap-2">
+                    <SpinnerIcon size={16} />
+                    Processing...
+                  </span>
+                )}
+                {dbStats && dbStats.totalSessions > 0 && (
+                  <>
                     <button
                       type="button"
-                      onClick={handleExportCSV}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors flex items-center gap-2"
-                      aria-label="Export data as CSV file"
+                      onClick={handleClearDatabase}
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium py-3 px-4 sm:py-2 rounded transition-colors flex items-center gap-2 min-h-[44px]"
+                      aria-label="Clear all data from database"
                     >
-                      <DownloadIcon size={18} />
-                      Export CSV
+                      <TrashIcon size={18} />
+                      Clear Database
                     </button>
-                  )}
-                </>
-              )}
-            </div>
-            {uploadError && (
-              <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
-                {uploadError}
+                    {dateRange && (
+                      <button
+                        type="button"
+                        onClick={handleExportCSV}
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 sm:py-2 rounded transition-colors flex items-center gap-2 min-h-[44px]"
+                        aria-label="Export data as CSV file"
+                      >
+                        <DownloadIcon size={18} />
+                        Export CSV
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </section>
-        )}
+              {uploadError && (
+                <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
+                  {uploadError}
+                </div>
+              )}
+            </section>
+          ))}
 
         {/* Database Stats */}
-        {dbStats && isInitialized && dbStats.totalSessions > 0 && (
-          <section
-            className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
-            aria-label="Database statistics"
-          >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Database Statistics</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-primary/10 p-4 rounded transition-colors hover:bg-primary/15">
-                <div className="text-sm text-muted-foreground">Total Sessions</div>
-                <div className="text-2xl font-bold text-primary">{dbStats.totalSessions}</div>
-              </div>
-              <div className="bg-green-600/10 p-4 rounded transition-colors hover:bg-green-600/15">
-                <div className="text-sm text-muted-foreground">Data Start Date</div>
-                <div className="text-lg font-semibold text-green-600">
-                  {dbStats.dateRange.min
-                    ? new Date(dbStats.dateRange.min).toLocaleDateString()
-                    : "No data"}
+        {dbStats &&
+          isInitialized &&
+          dbStats.totalSessions > 0 &&
+          (isMobile ? (
+            <MobileDatabaseStats
+              totalSessions={dbStats.totalSessions}
+              dateRange={dbStats.dateRange}
+            />
+          ) : (
+            <section
+              className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
+              aria-label="Database statistics"
+            >
+              <h2 className="text-[1.25rem] sm:text-2xl font-bold mb-4">Database Statistics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-primary/10 p-4 rounded transition-colors hover:bg-primary/15">
+                  <div className="text-sm text-muted-foreground">Total Sessions</div>
+                  <div className="text-2xl font-bold text-primary">{dbStats.totalSessions}</div>
+                </div>
+                <div className="bg-green-600/10 p-4 rounded transition-colors hover:bg-green-600/15">
+                  <div className="text-sm text-muted-foreground">Data Start Date</div>
+                  <div className="text-lg font-semibold text-green-600">
+                    {dbStats.dateRange.min
+                      ? new Date(dbStats.dateRange.min).toLocaleDateString()
+                      : "No data"}
+                  </div>
+                </div>
+                <div className="bg-purple-600/10 p-4 rounded transition-colors hover:bg-purple-600/15">
+                  <div className="text-sm text-muted-foreground">Data End Date</div>
+                  <div className="text-lg font-semibold text-purple-600">
+                    {dbStats.dateRange.max
+                      ? new Date(dbStats.dateRange.max).toLocaleDateString()
+                      : "No data"}
+                  </div>
                 </div>
               </div>
-              <div className="bg-purple-600/10 p-4 rounded transition-colors hover:bg-purple-600/15">
-                <div className="text-sm text-muted-foreground">Data End Date</div>
-                <div className="text-lg font-semibold text-purple-600">
-                  {dbStats.dateRange.max
-                    ? new Date(dbStats.dateRange.max).toLocaleDateString()
-                    : "No data"}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+            </section>
+          ))}
 
         {/* Date Range Picker */}
-        {dbStats && dbStats.totalSessions > 0 && (
-          <DateRangePicker
-            minDate={dbStats.dateRange.min}
-            maxDate={dbStats.dateRange.max}
-            onDateRangeChange={loadDataForDateRange}
-          />
-        )}
+        {dbStats &&
+          dbStats.totalSessions > 0 &&
+          (isMobile ? (
+            <MobileDateRangePicker
+              minDate={dbStats.dateRange.min}
+              maxDate={dbStats.dateRange.max}
+              onDateRangeChange={loadDataForDateRange}
+            />
+          ) : (
+            <DateRangePicker
+              minDate={dbStats.dateRange.min}
+              maxDate={dbStats.dateRange.max}
+              onDateRangeChange={loadDataForDateRange}
+            />
+          ))}
 
-        {/* Metrics */}
-        {isLoadingData && dateRange && (
+        {/* Metrics - Desktop only */}
+        {!isMobile && isLoadingData && dateRange && (
           <EnhancedLoadingState
             stage="metrics"
             totalSessions={dbStats?.totalSessions}
             className="mb-8"
           />
         )}
-        {metrics && !isLoadingData && (
+        {!isMobile && metrics && !isLoadingData && (
           <EnhancedMetricsDisplay
             metrics={metrics as unknown as { [key: string]: string | number }}
           />
@@ -410,22 +513,33 @@ export default function Home() {
           />
         )}
 
-        {/* Data Quality Assessment */}
-        {metrics && chartData && dateRange && !isLoadingData && (
-          <DataQualityIndicator
-            metrics={metrics}
-            totalSessions={metrics["Total Conversations"]}
-            dateRange={dateRange}
-          />
+        {/* Mobile Dashboard */}
+        {isMobile && metrics && chartData && !isLoadingData && (
+          <MobileDashboard metrics={metrics} chartData={chartData} />
         )}
 
-        {/* Key Insights Summary */}
-        {metrics && chartData && dateRange && !isLoadingData && (
-          <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />
+        {/* Desktop-only components */}
+        {!isMobile && (
+          <>
+            {/* Data Quality Assessment */}
+            {metrics && chartData && dateRange && !isLoadingData && (
+              <DataQualityIndicator
+                metrics={metrics}
+                totalSessions={metrics["Total Conversations"]}
+                dateRange={dateRange}
+              />
+            )}
+
+            {/* Key Insights Summary */}
+            {metrics && chartData && dateRange && !isLoadingData && (
+              <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />
+            )}
+          </>
         )}
 
-        {/* Progressive Charts Dashboard */}
-        {chartData &&
+        {/* Progressive Charts Dashboard - Desktop only */}
+        {!isMobile &&
+          chartData &&
           !isLoadingData &&
           (() => {
             const colors = getChartColors();
@@ -586,7 +700,10 @@ export default function Home() {
             className={`${isDragging ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""}`}
             aria-label="Drop zone for JSON files"
           >
-            <EmptyState onSampleData={handleLoadSampleData} />
+            <EmptyState
+              onSampleData={handleLoadSampleData}
+              onUploadClick={handleTriggerFileUpload}
+            />
           </section>
         )}
       </div>
