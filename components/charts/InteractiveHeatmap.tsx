@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface HeatmapData {
   hour: number;
@@ -24,10 +24,38 @@ export function InteractiveHeatmap({
   title = "Weekly Usage Heatmap"
 }: InteractiveHeatmapProps) {
   const [hoveredCell, setHoveredCell] = useState<{ hour: number; day: string } | null>(null);
+  const [displayedCell, setDisplayedCell] = useState<{ hour: number; day: string } | null>(null);
   const [hourStep, setHourStep] = useState(1);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Days for the grid
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Handle hover with delay
+  useEffect(() => {
+    if (hoveredCell) {
+      // Clear any existing timeout
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+      // Show immediately when hovering a new cell
+      setDisplayedCell(hoveredCell);
+    } else {
+      // Hide with delay when not hovering
+      hideTimeoutRef.current = setTimeout(() => {
+        setDisplayedCell(null);
+      }, 300); // 300ms delay before hiding
+    }
+
+    return () => {
+      // Cleanup function will clear any pending timeout
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+    };
+  }, [hoveredCell]);
 
   // Responsive hour step calculation
   useEffect(() => {
@@ -191,18 +219,25 @@ export function InteractiveHeatmap({
       </div>
 
       {/* Hover tooltip */}
-      {hoveredCell && (
-        <div className="mt-2 text-sm text-muted-foreground text-center">
-          {hoveredCell.day} at{" "}
-          {hourStep === 1
-            ? `${hoveredCell.hour}:00`
-            : `${hoveredCell.hour}:00-${Math.min(hoveredCell.hour + hourStep - 1, 23)}:59`}{" "}
-          -{" "}
-          <span className="font-semibold">
-            {dataMap.get(`${hoveredCell.day}-${hoveredCell.hour}`) || 0} sessions
-          </span>
-        </div>
-      )}
+      <div
+        className={`mt-2 text-sm text-muted-foreground text-center transition-opacity duration-300 ${
+          displayedCell ? "opacity-100" : "opacity-0"
+        }`}
+        style={{ minHeight: "1.5rem" }}
+      >
+        {displayedCell && (
+          <>
+            {displayedCell.day} at{" "}
+            {hourStep === 1
+              ? `${displayedCell.hour}:00`
+              : `${displayedCell.hour}:00-${Math.min(displayedCell.hour + hourStep - 1, 23)}:59`}{" "}
+            -{" "}
+            <span className="font-semibold">
+              {dataMap.get(`${displayedCell.day}-${displayedCell.hour}`) || 0} sessions
+            </span>
+          </>
+        )}
+      </div>
     </div>
   );
 }
