@@ -50,7 +50,7 @@ export function MobileCollapsibleSection({
           isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         } overflow-hidden`}
       >
-        <div className="p-3 pt-0 border-t border-border/50">{children}</div>
+        <div className="p-3 pt-2 border-t border-border/50">{children}</div>
       </div>
     </div>
   );

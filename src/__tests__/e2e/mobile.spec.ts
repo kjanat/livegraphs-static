@@ -187,4 +187,50 @@ test.describe("Notso AI Dashboard - Mobile", () => {
     // Should still show metrics
     await expect(page.getByText("Total Sessions")).toBeVisible();
   });
+
+  test("collapsible sections work on mobile", async ({ page }) => {
+    // Load sample data
+    const uploadToggle = page.getByRole("button", { name: "Upload or manage data" });
+    if (await uploadToggle.isVisible()) {
+      await uploadToggle.click();
+      await page.waitForTimeout(500);
+    }
+
+    await page.getByRole("button", { name: "Try Sample Data" }).click();
+    await expect(page.getByText(/Successfully loaded \d+ sample sessions/)).toBeVisible({
+      timeout: 10000
+    });
+
+    // Reload to see data
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Wait for the UI to settle
+    await page.waitForTimeout(2000);
+
+    // Check that Top Countries section is visible and collapsible
+    const topCountriesButton = page.getByRole("button", { name: /Top Countries/i });
+    await expect(topCountriesButton).toBeVisible();
+
+    // The section should be expanded by default - verify content is visible
+    await expect(page.getByText("United States").first()).toBeVisible();
+
+    // Click to collapse
+    await topCountriesButton.click({ force: true });
+    await page.waitForTimeout(500);
+
+    // Content should be hidden
+    await expect(page.getByText("United States").first()).not.toBeVisible();
+
+    // Check Top Languages section
+    const topLanguagesButton = page.getByRole("button", { name: /Top Languages/i });
+    await expect(topLanguagesButton).toBeVisible();
+
+    // Click to expand (it should be collapsed after collapsing countries)
+    await topLanguagesButton.click({ force: true });
+    await page.waitForTimeout(500);
+
+    // Language content should be visible
+    await expect(page.getByText("English").first()).toBeVisible();
+  });
 });

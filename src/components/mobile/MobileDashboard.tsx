@@ -198,8 +198,11 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                   </div>
 
                   {/* Top Countries */}
-                  <div className="bg-card rounded-lg p-3 shadow-sm">
-                    <h3 className="font-semibold text-sm mb-3">Top Countries</h3>
+                  <MobileCollapsibleSection
+                    title="Top Countries"
+                    badge={chartData.country_labels.length}
+                    defaultExpanded={true}
+                  >
                     <div className="space-y-2.5">
                       {(() => {
                         const totalCountrySessions = chartData.country_values.reduce(
@@ -219,11 +222,14 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                           ));
                       })()}
                     </div>
-                  </div>
+                  </MobileCollapsibleSection>
 
                   {/* Top Languages */}
-                  <div className="bg-card rounded-lg p-3 shadow-sm">
-                    <h3 className="font-semibold text-sm mb-3">Top Languages</h3>
+                  <MobileCollapsibleSection
+                    title="Top Languages"
+                    badge={chartData.language_labels.length}
+                    defaultExpanded={true}
+                  >
                     <div className="space-y-2.5">
                       {(() => {
                         const totalLanguageSessions = chartData.language_values.reduce(
@@ -243,7 +249,7 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                           ));
                       })()}
                     </div>
-                  </div>
+                  </MobileCollapsibleSection>
                 </div>
               );
 
