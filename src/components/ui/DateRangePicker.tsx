@@ -1,7 +1,14 @@
 "use client";
 
 import { format, subMonths } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface DateRangePickerProps {
   minDate?: string;
@@ -10,47 +17,37 @@ interface DateRangePickerProps {
 }
 
 export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRangePickerProps) {
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [isOpen, setIsOpen] = useState(false);
 
   // Set default to last month when dates are available
   useEffect(() => {
-    if (minDate && maxDate && !startDate && !endDate) {
+    if (minDate && maxDate && !dateRange) {
       const max = new Date(maxDate);
       const lastMonthStart = subMonths(max, 1);
       const defaultStart = lastMonthStart < new Date(minDate) ? new Date(minDate) : lastMonthStart;
 
-      setStartDate(format(defaultStart, "yyyy-MM-dd"));
-      setEndDate(format(max, "yyyy-MM-dd"));
+      const initialRange = { from: defaultStart, to: max };
+      setDateRange(initialRange);
 
       // Trigger initial load with end date at end of day
       const endOfDay = new Date(max);
       endOfDay.setHours(23, 59, 59, 999);
       onDateRangeChange(defaultStart, endOfDay);
     }
-  }, [minDate, maxDate, startDate, endDate, onDateRangeChange]);
+  }, [minDate, maxDate, dateRange, onDateRangeChange]);
 
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newStart = e.target.value;
-    setStartDate(newStart);
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
 
-    // Ensure end date is not before start date
-    if (endDate && newStart > endDate) {
-      setEndDate(newStart);
-    }
-  };
-
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEndDate(e.target.value);
-  };
-
-  const handleApply = () => {
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    // Apply the range if both dates are selected
+    if (range?.from && range?.to) {
+      const start = new Date(range.from);
+      const end = new Date(range.to);
       // Ensure end date includes the entire day
       end.setHours(23, 59, 59, 999);
       onDateRangeChange(start, end);
+      setIsOpen(false);
     }
   };
 
@@ -81,8 +78,8 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
       start = new Date(minDate);
     }
 
-    setStartDate(format(start, "yyyy-MM-dd"));
-    setEndDate(format(max, "yyyy-MM-dd"));
+    const range = { from: start, to: max };
+    setDateRange(range);
 
     // Ensure end date includes the entire day
     const endOfDay = new Date(max);
@@ -92,95 +89,80 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4">Date Range</h2>
-
-      {/* Preset buttons */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => handlePresetRange("lastWeek")}
-          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
-        >
-          Last Week
-        </button>
-        <button
-          type="button"
-          onClick={() => handlePresetRange("lastMonth")}
-          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
-        >
-          Last Month
-        </button>
-        <button
-          type="button"
-          onClick={() => handlePresetRange("last3Months")}
-          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
-        >
-          Last 3 Months
-        </button>
-        <button
-          type="button"
-          onClick={() => handlePresetRange("all")}
-          className="px-3 py-1 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded transition-colors"
-        >
-          All Data
-        </button>
-      </div>
-
-      {/* Date inputs - responsive layout */}
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-        <div className="flex-1">
-          <label
-            htmlFor="start-date"
-            className="block text-sm font-medium mb-1 text-muted-foreground"
-          >
-            Start Date
-          </label>
-          <input
-            id="start-date"
-            type="date"
-            value={startDate}
-            onChange={handleStartDateChange}
-            min={minDate}
-            max={maxDate}
-            className="w-full px-3 py-2 bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-          />
+    <Card className="mb-8 transition-all duration-200 hover:shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-xl sm:text-2xl">Date Range</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Preset buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" onClick={() => handlePresetRange("lastWeek")}>
+            Last Week
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handlePresetRange("lastMonth")}>
+            Last Month
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handlePresetRange("last3Months")}>
+            Last 3 Months
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handlePresetRange("all")}>
+            All Data
+          </Button>
         </div>
 
-        <div className="flex-1">
-          <label
-            htmlFor="end-date"
-            className="block text-sm font-medium mb-1 text-muted-foreground"
-          >
-            End Date
-          </label>
-          <input
-            id="end-date"
-            type="date"
-            value={endDate}
-            onChange={handleEndDateChange}
-            min={startDate || minDate}
-            max={maxDate}
-            className="w-full px-3 py-2 bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-          />
+        {/* Calendar picker */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1">
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "MMM d, yyyy")} -{" "}
+                        {format(dateRange.to, "MMM d, yyyy")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "MMM d, yyyy")
+                    )
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={handleDateRangeSelect}
+                  numberOfMonths={2}
+                  disabled={(date) => {
+                    const min = minDate ? new Date(minDate) : new Date("1900-01-01");
+                    const max = maxDate ? new Date(maxDate) : new Date("2100-12-31");
+                    return date < min || date > max;
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleApply}
-          disabled={!startDate || !endDate}
-          className="w-full sm:w-auto px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
-        >
-          Apply
-        </button>
-      </div>
-
-      {startDate && endDate && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          Showing data from {format(new Date(startDate), "MMM d, yyyy")} to{" "}
-          {format(new Date(endDate), "MMM d, yyyy")}
-        </p>
-      )}
-    </div>
+        {dateRange?.from && dateRange?.to && (
+          <p className="text-sm text-muted-foreground">
+            Showing data from {format(dateRange.from, "MMM d, yyyy")} to{" "}
+            {format(dateRange.to, "MMM d, yyyy")}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
