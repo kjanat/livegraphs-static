@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Expand } from "lucide-react";
 import type { ReactNode } from "react";
-import { ExpandIcon } from "@/components/icons";
 
 interface ChartWrapperProps {
   children: ReactNode;
@@ -37,7 +37,7 @@ export function ChartWrapper({ children, title, onExpand, className = "" }: Char
               aria-labelledby={headingId}
               aria-describedby={`${headingId}-expand-desc`}
             >
-              <ExpandIcon size={18} decorative />
+              <Expand className="h-[18px] w-[18px]" />
               <span id={`${headingId}-expand-desc`} className="sr-only">
                 Expand to fullscreen
               </span>

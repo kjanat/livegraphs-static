@@ -6,7 +6,7 @@
 
 "use client";
 
-import { TrendingDownIcon, TrendingUpIcon } from "@/components/icons/index";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface MobileMetricCardProps {
   title: string;
@@ -58,7 +58,11 @@ export function MobileMetricCard({
                 trend.isPositive ? "text-green-600" : "text-red-600"
               }`}
             >
-              {trend.isPositive ? <TrendingUpIcon size={14} /> : <TrendingDownIcon size={14} />}
+              {trend.isPositive ? (
+                <TrendingUp className="h-[14px] w-[14px]" />
+              ) : (
+                <TrendingDown className="h-[14px] w-[14px]" />
+              )}
               <span>{Math.abs(trend.value)}%</span>
             </div>
           )}

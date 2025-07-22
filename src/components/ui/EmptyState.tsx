@@ -6,7 +6,7 @@
 
 "use client";
 
-import { ChartIcon, FileIcon } from "@/components/icons";
+import { BarChart3, File } from "lucide-react";
 
 interface EmptyStateProps {
   onSampleData?: () => void;
@@ -26,11 +26,11 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
               <div className="w-32 h-32 bg-primary/10 rounded-full animate-pulse" />
             </div>
             <div className="relative flex items-center justify-center">
-              <FileIcon
+              <File
                 size={48}
                 className="text-primary/50 animate-in slide-in duration-700 delay-200"
               />
-              <ChartIcon
+              <BarChart3
                 size={48}
                 className="text-primary ml-4 animate-in slide-in duration-700 delay-400"
               />

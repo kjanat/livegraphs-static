@@ -6,12 +6,7 @@
 
 "use client";
 
-import {
-  AlertTriangleIcon,
-  CheckCircleIcon,
-  TrendingDownIcon,
-  TrendingUpIcon
-} from "@/components/icons";
+import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp } from "lucide-react";
 import type { ChartData, Metrics } from "@/lib/types/session";
 
 interface InsightsSummaryProps {
@@ -44,7 +39,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "High Activity Volume",
       description: `Strong engagement with ${avgSessionsPerDay.toFixed(0)} sessions per day on average`,
       value: `${totalSessions} total sessions`,
-      icon: TrendingUpIcon
+      icon: TrendingUp
     });
   } else if (avgSessionsPerDay < 10) {
     insights.push({
@@ -52,7 +47,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "Low Activity Volume",
       description: `Consider promoting your chatbot - only ${avgSessionsPerDay.toFixed(0)} sessions per day`,
       value: `${totalSessions} total sessions`,
-      icon: TrendingDownIcon
+      icon: TrendingDown
     });
   }
 
@@ -64,7 +59,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
         title: "Excellent User Satisfaction",
         description: "Users are highly satisfied with the chatbot experience",
         value: `${chartData.avg_rating.toFixed(1)}/5.0 stars`,
-        icon: CheckCircleIcon
+        icon: CheckCircle
       });
     } else if (chartData.avg_rating < 3.0) {
       insights.push({
@@ -72,7 +67,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
         title: "User Satisfaction Needs Attention",
         description: "Consider reviewing negative feedback and improving responses",
         value: `${chartData.avg_rating.toFixed(1)}/5.0 stars`,
-        icon: AlertTriangleIcon
+        icon: AlertTriangle
       });
     }
   }
@@ -87,7 +82,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "High Escalation Rate",
       description: "Many conversations require human intervention",
       value: `${escalationRate.toFixed(1)}% escalated`,
-      icon: AlertTriangleIcon
+      icon: AlertTriangle
     });
   } else if (escalationRate < 10) {
     insights.push({
@@ -95,7 +90,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "Effective Self-Service",
       description: "Most conversations are resolved without escalation",
       value: `${escalationRate.toFixed(1)}% escalated`,
-      icon: CheckCircleIcon
+      icon: CheckCircle
     });
   }
 
@@ -107,7 +102,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "Slow Response Times",
       description: "Users may experience delays - consider optimization",
       value: `${avgResponseTime.toFixed(1)}s average`,
-      icon: TrendingDownIcon
+      icon: TrendingDown
     });
   } else if (avgResponseTime < 2) {
     insights.push({
@@ -115,7 +110,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "Fast Response Times",
       description: "Users receive quick responses for better experience",
       value: `${avgResponseTime.toFixed(1)}s average`,
-      icon: TrendingUpIcon
+      icon: TrendingUp
     });
   }
 
@@ -136,7 +131,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
           title: "High Negative Sentiment",
           description: "Significant portion of conversations have negative sentiment",
           value: `${negativePercentage.toFixed(1)}% negative`,
-          icon: TrendingDownIcon
+          icon: TrendingDown
         });
       }
     }
@@ -160,7 +155,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
           description:
             "Many conversations lack proper categorization - consider reviewing classification rules",
           value: `${unrecognizedPercentage.toFixed(1)}% unrecognized`,
-          icon: AlertTriangleIcon
+          icon: AlertTriangle
         });
       }
     }
@@ -173,7 +168,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       title: "Limited Data Sample",
       description: "Insights may be less reliable with small data sets",
       value: `${totalSessions} sessions`,
-      icon: AlertTriangleIcon
+      icon: AlertTriangle
     });
   }
 
@@ -223,7 +218,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
   return (
     <section className="bg-card rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <CheckCircleIcon size={24} className="text-primary" />
+        <CheckCircle className="h-6 w-6 text-primary" />
         Key Insights
       </h2>
 
@@ -236,7 +231,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
               className={`border rounded-lg p-4 transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
             >
               <div className="flex items-start gap-3">
-                <Icon size={20} className={`mt-0.5 flex-shrink-0 ${getIconColor(insight.type)}`} />
+                <Icon className={`mt-0.5 flex-shrink-0 h-5 w-5 ${getIconColor(insight.type)}`} />
                 <div className="flex-1">
                   <h3 className={`font-semibold mb-1 ${getTextColor(insight.type)}`}>
                     {insight.title}

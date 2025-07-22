@@ -6,14 +6,8 @@
 
 "use client";
 
+import { AlertCircle, CheckCircle, Info, TrendingUp, X } from "lucide-react";
 import { useState } from "react";
-import {
-  AlertCircleIcon,
-  CheckCircleIcon,
-  InfoIcon,
-  TrendingUpIcon,
-  XIcon
-} from "@/components/icons/index";
 import type { Metrics } from "@/lib/types/session";
 
 interface MobileHighlightsProps {
@@ -35,7 +29,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
       type: "success" as const,
       title: "High Resolution Rate",
       message: `${resolutionRate}% of conversations resolved successfully`,
-      icon: <CheckCircleIcon size={20} />
+      icon: <CheckCircle className="h-5 w-5" />
     });
   }
 
@@ -45,7 +39,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
       type: "warning" as const,
       title: "Low Resolution Rate",
       message: `Only ${resolutionRate}% of conversations were resolved`,
-      icon: <AlertCircleIcon size={20} />
+      icon: <AlertCircle className="h-5 w-5" />
     });
   }
 
@@ -59,7 +53,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
       type: "success" as const,
       title: "Excellent User Satisfaction",
       message: `Average rating of ${avgRating.toFixed(1)} out of 5 stars`,
-      icon: <TrendingUpIcon size={20} />
+      icon: <TrendingUp className="h-5 w-5" />
     });
   }
 
@@ -69,7 +63,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
       type: "warning" as const,
       title: "User Satisfaction Needs Improvement",
       message: `Average rating of ${avgRating.toFixed(1)} out of 5 stars`,
-      icon: <AlertCircleIcon size={20} />
+      icon: <AlertCircle className="h-5 w-5" />
     });
   }
 
@@ -79,7 +73,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
       type: "info" as const,
       title: "Dashboard Summary",
       message: `Analyzing ${totalConversations} conversations from your dataset`,
-      icon: <InfoIcon size={20} />
+      icon: <Info className="h-5 w-5" />
     });
   }
 
@@ -108,7 +102,7 @@ export function MobileHighlights({ metrics }: MobileHighlightsProps) {
             className="p-1 hover:bg-muted rounded-md transition-colors"
             aria-label="Dismiss insights"
           >
-            <XIcon size={14} className="text-muted-foreground" />
+            <X className="h-[14px] w-[14px] text-muted-foreground" />
           </button>
         </div>
       </div>

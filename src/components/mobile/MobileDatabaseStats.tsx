@@ -6,8 +6,8 @@
 
 "use client";
 
+import { BarChart3, Calendar, File } from "lucide-react";
 import { useState } from "react";
-import { BarChart3Icon, CalendarIcon, FileIcon } from "@/components/icons/index";
 
 interface MobileDatabaseStatsProps {
   totalSessions: number;
@@ -31,7 +31,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
         className="w-full p-3 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-lg"
       >
         <div className="flex items-center gap-2">
-          <FileIcon size={18} className="text-muted-foreground" />
+          <File className="h-[18px] w-[18px] text-muted-foreground" />
           <h2 className="text-base font-semibold">Database Statistics</h2>
           <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
             {totalSessions} sessions
@@ -60,7 +60,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
           <div className="mt-3 space-y-3">
             <div className="bg-primary/10 p-3 rounded-md">
               <div className="flex items-center gap-2 mb-1">
-                <BarChart3Icon size={14} className="text-primary" />
+                <BarChart3 className="h-[14px] w-[14px] text-primary" />
                 <div className="text-xs text-muted-foreground font-medium">Total Sessions</div>
               </div>
               <div className="text-xl font-bold text-primary">{totalSessions}</div>
@@ -69,7 +69,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-green-600/10 p-3 rounded-md">
                 <div className="flex items-center gap-2 mb-1">
-                  <CalendarIcon size={14} className="text-green-600" />
+                  <Calendar className="h-[14px] w-[14px] text-green-600" />
                   <div className="text-xs text-muted-foreground font-medium">Start Date</div>
                 </div>
                 <div className="text-sm font-semibold text-green-600">
@@ -79,7 +79,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
 
               <div className="bg-purple-600/10 p-3 rounded-md">
                 <div className="flex items-center gap-2 mb-1">
-                  <CalendarIcon size={14} className="text-purple-600" />
+                  <Calendar className="h-[14px] w-[14px] text-purple-600" />
                   <div className="text-xs text-muted-foreground font-medium">End Date</div>
                 </div>
                 <div className="text-sm font-semibold text-purple-600">

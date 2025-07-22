@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SpinnerIcon } from "@/components/icons";
 
 interface EnhancedLoadingStateProps {
   stage: "metrics" | "charts" | "processing";
@@ -103,7 +103,7 @@ export function EnhancedLoadingState({
             <div className="w-16 h-16 bg-primary/10 rounded-full animate-ping" />
           </div>
           <div className="relative flex items-center justify-center">
-            <SpinnerIcon size={48} className="text-primary" />
+            <Loader2 className="h-12 w-12 text-primary animate-spin" />
           </div>
         </div>
 

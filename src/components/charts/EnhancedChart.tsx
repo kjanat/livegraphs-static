@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Download, Expand } from "lucide-react";
 import { type ReactElement, useRef, useState } from "react";
-import { DownloadIcon, ExpandIcon } from "@/components/icons";
 import { ChartWrapper } from "@/components/ui/ChartWrapper";
 import { FullscreenModal } from "@/components/ui/FullscreenModal";
 
@@ -65,7 +65,7 @@ export function EnhancedChart({
               aria-label="Export chart"
               title="Export as PNG"
             >
-              <DownloadIcon size={18} />
+              <Download className="h-[18px] w-[18px]" />
             </button>
             <button
               type="button"
@@ -74,7 +74,7 @@ export function EnhancedChart({
               aria-label="View fullscreen"
               title="View fullscreen"
             >
-              <ExpandIcon size={18} />
+              <Expand className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>

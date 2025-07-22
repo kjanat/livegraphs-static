@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Info } from "lucide-react";
 import { useState } from "react";
-import { InfoIcon } from "@/components/icons/index";
 
 export function MobileFooter() {
   const [showInfo, setShowInfo] = useState(false);
@@ -21,7 +21,7 @@ export function MobileFooter() {
         className="fixed bottom-4 right-4 p-2 bg-muted rounded-full shadow-md hover:shadow-lg transition-all z-10"
         aria-label="Show information"
       >
-        <InfoIcon size={16} className="text-muted-foreground" />
+        <Info className="h-4 w-4 text-muted-foreground" />
       </button>
 
       {/* Info overlay */}

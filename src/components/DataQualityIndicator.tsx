@@ -6,7 +6,7 @@
 
 "use client";
 
-import { AlertTriangleIcon, CheckCircleIcon, InfoIcon } from "@/components/icons";
+import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 import type { Metrics } from "@/lib/types/session";
 
 interface DataQualityIndicatorProps {
@@ -105,14 +105,14 @@ export function DataQualityIndicator({
   const getIssueIcon = (type: QualityIssue["type"]) => {
     switch (type) {
       case "error":
-        return <AlertTriangleIcon size={16} className="text-red-500" />;
+        return <AlertTriangle size={16} className="text-red-500" />;
       case "warning":
-        return <AlertTriangleIcon size={16} className="text-amber-500" />;
+        return <AlertTriangle size={16} className="text-amber-500" />;
       case "info":
         return issues.length === 1 ? (
-          <CheckCircleIcon size={16} className="text-green-500" />
+          <CheckCircle size={16} className="text-green-500" />
         ) : (
-          <InfoIcon size={16} className="text-blue-500" />
+          <Info size={16} className="text-blue-500" />
         );
     }
   };
@@ -170,7 +170,7 @@ export function DataQualityIndicator({
   return (
     <section className="bg-card rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <InfoIcon size={24} className="text-muted-foreground" />
+        <Info size={24} className="text-muted-foreground" />
         Data Quality Assessment
       </h2>
 

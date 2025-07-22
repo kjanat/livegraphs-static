@@ -6,8 +6,8 @@
 
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -101,9 +101,9 @@ export function ExpandableSection({
         </div>
         <div className="ml-4 flex-shrink-0 p-2 sm:p-2">
           {isExpanded ? (
-            <ChevronUpIcon size={24} className="text-muted-foreground" />
+            <ChevronUp size={24} className="text-muted-foreground" />
           ) : (
-            <ChevronDownIcon size={24} className="text-muted-foreground" />
+            <ChevronDown size={24} className="text-muted-foreground" />
           )}
         </div>
       </Button>
