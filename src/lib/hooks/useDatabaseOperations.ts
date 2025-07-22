@@ -142,12 +142,21 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     }
   }, [db, dateRange]);
 
-  const refreshStats = useCallback(() => {
+  const refreshStats = useCallback(async () => {
     if (isInitialized && !dbError) {
       const stats = getDatabaseStats();
       setDbStats(stats);
+
+      // If we have data but no date range selected, automatically load all data
+      if (stats.totalSessions > 0 && !dateRange && stats.dateRange.min && stats.dateRange.max) {
+        const startDate = new Date(stats.dateRange.min);
+        const endDate = new Date(stats.dateRange.max);
+        // Set end date to end of day
+        endDate.setHours(23, 59, 59, 999);
+        await loadDataForDateRange(startDate, endDate);
+      }
     }
-  }, [isInitialized, dbError, getDatabaseStats]);
+  }, [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]);
 
   return {
     dbStats,

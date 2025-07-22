@@ -23,8 +23,10 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
       setStartDate(format(defaultStart, "yyyy-MM-dd"));
       setEndDate(format(max, "yyyy-MM-dd"));
 
-      // Trigger initial load
-      onDateRangeChange(defaultStart, max);
+      // Trigger initial load with end date at end of day
+      const endOfDay = new Date(max);
+      endOfDay.setHours(23, 59, 59, 999);
+      onDateRangeChange(defaultStart, endOfDay);
     }
   }, [minDate, maxDate, startDate, endDate, onDateRangeChange]);
 
@@ -44,7 +46,11 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
 
   const handleApply = () => {
     if (startDate && endDate) {
-      onDateRangeChange(new Date(startDate), new Date(endDate));
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      // Ensure end date includes the entire day
+      end.setHours(23, 59, 59, 999);
+      onDateRangeChange(start, end);
     }
   };
 
@@ -77,7 +83,12 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
 
     setStartDate(format(start, "yyyy-MM-dd"));
     setEndDate(format(max, "yyyy-MM-dd"));
-    onDateRangeChange(start, max);
+
+    // Ensure end date includes the entire day
+    const endOfDay = new Date(max);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    onDateRangeChange(start, endOfDay);
   };
 
   return (

@@ -189,7 +189,9 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   const response_time_dates = responseTimeData.map((row) => row.date as string);
   const response_time_values = responseTimeData.map((row) =>
-    Number((row.avg_response_time as number).toFixed(1))
+    row.avg_response_time !== null && row.avg_response_time !== undefined
+      ? Number((row.avg_response_time as number).toFixed(1))
+      : 0
   );
 
   // Cost over time
@@ -204,7 +206,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
   `);
 
   const cost_dates = costData.map((row) => row.date as string);
-  const cost_values = costData.map((row) => Number((row.daily_cost as number).toFixed(2)));
+  const cost_values = costData.map((row) =>
+    row.daily_cost !== null && row.daily_cost !== undefined
+      ? Number((row.daily_cost as number).toFixed(2))
+      : 0
+  );
 
   // Geographic distribution
   const countryData = execQuery<{ country: string; count: number }>(`
@@ -259,7 +265,9 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
   `);
 
   const conversation_durations = durationData.map((row) =>
-    Number((row.duration_minutes as number).toFixed(1))
+    row.duration_minutes !== null && row.duration_minutes !== undefined
+      ? Number((row.duration_minutes as number).toFixed(1))
+      : 0
   );
 
   // Messages per conversation
@@ -298,7 +306,7 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
   `);
 
   const avg_rating =
-    avgRatingData.length > 0 && avgRatingData[0].avg_rating
+    avgRatingData.length > 0 && avgRatingData[0].avg_rating !== null
       ? Number((avgRatingData[0].avg_rating as number).toFixed(1))
       : null;
 
@@ -324,8 +332,14 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   const category_costs = categoryCostData.map((row) => ({
     category: row.category as string,
-    total_cost: Number((row.total_cost as number).toFixed(2)),
-    avg_cost: Number((row.avg_cost as number).toFixed(4)),
+    total_cost:
+      row.total_cost !== null && row.total_cost !== undefined
+        ? Number((row.total_cost as number).toFixed(2))
+        : 0,
+    avg_cost:
+      row.avg_cost !== null && row.avg_cost !== undefined
+        ? Number((row.avg_cost as number).toFixed(4))
+        : 0,
     count: row.count as number
   }));
 

@@ -1,0 +1,43 @@
+{
+  "sessions": [
+    {
+      "session_id": "test-001",
+      "start_time": "2024-01-15T10:00:00Z",
+      "end_time": "2024-01-15T10:30:00Z",
+      "questions": "How do I reset my password?",
+      "category": "Technical Support",
+      "sentiment": "positive",
+      "escalated": 0,
+      "forwarded_hr": 0,
+      "avg_response_time": 2.5,
+      "tokens_eur": 0.05,
+      "rating": 4.5
+    },
+    {
+      "session_id": "test-002",
+      "start_time": "2024-01-15T11:00:00Z",
+      "end_time": "2024-01-15T11:15:00Z",
+      "questions": "What are the office hours?",
+      "category": "HR",
+      "sentiment": "neutral",
+      "escalated": 0,
+      "forwarded_hr": 1,
+      "avg_response_time": 1.8,
+      "tokens_eur": 0.03,
+      "rating": 4.0
+    },
+    {
+      "session_id": "test-003",
+      "start_time": "2024-01-15T14:00:00Z",
+      "end_time": "2024-01-15T14:45:00Z",
+      "questions": "I need help with a billing issue",
+      "category": "Billing",
+      "sentiment": "negative",
+      "escalated": 1,
+      "forwarded_hr": 0,
+      "avg_response_time": 3.2,
+      "tokens_eur": 0.08,
+      "rating": 2.5
+    }
+  ]
+}

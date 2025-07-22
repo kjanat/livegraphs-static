@@ -44,6 +44,8 @@ export function useDatabase(): DatabaseHook {
 
   // Initialize database
   useEffect(() => {
+    let database: Database | null = null;
+
     const initDb = async () => {
       try {
         // Initialize sql.js with local files
@@ -51,7 +53,6 @@ export function useDatabase(): DatabaseHook {
 
         // Try to load existing database from localStorage
         const savedData = localStorage.getItem(STORAGE_KEY);
-        let database: Database;
 
         if (savedData) {
           try {
@@ -81,11 +82,11 @@ export function useDatabase(): DatabaseHook {
 
     // Cleanup on unmount
     return () => {
-      if (db) {
-        closeDatabase(db);
+      if (database) {
+        closeDatabase(database);
       }
     };
-  }, [db]);
+  }, []); // Remove db dependency to prevent infinite loop
 
   // Save database to localStorage
   const saveDatabase = useCallback(() => {
@@ -93,7 +94,14 @@ export function useDatabase(): DatabaseHook {
 
     try {
       const data = exportDatabase(db);
-      const base64 = btoa(String.fromCharCode.apply(null, Array.from(data)));
+      // Convert Uint8Array to base64 more efficiently to avoid stack overflow
+      let binary = "";
+      const bytes = new Uint8Array(data);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
       localStorage.setItem(STORAGE_KEY, base64);
     } catch (err) {
       console.error("Failed to save database:", err);

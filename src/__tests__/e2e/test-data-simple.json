@@ -1,0 +1,137 @@
+[
+  {
+    "session_id": "550e8400-e29b-41d4-a716-446655440001",
+    "start_time": "2025-01-15T10:00:00Z",
+    "end_time": "2025-01-15T10:30:00Z",
+    "transcript": [
+      {
+        "timestamp": "2025-01-15T10:00:05Z",
+        "role": "User",
+        "content": "How do I reset my password?"
+      },
+      {
+        "timestamp": "2025-01-15T10:00:10Z",
+        "role": "Assistant",
+        "content": "I can help you reset your password. Please follow these steps..."
+      }
+    ],
+    "messages": {
+      "response_time": {
+        "avg": 2.5
+      },
+      "amount": {
+        "user": 1,
+        "total": 2
+      },
+      "tokens": 150,
+      "cost": {
+        "eur": {
+          "cent": 5,
+          "full": 0.05
+        }
+      },
+      "source_url": "https://example.com/chat"
+    },
+    "user": {
+      "ip": "192.168.1.1",
+      "country": "US",
+      "language": "en"
+    },
+    "sentiment": "positive",
+    "escalated": false,
+    "forwarded_hr": false,
+    "category": "Technical Support",
+    "questions": ["How do I reset my password?"],
+    "summary": "User requested password reset instructions"
+  },
+  {
+    "session_id": "550e8400-e29b-41d4-a716-446655440002",
+    "start_time": "2025-01-15T11:00:00Z",
+    "end_time": "2025-01-15T11:15:00Z",
+    "transcript": [
+      {
+        "timestamp": "2025-01-15T11:00:05Z",
+        "role": "User",
+        "content": "What are the office hours?"
+      },
+      {
+        "timestamp": "2025-01-15T11:00:08Z",
+        "role": "Assistant",
+        "content": "Our office hours are Monday to Friday, 9 AM to 5 PM."
+      }
+    ],
+    "messages": {
+      "response_time": {
+        "avg": 1.8
+      },
+      "amount": {
+        "user": 1,
+        "total": 2
+      },
+      "tokens": 100,
+      "cost": {
+        "eur": {
+          "cent": 3,
+          "full": 0.03
+        }
+      },
+      "source_url": "https://example.com/chat"
+    },
+    "user": {
+      "ip": "192.168.1.2",
+      "country": "US",
+      "language": "en"
+    },
+    "sentiment": "neutral",
+    "escalated": false,
+    "forwarded_hr": true,
+    "category": "HR",
+    "questions": ["What are the office hours?"],
+    "summary": "User inquired about office hours"
+  },
+  {
+    "session_id": "550e8400-e29b-41d4-a716-446655440003",
+    "start_time": "2025-01-15T14:00:00Z",
+    "end_time": "2025-01-15T14:45:00Z",
+    "transcript": [
+      {
+        "timestamp": "2025-01-15T14:00:05Z",
+        "role": "User",
+        "content": "I need help with a billing issue"
+      },
+      {
+        "timestamp": "2025-01-15T14:00:15Z",
+        "role": "Assistant",
+        "content": "I understand you're having billing issues. Let me connect you with our billing department."
+      }
+    ],
+    "messages": {
+      "response_time": {
+        "avg": 3.2
+      },
+      "amount": {
+        "user": 1,
+        "total": 2
+      },
+      "tokens": 200,
+      "cost": {
+        "eur": {
+          "cent": 8,
+          "full": 0.08
+        }
+      },
+      "source_url": "https://example.com/chat"
+    },
+    "user": {
+      "ip": "192.168.1.3",
+      "country": "US",
+      "language": "en"
+    },
+    "sentiment": "negative",
+    "escalated": true,
+    "forwarded_hr": false,
+    "category": "Billing",
+    "questions": ["I need help with a billing issue"],
+    "summary": "User reported billing issue, escalated to billing department"
+  }
+]

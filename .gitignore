@@ -64,3 +64,9 @@ docs/next-js/
 
 # sql.js files (copied during build)
 public/sql-js/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

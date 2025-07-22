@@ -26,7 +26,7 @@ export function useDataManagement() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const refreshStats = useCallback(() => {
+  const refreshStats = useCallback(async () => {
     if (isInitialized && !dbError) {
       const stats = getDatabaseStats();
       setDbStats(stats);
@@ -70,7 +70,7 @@ export function useDataManagement() {
         const validatedData = validateSessionData(jsonData);
         const count = await loadSessionsFromJSON(validatedData);
 
-        refreshStats();
+        await refreshStats();
 
         // Clear existing data views to force reload
         setMetrics(null);

@@ -61,7 +61,9 @@ export function ClientDashboard() {
     handleDrop,
     triggerFileInput
   } = useFileUpload(loadSessionsFromJSON, {
-    onSuccess: refreshStats
+    onSuccess: async () => {
+      await refreshStats();
+    }
   });
 
   // Computed values

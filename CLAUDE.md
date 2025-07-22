@@ -62,6 +62,16 @@ pnpm test path/to/test.test.ts    # Run specific test file
 pnpm test -t "test name"          # Run tests matching pattern
 ```
 
+### E2E Testing (Playwright)
+
+```bash
+pnpm test:e2e          # Run all E2E tests
+pnpm test:e2e:ui       # Open Playwright Test UI
+pnpm test:e2e:debug    # Run tests in debug mode
+pnpm test:e2e:codegen  # Auto-generate tests with Codegen
+pnpm playwright install # Install browser binaries (run once)
+```
+
 ## Architecture
 
 ### Core Application Flow
@@ -148,10 +158,12 @@ The `ip_address` field contains **Personally Identifiable Information (PII)** su
 
 ## Testing Strategy
 
-- Component tests use React Testing Library
+- Component tests use React Testing Library (Vitest)
 - Database operations tested with in-memory SQL.js
 - Chart components tested for data rendering
+- E2E tests use Playwright for full user flow testing
 - Run specific test: `pnpm test components/charts/AnalyticsChart.test.tsx`
+- Run E2E test: `pnpm test:e2e src/__tests__/e2e/livegraphs.spec.ts`
 
 ## CI/CD Pipeline
 
