@@ -31,7 +31,9 @@ jobs:
         with: { version: latest }
 
       - name: Run Biome
-        run: biome ci .
+        run: |
+          biome ci . --reporter=github
+          biome ci .
 
       - name: Install dependencies
         run: pnpm install
