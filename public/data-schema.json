@@ -1,0 +1,238 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Notso AI Chat Sessions Data",
+  "description": "Schema for validating chat session data for the Notso AI analytics dashboard",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/ChatSession"
+  },
+  "definitions": {
+    "ChatSession": {
+      "type": "object",
+      "description": "A single chat session between a user and the AI assistant",
+      "required": [
+        "session_id",
+        "start_time",
+        "end_time",
+        "transcript",
+        "messages",
+        "user",
+        "sentiment",
+        "escalated",
+        "forwarded_hr",
+        "category",
+        "questions",
+        "summary"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for the chat session",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "examples": ["550e8400-e29b-41d4-a716-446655440000"]
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime when the chat session started",
+          "examples": ["2024-01-01T10:00:00Z", "2024-01-01T10:00:00+02:00"]
+        },
+        "end_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime when the chat session ended",
+          "examples": ["2024-01-01T10:15:30Z", "2024-01-01T10:15:30+02:00"]
+        },
+        "transcript": {
+          "type": "array",
+          "description": "Complete conversation transcript with timestamps",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/TranscriptMessage"
+          }
+        },
+        "messages": {
+          "$ref": "#/definitions/MessageMetrics",
+          "description": "Aggregate metrics about the messages in this session"
+        },
+        "user": {
+          "$ref": "#/definitions/UserInfo",
+          "description": "Information about the user in this session"
+        },
+        "sentiment": {
+          "type": "string",
+          "enum": ["positive", "neutral", "negative"],
+          "description": "Overall sentiment analysis of the conversation"
+        },
+        "escalated": {
+          "type": "boolean",
+          "description": "Whether the conversation was escalated to human support"
+        },
+        "forwarded_hr": {
+          "type": "boolean",
+          "description": "Whether the conversation was forwarded to HR department"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category or topic of the conversation",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": ["Technical Support", "Account Management", "General Inquiry", "HR", "Sales"]
+        },
+        "questions": {
+          "type": "array",
+          "description": "List of questions asked by the user during the session",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "summary": {
+          "type": "string",
+          "description": "AI-generated summary of the conversation",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "user_rating": {
+          "type": "number",
+          "description": "User's rating of the conversation quality (optional)",
+          "minimum": 1,
+          "maximum": 5,
+          "multipleOf": 0.5
+        }
+      }
+    },
+    "TranscriptMessage": {
+      "type": "object",
+      "description": "A single message in the conversation transcript",
+      "required": ["timestamp", "role", "content"],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime when the message was sent"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["User", "Assistant"],
+          "description": "Who sent this message"
+        },
+        "content": {
+          "type": "string",
+          "description": "The actual message content",
+          "minLength": 1,
+          "maxLength": 10000
+        }
+      }
+    },
+    "MessageMetrics": {
+      "type": "object",
+      "description": "Metrics and analytics about messages in the session",
+      "required": ["response_time", "amount", "tokens", "cost", "source_url"],
+      "properties": {
+        "response_time": {
+          "type": "object",
+          "required": ["avg"],
+          "properties": {
+            "avg": {
+              "type": "number",
+              "description": "Average response time in seconds",
+              "minimum": 0,
+              "maximum": 300
+            }
+          }
+        },
+        "amount": {
+          "type": "object",
+          "description": "Message counts",
+          "required": ["user", "total"],
+          "properties": {
+            "user": {
+              "type": "integer",
+              "description": "Number of messages from the user",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "description": "Total number of messages in the conversation",
+              "minimum": 1
+            }
+          }
+        },
+        "tokens": {
+          "type": "integer",
+          "description": "Total number of tokens used in the conversation",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "cost": {
+          "type": "object",
+          "description": "Cost information for the conversation",
+          "required": ["eur"],
+          "properties": {
+            "eur": {
+              "type": "object",
+              "required": ["cent", "full"],
+              "properties": {
+                "cent": {
+                  "type": "number",
+                  "description": "Cost in euro cents",
+                  "minimum": 0,
+                  "maximum": 10000
+                },
+                "full": {
+                  "type": "number",
+                  "description": "Cost in full euros",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          }
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL where the conversation originated",
+          "pattern": "^https?://",
+          "maxLength": 2000
+        }
+      }
+    },
+    "UserInfo": {
+      "type": "object",
+      "description": "Information about the user in the session",
+      "required": ["ip", "country", "language"],
+      "properties": {
+        "ip": {
+          "type": "string",
+          "description": "IP address (can be raw IP, MD5 hash, or pre-anonymized)",
+          "minLength": 1,
+          "maxLength": 64,
+          "examples": [
+            "192.168.1.1",
+            "5d41402abc4b2a76b9719d911017c592",
+            "192.168.x.x",
+            "anonymized"
+          ]
+        },
+        "country": {
+          "type": "string",
+          "description": "Country code or name",
+          "minLength": 2,
+          "maxLength": 100,
+          "examples": ["US", "United States", "DE", "Germany", "UK", "Unknown"]
+        },
+        "language": {
+          "type": "string",
+          "description": "Language code or name",
+          "minLength": 2,
+          "maxLength": 50,
+          "examples": ["en", "English", "de", "German", "fr", "French", "Unknown"]
+        }
+      }
+    }
+  }
+}
