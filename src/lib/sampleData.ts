@@ -35,53 +35,55 @@ interface SampleSession {
   user_rating: number;
 }
 
-const categories = [
-  "Technical Support",
-  "Billing",
-  "Account Management",
-  "Product Information",
-  "General Inquiry",
-  "Feature Request",
-  "Bug Report",
-  "Onboarding"
-];
+export const SAMPLE_DATA_CONSTANTS = {
+  categories: [
+    "Technical Support",
+    "Billing",
+    "Account Management",
+    "Product Information",
+    "General Inquiry",
+    "Feature Request",
+    "Bug Report",
+    "Onboarding"
+  ],
+  sentiments: ["Positive", "Neutral", "Negative"],
+  negativeKeywords: [
+    "trouble",
+    "problem",
+    "issue",
+    "can't",
+    "cannot",
+    "broken",
+    "error",
+    "failed",
+    "stuck"
+  ],
+  questions: [
+    "How do I reset my password?",
+    "What are your pricing plans?",
+    "How can I upgrade my account?",
+    "I'm having trouble logging in",
+    "Can you explain this feature?",
+    "How do I export my data?",
+    "Is there a mobile app available?",
+    "How secure is my data?",
+    "Can I integrate with other tools?",
+    "What's included in the free plan?",
+    "How do I cancel my subscription?",
+    "Can I get a demo?",
+    "What payment methods do you accept?",
+    "How do I add team members?",
+    "Is there an API available?"
+  ],
+  countries: ["NL", "DE", "FR", "GB", "US", "ES", "IT", "BE", "PL", "SE"],
+  languages: ["en", "nl", "de", "fr", "es", "it", "pl", "sv"]
+} as const;
 
-const sentiments = ["Positive", "Neutral", "Negative"];
+// Destructure for internal use
+const { categories, sentiments, negativeKeywords, questions, countries, languages } =
+  SAMPLE_DATA_CONSTANTS;
 
-const negativeKeywords = [
-  "trouble",
-  "problem",
-  "issue",
-  "can't",
-  "cannot",
-  "broken",
-  "error",
-  "failed",
-  "stuck"
-];
-
-const questions = [
-  "How do I reset my password?",
-  "What are your pricing plans?",
-  "How can I upgrade my account?",
-  "I'm having trouble logging in",
-  "Can you explain this feature?",
-  "How do I export my data?",
-  "Is there a mobile app available?",
-  "How secure is my data?",
-  "Can I integrate with other tools?",
-  "What's included in the free plan?",
-  "How do I cancel my subscription?",
-  "Can I get a demo?",
-  "What payment methods do you accept?",
-  "How do I add team members?",
-  "Is there an API available?"
-];
-
-const countries = ["NL", "DE", "FR", "GB", "US", "ES", "IT", "BE", "PL", "SE"];
-const languages = ["en", "nl", "de", "fr", "es", "it", "pl", "sv"];
-
-function randomElement<T>(array: T[]): T {
+function randomElement<T>(array: readonly T[]): T {
   if (array.length === 0) {
     throw new Error("Cannot select random element from empty array");
   }

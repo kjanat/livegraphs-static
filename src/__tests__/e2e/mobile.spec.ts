@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { expect, test } from "@playwright/test";
+import { SAMPLE_DATA_CONSTANTS } from "@/lib/sampleData";
 
 // Only run these tests on mobile devices
 test.describe("Notso AI Dashboard - Mobile", () => {
@@ -227,10 +228,16 @@ test.describe("Notso AI Dashboard - Mobile", () => {
     await expect(topCountriesButton).toBeVisible();
 
     // The section should be expanded by default - verify content is visible
-    // Use a more specific selector to avoid conflicts
-    // The data uses country codes like "US", "NL", etc.
-    const countryContent = page.locator('text="US"').first();
-    await expect(countryContent).toBeVisible();
+    // Check that at least one country from the sample data is visible
+    let countryFound = false;
+    for (const country of SAMPLE_DATA_CONSTANTS.countries) {
+      const countryContent = page.locator(`text="${country}"`).first();
+      if (await countryContent.isVisible().catch(() => false)) {
+        countryFound = true;
+        break;
+      }
+    }
+    expect(countryFound).toBe(true);
 
     // Click to collapse
     await topCountriesButton.click({ force: true });
@@ -238,8 +245,17 @@ test.describe("Notso AI Dashboard - Mobile", () => {
 
     // Content should be hidden - check if parent container has collapsed
     // The content uses max-h-0 and opacity-0 when collapsed
-    const contentContainer = page.locator(".max-h-0").filter({ hasText: "US" }).first();
-    await expect(contentContainer).toHaveCount(1);
+    // Check for any country code being hidden
+    const collapsedCountryContainers = await page.locator(".max-h-0").all();
+    let hasCollapsedCountry = false;
+    for (const container of collapsedCountryContainers) {
+      const text = await container.textContent();
+      if (text && SAMPLE_DATA_CONSTANTS.countries.some((country) => text.includes(country))) {
+        hasCollapsedCountry = true;
+        break;
+      }
+    }
+    expect(hasCollapsedCountry).toBe(true);
 
     // Check Top Languages section
     const topLanguagesButton = page.getByRole("button", { name: /Top Languages/i });
@@ -259,16 +275,31 @@ test.describe("Notso AI Dashboard - Mobile", () => {
     }
 
     // Now verify content is visible
-    // The data uses language codes like "en", "nl", etc.
-    const languageContent = page.locator('text="en"').first();
-    await expect(languageContent).toBeVisible({ timeout: 5000 });
+    // Check that at least one language from the sample data is visible
+    let languageFound = false;
+    for (const language of SAMPLE_DATA_CONSTANTS.languages) {
+      const languageContent = page.locator(`text="${language}"`).first();
+      if (await languageContent.isVisible({ timeout: 5000 }).catch(() => false)) {
+        languageFound = true;
+        break;
+      }
+    }
+    expect(languageFound).toBe(true);
 
     // Click to collapse
     await topLanguagesButton.click({ force: true });
     await page.waitForTimeout(500);
 
     // Language content should be hidden - check if parent container has collapsed
-    const languageContainer = page.locator(".max-h-0").filter({ hasText: "en" }).first();
-    await expect(languageContainer).toHaveCount(1);
+    const collapsedLanguageContainers = await page.locator(".max-h-0").all();
+    let hasCollapsedLanguage = false;
+    for (const container of collapsedLanguageContainers) {
+      const text = await container.textContent();
+      if (text && SAMPLE_DATA_CONSTANTS.languages.some((language) => text.includes(language))) {
+        hasCollapsedLanguage = true;
+        break;
+      }
+    }
+    expect(hasCollapsedLanguage).toBe(true);
   });
 });
