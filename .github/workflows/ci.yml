@@ -26,14 +26,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with: { version: latest }
+
+      - name: Run Biome
+        run: biome ci .
+
       - name: Install dependencies
         run: pnpm install
 
       - name: Run ESLint
         run: pnpm lint:next
-
-      - name: Run Biome checks
-        run: pnpm lint:biome
 
       - name: Check formatting
         run: pnpm format:check
