@@ -7,7 +7,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Footer } from "@/components/Footer";
+import { StructuredData } from "@/components/StructuredData";
 import { SkipLinks } from "@/components/ui/SkipLinks";
+import { WebVitals } from "@/components/WebVitals";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { generateMetadata } from "@/lib/constants/metadata";
 import { generateViewport } from "@/lib/constants/viewport";
@@ -15,12 +17,16 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"]
+  subsets: ["latin"],
+  display: "swap",
+  preload: true
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"]
+  subsets: ["latin"],
+  display: "swap",
+  preload: true
 });
 
 export const metadata = generateMetadata();
@@ -33,8 +39,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <StructuredData />
+      </head>
       <body className="antialiased flex min-h-screen flex-col">
         <ThemeProvider>
+          <WebVitals />
           <SkipLinks />
           {children}
           <Footer />

@@ -6,23 +6,105 @@
 
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { CostAnalysisChart } from "@/components/charts/CostAnalysisChart";
-import { DailyCostTrendChart } from "@/components/charts/DailyCostTrendChart";
-import { GaugeChart } from "@/components/charts/GaugeChart";
-import { HistogramChart } from "@/components/charts/HistogramChart";
-import { InteractiveHeatmap } from "@/components/charts/InteractiveHeatmap";
-import { LanguageDistributionChart } from "@/components/charts/LanguageDistributionChart";
-import { PerformanceTrendsChart } from "@/components/charts/PerformanceTrendsChart";
-import { ResolutionStatusChart } from "@/components/charts/ResolutionStatusChart";
-import { SentimentDistributionChart } from "@/components/charts/SentimentDistributionChart";
-import { SessionsByCountryChart } from "@/components/charts/SessionsByCountryChart";
-import { TopCategoriesChart } from "@/components/charts/TopCategoriesChart";
-import { TopQuestionsSection } from "@/components/charts/TopQuestionsSection";
+import { ChartSkeleton } from "@/components/ui/ChartSkeleton";
 import { ExpandableSection } from "@/components/ui/ExpandableSection";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
 import { getChartColors } from "@/lib/utils/chartColors";
+
+// Dynamic imports for all chart components
+const CostAnalysisChart = dynamic(
+  () =>
+    import("@/components/charts/CostAnalysisChart").then((mod) => ({
+      default: mod.CostAnalysisChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const DailyCostTrendChart = dynamic(
+  () =>
+    import("@/components/charts/DailyCostTrendChart").then((mod) => ({
+      default: mod.DailyCostTrendChart
+    })),
+  { loading: () => <ChartSkeleton height={400} />, ssr: false }
+);
+
+const GaugeChart = dynamic(
+  () => import("@/components/charts/GaugeChart").then((mod) => ({ default: mod.GaugeChart })),
+  { loading: () => <ChartSkeleton height={250} />, ssr: false }
+);
+
+const HistogramChart = dynamic(
+  () =>
+    import("@/components/charts/HistogramChart").then((mod) => ({ default: mod.HistogramChart })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const InteractiveHeatmap = dynamic(
+  () =>
+    import("@/components/charts/InteractiveHeatmap").then((mod) => ({
+      default: mod.InteractiveHeatmap
+    })),
+  { loading: () => <ChartSkeleton height={400} />, ssr: false }
+);
+
+const LanguageDistributionChart = dynamic(
+  () =>
+    import("@/components/charts/LanguageDistributionChart").then((mod) => ({
+      default: mod.LanguageDistributionChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const PerformanceTrendsChart = dynamic(
+  () =>
+    import("@/components/charts/PerformanceTrendsChart").then((mod) => ({
+      default: mod.PerformanceTrendsChart
+    })),
+  { loading: () => <ChartSkeleton height={400} />, ssr: false }
+);
+
+const ResolutionStatusChart = dynamic(
+  () =>
+    import("@/components/charts/ResolutionStatusChart").then((mod) => ({
+      default: mod.ResolutionStatusChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const SentimentDistributionChart = dynamic(
+  () =>
+    import("@/components/charts/SentimentDistributionChart").then((mod) => ({
+      default: mod.SentimentDistributionChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const SessionsByCountryChart = dynamic(
+  () =>
+    import("@/components/charts/SessionsByCountryChart").then((mod) => ({
+      default: mod.SessionsByCountryChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const TopCategoriesChart = dynamic(
+  () =>
+    import("@/components/charts/TopCategoriesChart").then((mod) => ({
+      default: mod.TopCategoriesChart
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
+const TopQuestionsSection = dynamic(
+  () =>
+    import("@/components/charts/TopQuestionsSection").then((mod) => ({
+      default: mod.TopQuestionsSection
+    })),
+  { loading: () => <ChartSkeleton height={500} />, ssr: false }
+);
 
 interface ChartsDashboardProps {
   metrics: Metrics;
