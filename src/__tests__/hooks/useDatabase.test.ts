@@ -72,11 +72,6 @@ describe("useDatabase", () => {
     });
   });
 
-  // Skip this test for now as it's complex to mock properly
-  it.skip("should handle initialization errors", async () => {
-    // Test is skipped due to complex mocking requirements
-  });
-
   it("should load existing database from localStorage", async () => {
     const mockDbData = btoa(String.fromCharCode(1, 2, 3));
     localStorageMock.setItem("livegraphs_db", mockDbData);
@@ -176,11 +171,6 @@ describe("useDatabase", () => {
 
       expect(loadedCount).toBe(1);
       expect(localStorageMock.setItem).toHaveBeenCalled();
-    });
-
-    // Skip this test as the database initializes too quickly in the test environment
-    it.skip("should handle database not initialized error", async () => {
-      // Test is skipped - database initializes immediately in test environment
     });
 
     it("should handle transaction rollback on error", async () => {
