@@ -15,7 +15,6 @@
   "author": "Kaj Kowalski <dev@kajkowalski.nl>",
   "scripts": {
     "build": "next build",
-    "copy:sql-wasm": "node scripts/copy-sql-wasm.mjs",
     "dev": "next dev",
     "dev:turbo": "next dev --turbopack",
     "format": "biome format --write",

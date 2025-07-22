@@ -137,24 +137,10 @@ Expected structure (validated by Zod):
     avg_response_time: number
     tokens_eur: number
     rating?: number
-    ip_address?: string  // ⚠️ PII - See privacy notice below
+    ip_address?: string
   }>
 }
 ```
-
-### ⚠️ Privacy & Compliance Notice for `ip_address` Field
-
-The `ip_address` field contains **Personally Identifiable Information (PII)** subject to GDPR, CCPA, and other privacy regulations:
-
-- **Collection**: Should be optional and require explicit user consent
-- **Anonymization**: Consider storing only a hash or partial IP (e.g., `192.168.x.x`)
-- **Processing**: Anonymization should occur BEFORE data enters the application:
-  - Best: Anonymize in the data source before export
-  - Alternative: Add anonymization in `lib/validation/schema.ts` during import
-- **Retention**: Define and document retention policy (e.g., 90 days)
-- **Access Control**: Ensure proper access controls for any stored IP data
-
-**Recommendation**: Unless IP addresses are essential for analytics, consider removing this field entirely or replacing with anonymized geographic data (country/region only).
 
 ## Testing Strategy
 
