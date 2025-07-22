@@ -1,3 +1,4 @@
+import CopyPlugin from "copy-webpack-plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -86,6 +87,22 @@ const nextConfig: NextConfig = {
         test: /\.wasm$/,
         type: "webassembly/async"
       });
+
+      // Copy SQL.js WASM files to public directory
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: "node_modules/sql.js/dist/sql-wasm.js",
+              to: "../public/sql-js/sql-wasm.js"
+            },
+            {
+              from: "node_modules/sql.js/dist/sql-wasm.wasm",
+              to: "../public/sql-js/sql-wasm.wasm"
+            }
+          ]
+        })
+      );
     }
 
     return config;
