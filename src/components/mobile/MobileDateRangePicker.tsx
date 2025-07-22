@@ -61,6 +61,7 @@ export function MobileDateRangePicker({
       setIsPopoverOpen(false);
       setIsExpanded(false);
     }
+    // Don't close the popover if only the first date is selected
   };
 
   const handlePresetRange = (preset: "lastWeek" | "lastMonth" | "last3Months" | "all") => {

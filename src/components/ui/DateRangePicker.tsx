@@ -49,6 +49,7 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
       onDateRangeChange(start, end);
       setIsOpen(false);
     }
+    // Don't close the popover if only the first date is selected
   };
 
   const handlePresetRange = (preset: "lastWeek" | "lastMonth" | "last3Months" | "all") => {
