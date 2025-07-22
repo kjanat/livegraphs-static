@@ -49,12 +49,19 @@ export function HistogramChart({
     const binEnd = binStart + binWidth;
 
     // Format labels based on whether the data appears to be integers
-    const isIntegerData =
-      data.every((val) => Number.isInteger(val)) ||
-      (binWidth >= 1 && Math.abs(binWidth - Math.round(binWidth)) < 0.1);
+    // Improved logic: if all data points are integers AND bin width is reasonably close to an integer,
+    // format as integers
+    const dataIsIntegers = data.every((val) => Number.isInteger(val));
+    const binWidthIsReasonable = binWidth >= 0.5; // Don't show decimals for reasonable bin widths
 
     const formatValue = (val: number) => {
-      if (isIntegerData || val % 1 === 0) {
+      // If data consists of integers and we have reasonable bin widths,
+      // always round to integers regardless of the exact boundary value
+      if (dataIsIntegers && binWidthIsReasonable) {
+        return Math.round(val).toString();
+      }
+      // Otherwise, show decimals only if needed
+      if (val % 1 === 0) {
         return Math.round(val).toString();
       }
       return val.toFixed(1);
@@ -131,9 +138,10 @@ export function HistogramChart({
   const median = sorted[Math.floor(sorted.length / 2)];
 
   // Use consistent formatting for statistics
-  const isIntegerData = data.every((val) => Number.isInteger(val));
+  const dataIsIntegers = data.every((val) => Number.isInteger(val));
   const formatStat = (val: number) => {
-    if (isIntegerData && Math.abs(val - Math.round(val)) < 0.1) {
+    // If data is all integers, round statistics to integers too
+    if (dataIsIntegers) {
       return Math.round(val).toString();
     }
     return val.toFixed(1);

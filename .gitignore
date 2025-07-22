@@ -48,6 +48,7 @@ complexity-report.json
 
 # sample files
 jumbo*.json
+jumbo*.json?
 charts-overhaul.md
 issues-found.md
 

@@ -281,7 +281,7 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   const conversation_durations = durationData.map((row) =>
     row.duration_minutes !== null && row.duration_minutes !== undefined
-      ? Number((row.duration_minutes as number).toFixed(1))
+      ? Math.round(row.duration_minutes as number)
       : 0
   );
 
