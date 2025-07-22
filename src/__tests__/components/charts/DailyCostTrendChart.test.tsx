@@ -9,8 +9,22 @@ import { describe, expect, it, vi } from "vitest";
 import { DailyCostTrendChart } from "@/components/charts/DailyCostTrendChart";
 
 // Mock the MultiLineChart component
+interface MockMultiLineChartProps {
+  title: string;
+  labels: string[];
+  datasets: Array<{
+    label: string;
+    data: number[];
+    borderColor?: string;
+    backgroundColor?: string;
+    fill?: boolean;
+    yAxisID?: string;
+  }>;
+  options: Record<string, unknown>;
+}
+
 vi.mock("@/components/charts/MultiLineChart", () => ({
-  MultiLineChart: ({ title, labels, datasets, options }: any) => (
+  MultiLineChart: ({ title, labels, datasets, options }: MockMultiLineChartProps) => (
     <div data-testid="multi-line-chart">
       <h2>{title}</h2>
       <div data-testid="labels">{JSON.stringify(labels)}</div>

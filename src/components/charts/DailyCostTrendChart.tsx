@@ -6,6 +6,7 @@
 
 "use client";
 
+import type { ChartDataset, ChartOptions } from "chart.js";
 import { getChartColors, hexToRgba } from "@/lib/utils/chartColors";
 import { MultiLineChart } from "./MultiLineChart";
 
@@ -17,10 +18,19 @@ interface DailyCostTrendChartProps {
   };
 }
 
+interface CostDataset extends ChartDataset<"line", number[]> {
+  label: string;
+  data: number[];
+  borderColor: string;
+  backgroundColor: string;
+  fill: boolean;
+  yAxisID?: string;
+}
+
 export function DailyCostTrendChart({ data }: DailyCostTrendChartProps) {
   const colors = getChartColors();
 
-  const datasets = [
+  const datasets: CostDataset[] = [
     {
       label: "Daily Cost (€)",
       data: data.values,
@@ -39,27 +49,27 @@ export function DailyCostTrendChart({ data }: DailyCostTrendChartProps) {
       backgroundColor: hexToRgba(colors.blue, 0.25),
       fill: false,
       yAxisID: "y1"
-    } as any);
+    });
   }
 
-  const options: any = {
+  const options: ChartOptions<"line"> = {
     scales: {
       y: {
         beginAtZero: true,
         position: "left" as const,
         title: {
-          display: data.message_counts ? true : false,
+          display: !!data.message_counts,
           text: "Cost (€)"
         },
         ticks: {
-          callback: (value: any) => `€${Number(value).toFixed(2)}`
+          callback: (value) => `€${Number(value).toFixed(2)}`
         }
       }
     }
   };
 
   // Add right y-axis for message counts if provided
-  if (data.message_counts) {
+  if (data.message_counts && options.scales) {
     options.scales.y1 = {
       type: "linear" as const,
       display: true,

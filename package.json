@@ -37,7 +37,7 @@
     "test:unit": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run",
     "test:watch": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest",
     "type-check": "tsc --noEmit",
-    "validate": "pnpm lint && pnpm format:check && pnpm type-check"
+    "validate": "pnpm format && pnpm type-check && pnpm lint"
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

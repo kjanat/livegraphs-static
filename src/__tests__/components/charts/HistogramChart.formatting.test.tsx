@@ -9,8 +9,18 @@ import { describe, expect, it, vi } from "vitest";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 
 // Mock Chart.js
+interface MockBarChartProps {
+  data: {
+    labels: string[];
+    datasets: Array<{
+      data: number[];
+      [key: string]: unknown;
+    }>;
+  };
+}
+
 vi.mock("react-chartjs-2", () => ({
-  Bar: ({ data }: any) => (
+  Bar: ({ data }: MockBarChartProps) => (
     <div data-testid="bar-chart">
       <div data-testid="chart-labels">{JSON.stringify(data.labels)}</div>
       <div data-testid="chart-data">{JSON.stringify(data.datasets[0].data)}</div>
