@@ -40,7 +40,7 @@ const createMockDatabase = () => ({
   export: vi.fn(() => new Uint8Array([1, 2, 3]))
 });
 
-const mockInitSqlJs = vi.fn(async (_config?: { locateFile?: (file: string) => string }) => ({
+const mockInitSqlJs = vi.fn(async () => ({
   Database: vi.fn().mockImplementation(createMockDatabase)
 }));
 
