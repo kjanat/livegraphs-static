@@ -9,6 +9,9 @@
  * - File upload and data processing
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDatabase } from "../../hooks/useDatabase";
@@ -42,7 +45,7 @@ vi.mock("@/lib/db/schema", () => ({
 
 // Mock the sql-wrapper module entirely
 vi.mock("@/lib/db/sql-wrapper", () => {
-  const vi = globalThis.vi; // Access vi from global scope
+  const vi = (globalThis as any).vi; // Access vi from global scope
 
   // Define createMockDatabase inside the mock factory
   const createMockDatabase = () => {
@@ -69,12 +72,12 @@ vi.mock("@/lib/db/sql-wrapper", () => {
       Database: vi.fn().mockImplementation(createMockDatabase)
     }),
     createDatabase: vi.fn().mockImplementation(async () => createMockDatabase()),
-    executeUpdate: vi.fn((db, query, params) => 1),
-    queryOne: vi.fn((db, query, params) => null),
-    executeQuery: vi.fn((db, query, params) => []),
-    exportDatabase: vi.fn((db) => new Uint8Array([1, 2, 3])),
-    closeDatabase: vi.fn((db) => {}),
-    transaction: vi.fn(async (db, callback) => {
+    executeUpdate: vi.fn((_db: any, _query: any, _params: any) => 1),
+    queryOne: vi.fn((_db: any, _query: any, _params: any) => null),
+    executeQuery: vi.fn((_db: any, _query: any, _params: any) => []),
+    exportDatabase: vi.fn((_db: any) => new Uint8Array([1, 2, 3])),
+    closeDatabase: vi.fn((_db: any) => {}),
+    transaction: vi.fn(async (db: any, callback: any) => {
       db.run("BEGIN TRANSACTION");
       try {
         const result = await callback();

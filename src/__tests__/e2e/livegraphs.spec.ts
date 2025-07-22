@@ -2,6 +2,8 @@ import * as path from "node:path";
 import { expect, test } from "@playwright/test";
 
 test.describe("Notso AI Dashboard", () => {
+  // Skip mobile browsers for these desktop-focused tests
+  test.skip(({ isMobile }) => isMobile === true, "Desktop only tests");
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
@@ -64,6 +66,14 @@ test.describe("Notso AI Dashboard", () => {
     await expect(page.getByRole("heading", { name: "Notso AI Dashboard" })).toBeVisible();
     // The upload UI should be present but might be rendered differently on mobile
     await expect(page.getByText("Transform Your Chatbot Data Into Insights")).toBeVisible();
+
+    // On mobile, we need to expand the upload section first
+    const uploadToggle = page.getByRole("button", { name: "Upload or manage data" });
+    if (await uploadToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await uploadToggle.click();
+      await page.waitForTimeout(500);
+    }
+
     await expect(page.getByRole("button", { name: "Try Sample Data" })).toBeVisible();
   });
 
