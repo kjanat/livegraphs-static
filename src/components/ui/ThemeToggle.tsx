@@ -6,23 +6,24 @@
 
 "use client";
 
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () => {
-    const themeOrder = ["light", "dark", "system"] as const;
-    const currentIndex = themeOrder.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeOrder.length;
-    setTheme(themeOrder[nextIndex]);
+    if (theme === "light") setTheme("dark");
+    else if (theme === "dark") setTheme("system");
+    else setTheme("light");
   };
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={toggleTheme}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
+      className="relative h-9 w-9"
       aria-label={`Current theme: ${theme}. Click to change theme`}
     >
       {/* Sun icon */}
@@ -59,8 +60,9 @@ export function ThemeToggle() {
 
       {/* System indicator */}
       {theme === "system" && (
-        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-blue-500" />
+        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-blue-500" />
       )}
-    </button>
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   );
 }
