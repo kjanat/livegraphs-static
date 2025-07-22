@@ -7,8 +7,9 @@
 "use client";
 
 import { ResponsiveBar } from "@nivo/bar";
-import { useEffect, useState } from "react";
+import { useDarkMode } from "@/lib/hooks/useDarkMode";
 import { getChartColors } from "@/lib/utils/chartColors";
+import { getNivoTheme, getNivoTooltipStyles } from "@/lib/utils/nivoTheme";
 
 interface LanguageDistributionChartProps {
   data: {
@@ -18,24 +19,8 @@ interface LanguageDistributionChartProps {
 }
 
 export function LanguageDistributionChart({ data }: LanguageDistributionChartProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = useDarkMode();
   const colors = getChartColors();
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    };
-
-    checkDarkMode();
-
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
@@ -78,47 +63,7 @@ export function LanguageDistributionChart({ data }: LanguageDistributionChartPro
             from: "color",
             modifiers: [["darker", 1.6]]
           }}
-          theme={{
-            background: "transparent",
-            text: {
-              fontSize: 12,
-              fill: isDarkMode ? "#e5e7eb" : "#1f2937"
-            },
-            axis: {
-              domain: {
-                line: {
-                  stroke: isDarkMode ? "#4b5563" : "#d1d5db"
-                }
-              },
-              ticks: {
-                line: {
-                  stroke: isDarkMode ? "#4b5563" : "#d1d5db"
-                },
-                text: {
-                  fill: isDarkMode ? "#9ca3af" : "#6b7280"
-                }
-              },
-              legend: {
-                text: {
-                  fill: isDarkMode ? "#e5e7eb" : "#1f2937"
-                }
-              }
-            },
-            grid: {
-              line: {
-                stroke: isDarkMode ? "#374151" : "#e5e7eb"
-              }
-            },
-            tooltip: {
-              container: {
-                background: isDarkMode ? "#1f2937" : "#ffffff",
-                color: isDarkMode ? "#e5e7eb" : "#1f2937",
-                fontSize: 12,
-                borderRadius: 4,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-              }
-            }
-          }}
+          theme={getNivoTheme(isDarkMode)}
           axisTop={null}
           axisRight={null}
           axisBottom={{
@@ -142,6 +87,14 @@ export function LanguageDistributionChart({ data }: LanguageDistributionChartPro
           enableGridY={true}
           animate={true}
           motionConfig="stiff"
+          tooltip={({ indexValue, value }) => (
+            <div style={getNivoTooltipStyles(isDarkMode)}>
+              <div style={{ marginBottom: "4px" }}>
+                <strong>Language: {indexValue}</strong>
+              </div>
+              <div style={{ fontSize: "14px" }}>{value} sessions</div>
+            </div>
+          )}
         />
       </div>
     </div>

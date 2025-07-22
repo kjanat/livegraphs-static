@@ -7,7 +7,9 @@
 "use client";
 
 import { ResponsivePie } from "@nivo/pie";
-import { useEffect, useState } from "react";
+import { useDarkMode } from "@/lib/hooks/useDarkMode";
+import { useMobile } from "@/lib/hooks/useMobile";
+import { getNivoTheme, getNivoTooltipStyles } from "@/lib/utils/nivoTheme";
 
 interface ResolutionStatusChartProps {
   data: {
@@ -17,34 +19,8 @@ interface ResolutionStatusChartProps {
 }
 
 export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    };
-
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
-    };
-
-    checkDarkMode();
-    checkMobile();
-
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-
-    window.addEventListener("resize", checkMobile);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", checkMobile);
-    };
-  }, []);
+  const isDarkMode = useDarkMode();
+  const isMobile = useMobile();
 
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
@@ -117,38 +93,15 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
           }}
           arcLabel="formattedValue"
           valueFormat=">-.1%"
-          theme={{
-            text: {
-              fontSize: 12,
-              fill: isDarkMode ? "#e5e7eb" : "#1f2937"
-            },
-            labels: {
-              text: {
-                fontSize: 12,
-                fill: isDarkMode ? "#e5e7eb" : "#1f2937"
-              }
-            },
-            tooltip: {
-              container: {
-                background: isDarkMode ? "#1f2937" : "#ffffff",
-                color: isDarkMode ? "#e5e7eb" : "#1f2937",
-                fontSize: 12,
-                borderRadius: 4,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-              }
-            }
-          }}
+          theme={getNivoTheme(isDarkMode)}
           tooltip={({ datum }) => (
-            <div
-              style={{
-                background: isDarkMode ? "#1f2937" : "#ffffff",
-                color: isDarkMode ? "#e5e7eb" : "#1f2937",
-                padding: "9px 12px",
-                borderRadius: "4px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-              }}
-            >
-              <strong>{datum.id}:</strong> {datum.data.rawValue} ({(datum.value * 100).toFixed(1)}%)
+            <div style={getNivoTooltipStyles(isDarkMode)}>
+              <div style={{ marginBottom: "4px" }}>
+                <strong>{datum.id}</strong>
+              </div>
+              <div style={{ fontSize: "14px" }}>
+                {datum.data.rawValue} sessions ({(datum.value * 100).toFixed(1)}%)
+              </div>
             </div>
           )}
           legends={
