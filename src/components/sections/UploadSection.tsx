@@ -7,6 +7,7 @@
 "use client";
 
 import { Download, Loader2, Trash2, Upload } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UI_DIMENSIONS } from "@/lib/constants/ui";
 
 interface UploadSectionProps {
@@ -119,9 +120,9 @@ export function UploadSection({
       </div>
 
       {uploadError && (
-        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
-          {uploadError}
-        </div>
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{uploadError}</AlertDescription>
+        </Alert>
       )}
     </section>
   );

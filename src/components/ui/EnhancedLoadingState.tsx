@@ -8,6 +8,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Progress } from "@/components/ui/progress";
 
 interface EnhancedLoadingStateProps {
   stage: "metrics" | "charts" | "processing";
@@ -116,12 +117,7 @@ export function EnhancedLoadingState({
         </p>
 
         {/* Progress Bar */}
-        <div className="w-full bg-secondary rounded-full h-2 mb-4 overflow-hidden">
-          <div
-            className="bg-primary h-2 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <Progress value={progress} className="mb-4" />
 
         {/* Context Information */}
         <div className="space-y-2 text-sm text-muted-foreground">

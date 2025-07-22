@@ -18,6 +18,7 @@ import { ChartsDashboard } from "@/components/sections/ChartsDashboard";
 import { ChartsDashboardTabs } from "@/components/sections/ChartsDashboardTabs";
 import { DatabaseStatsSection } from "@/components/sections/DatabaseStatsSection";
 import { UploadSection } from "@/components/sections/UploadSection";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -87,15 +88,16 @@ export function ClientDashboard() {
 
       {/* Database Status Messages */}
       {!isInitialized && !dbError && (
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8">
-          <p className="text-primary">Initializing database...</p>
-        </div>
+        <Alert className="mb-8">
+          <AlertDescription>Initializing database...</AlertDescription>
+        </Alert>
       )}
 
       {dbError && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-8">
-          <p className="text-destructive">Database error: {dbError.message}</p>
-        </div>
+        <Alert variant="destructive" className="mb-8">
+          <AlertTitle>Database Error</AlertTitle>
+          <AlertDescription>{dbError.message}</AlertDescription>
+        </Alert>
       )}
 
       {/* Main Content */}
