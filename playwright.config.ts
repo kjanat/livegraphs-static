@@ -1,5 +1,3 @@
-import { defineConfig, devices } from "@playwright/test";
-
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -11,43 +9,62 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+import { defineConfig, devices, type ReporterDescription } from "@playwright/test";
+
+const CI = !!process.env.CI;
+const SHARD_TOTAL = Number(process.env.SHARD_TOTAL || 0);
+const SHARD_INDEX = Number(process.env.SHARD_INDEX || 0);
+
+const maybeReporters = [
+  ["list"] as ReporterDescription,
+  CI && (["junit", { outputFile: "test-results/junit.xml" }] as ReporterDescription),
+  CI && (["html", { open: "never", outputFolder: "html-report" }] as ReporterDescription)
+];
+
+function defined<T>(v: T | false | undefined | null): v is T {
+  return !!v;
+}
+
+const REPORTERS = maybeReporters.filter(defined);
+
 export default defineConfig({
+  // ---- Collection & timeouts ----
   testDir: "./src/__tests__/e2e",
-  snapshotDir: "./screenshots",
-  /* Run tests in files in parallel */
+  timeout: 30_000, // per-test
+  expect: { timeout: 5_000 }, // per-expect
+
+  // ---- Parallelism & retries ----
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 4 : 6,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ["html"],
-    ["junit", { outputFile: "results.xml" }],
-    [process.env.CI ? "github" : "list"],
-    [process.env.CI ? "@estruyf/github-actions-reporter" : "list"]
-  ],
-  // Individual test timeout (2-3 minutes)
-  timeout: 2 * 60 * 1000,
-  // Global timeout for entire test suite
-  globalTimeout: 30 * 60 * 1000, // 30 minutes for 140 tests
-  // Assertion timeout for expect statements
-  expect: {
-    timeout: 15 * 1000 // 15 seconds for assertions
-  },
+  workers: CI ? 2 : undefined, // tune per CI cores
+  retries: CI ? 2 : 0,
+  forbidOnly: CI,
+  maxFailures: CI ? 5 : undefined,
 
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  // ---- Sharding across CI jobs (optional) ----
+  shard: SHARD_TOTAL ? { total: SHARD_TOTAL, current: SHARD_INDEX } : undefined,
+
+  // ---- Snapshots ----
+  // For classic toMatchSnapshot(): drop them under ./__snapshots__/<file>-snapshots
+  snapshotDir: "__snapshots__",
+  // For visual/ARIA/etc. snapshots: full control with a template
+  snapshotPathTemplate: "{testDir}/__screenshots__{/projectName}/{testFilePath}/{arg}{ext}",
+
+  // ---- Reporters ----
+  reporter: REPORTERS,
+
+  // ---- Defaults for all tests ----
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:3000",
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry"
+    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    headless: true,
+    trace: "on-first-retry",
+    video: "retain-on-failure",
+    screenshot: "only-on-failure",
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000
+    // storageState: './.auth/admin.json', // uncomment if you pre-auth
   },
 
-  /* Configure projects for major browsers */
+  // ---- Browsers / projects ----
   projects: [
     {
       name: "chromium",
@@ -85,11 +102,11 @@ export default defineConfig({
     }
   ],
 
-  /* Run your local dev server before starting the tests */
+  // ---- Dev server ----
   webServer: {
     command: "pnpm dev",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI || true,
-    timeout: 30 * 60 * 1000
+    reuseExistingServer: !CI,
+    timeout: 120_000
   }
 });
