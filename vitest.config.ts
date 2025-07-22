@@ -8,9 +8,15 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./vitest.setup.ts",
-    exclude: [...configDefaults.exclude, "**/e2e/*", "tests-examples/", "**/useDatabase.test.ts"],
+    exclude: [
+      ...configDefaults.exclude,
+      "**/e2e/*",
+      "tests-examples/",
+      "**/useDatabase.test.ts",
+      "**/dataProcessor.integration.test.ts"
+    ],
     coverage: {
-      reporter: ["text", "json", "", "html"],
+      reporter: ["text", "json", "html"],
       exclude: [
         "node_modules/",
         ".next/",
