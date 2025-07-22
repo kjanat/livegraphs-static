@@ -233,7 +233,8 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
           <DailyCostTrendChart
             data={{
               dates: chartData.cost_dates,
-              values: chartData.cost_values
+              values: chartData.cost_values,
+              message_counts: chartData.daily_message_counts
             }}
           />
         </div>

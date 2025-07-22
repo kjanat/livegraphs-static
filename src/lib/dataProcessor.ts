@@ -212,6 +212,21 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
       : 0
   );
 
+  // Daily message counts
+  const messageCountData = execQuery<{ date: string; daily_messages: number }>(`
+    SELECT 
+      DATE(start_time) as date,
+      SUM(total_messages) as daily_messages
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY date
+    ORDER BY date
+  `);
+
+  const daily_message_counts = messageCountData.map((row) =>
+    row.daily_messages !== null && row.daily_messages !== undefined ? Number(row.daily_messages) : 0
+  );
+
   // Geographic distribution
   const countryData = execQuery<{ country: string; count: number }>(`
     SELECT country, COUNT(*) as count
@@ -358,6 +373,7 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     response_time_values,
     cost_dates,
     cost_values,
+    daily_message_counts,
     country_labels,
     country_values,
     language_labels,

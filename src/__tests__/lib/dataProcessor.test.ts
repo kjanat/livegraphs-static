@@ -124,6 +124,8 @@ describe("dataProcessor", () => {
         .mockReturnValueOnce([{ date: "2024-01-01", avg_response: 2.5 }])
         // Cost data
         .mockReturnValueOnce([{ date: "2024-01-01", daily_cost: 10.5 }])
+        // Daily message counts
+        .mockReturnValueOnce([{ date: "2024-01-01", daily_messages: 150 }])
         // Country data
         .mockReturnValueOnce([{ country: "USA", count: 50 }])
         // Language data
@@ -149,6 +151,7 @@ describe("dataProcessor", () => {
       expect(result.sentiment_values).toEqual([50, 30]);
       expect(result.resolution_labels).toEqual(["Resolved", "Escalated"]);
       expect(result.avg_rating).toBe(4.5);
+      expect(result.daily_message_counts).toEqual([150]);
     });
 
     it("should handle empty chart data", async () => {

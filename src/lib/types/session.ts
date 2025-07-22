@@ -71,6 +71,7 @@ export interface ChartData {
   response_time_values: number[];
   cost_dates: string[];
   cost_values: number[];
+  daily_message_counts: number[];
 
   // Geographic distribution
   country_labels: string[];
