@@ -42,8 +42,9 @@ describe("HistogramChart", () => {
     expect(bars.length).toBeGreaterThan(0);
 
     // Check format of labels (range: count)
+    // Can be either integer format (1-3: 2) or decimal format (1.0-3.0: 2)
     bars.forEach((bar) => {
-      expect(bar.textContent).toMatch(/\d+\.\d+-\d+\.\d+: \d+/);
+      expect(bar.textContent).toMatch(/\d+(\.\d+)?-\d+(\.\d+)?: \d+/);
     });
   });
 

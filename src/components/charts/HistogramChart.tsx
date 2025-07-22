@@ -47,7 +47,20 @@ export function HistogramChart({
   for (let i = 0; i < bins; i++) {
     const binStart = min + i * binWidth;
     const binEnd = binStart + binWidth;
-    binLabels.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
+
+    // Format labels based on whether the data appears to be integers
+    const isIntegerData =
+      data.every((val) => Number.isInteger(val)) ||
+      (binWidth >= 1 && Math.abs(binWidth - Math.round(binWidth)) < 0.1);
+
+    const formatValue = (val: number) => {
+      if (isIntegerData || val % 1 === 0) {
+        return Math.round(val).toString();
+      }
+      return val.toFixed(1);
+    };
+
+    binLabels.push(`${formatValue(binStart)}-${formatValue(binEnd)}`);
 
     data.forEach((value) => {
       if (value >= binStart && value < binEnd) {
@@ -117,17 +130,26 @@ export function HistogramChart({
   const sorted = [...data].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
 
+  // Use consistent formatting for statistics
+  const isIntegerData = data.every((val) => Number.isInteger(val));
+  const formatStat = (val: number) => {
+    if (isIntegerData && Math.abs(val - Math.round(val)) < 0.1) {
+      return Math.round(val).toString();
+    }
+    return val.toFixed(1);
+  };
+
   return (
     <div className="bg-card rounded-lg shadow-md p-6">
       <h3 className="text-xl font-bold mb-4">{title}</h3>
       <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
         <div className="text-center">
           <div className="text-muted-foreground">Mean</div>
-          <div className="font-semibold">{mean.toFixed(1)}</div>
+          <div className="font-semibold">{formatStat(mean)}</div>
         </div>
         <div className="text-center">
           <div className="text-muted-foreground">Median</div>
-          <div className="font-semibold">{median.toFixed(1)}</div>
+          <div className="font-semibold">{formatStat(median)}</div>
         </div>
         <div className="text-center">
           <div className="text-muted-foreground">Total</div>
