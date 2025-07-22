@@ -185,8 +185,13 @@ jobs:
       - name: Build application
         run: pnpm build
 
-      - name: Run Playwright tests
-        run: pnpm test:e2e
+      - name: Start server and run Playwright tests
+        run: |
+          pnpm dlx serve -s out -l 3000 &
+          SERVER_PID=$!
+          sleep 5
+          pnpm test:e2e
+          kill $SERVER_PID
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

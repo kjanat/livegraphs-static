@@ -42,10 +42,9 @@ describe("DateRangePicker", () => {
       const expectedStart = format(subMonths(new Date(maxDate), 1), "yyyy-MM-dd");
       expect(startInput.value).toBe(expectedStart);
       expect(endInput.value).toBe(maxDate);
-      expect(mockOnDateRangeChange).toHaveBeenCalledWith(
-        new Date(expectedStart),
-        new Date(maxDate)
-      );
+      const expectedEndDate = new Date(maxDate);
+      expectedEndDate.setHours(23, 59, 59, 999);
+      expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date(expectedStart), expectedEndDate);
     });
   });
 
@@ -103,10 +102,9 @@ describe("DateRangePicker", () => {
 
     await user.click(applyButton);
 
-    expect(mockOnDateRangeChange).toHaveBeenCalledWith(
-      new Date("2024-01-01"),
-      new Date("2024-01-31")
-    );
+    const expectedEndDate = new Date("2024-01-31");
+    expectedEndDate.setHours(23, 59, 59, 999);
+    expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date("2024-01-01"), expectedEndDate);
   });
 
   it("does not call onDateRangeChange when Apply is clicked without dates", async () => {
@@ -146,6 +144,7 @@ describe("DateRangePicker", () => {
       await user.click(lastWeekButton);
 
       const expectedEnd = new Date(maxDate);
+      expectedEnd.setHours(23, 59, 59, 999);
       const expectedStart = new Date(maxDate);
       expectedStart.setDate(expectedStart.getDate() - 7);
 
@@ -175,7 +174,8 @@ describe("DateRangePicker", () => {
       await user.click(lastMonthButton);
 
       const expectedEnd = new Date(maxDate);
-      const expectedStart = subMonths(expectedEnd, 1);
+      expectedEnd.setHours(23, 59, 59, 999);
+      const expectedStart = subMonths(new Date(maxDate), 1);
 
       expect(mockOnDateRangeChange).toHaveBeenCalledWith(expectedStart, expectedEnd);
     });
@@ -203,7 +203,8 @@ describe("DateRangePicker", () => {
       await user.click(last3MonthsButton);
 
       const expectedEnd = new Date(maxDate);
-      const expectedStart = subMonths(expectedEnd, 3);
+      expectedEnd.setHours(23, 59, 59, 999);
+      const expectedStart = subMonths(new Date(maxDate), 3);
 
       expect(mockOnDateRangeChange).toHaveBeenCalledWith(expectedStart, expectedEnd);
     });
@@ -230,7 +231,9 @@ describe("DateRangePicker", () => {
       const allDataButton = screen.getByText("All Data");
       await user.click(allDataButton);
 
-      expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date(minDate), new Date(maxDate));
+      const expectedEndDate = new Date(maxDate);
+      expectedEndDate.setHours(23, 59, 59, 999);
+      expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date(minDate), expectedEndDate);
     });
   });
 
@@ -356,7 +359,9 @@ describe("DateRangePicker", () => {
     await user.click(lastWeekButton);
 
     // Should use minDate as start since 7 days back would be before minDate
-    expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date(minDate), new Date(maxDate));
+    const expectedEndDate = new Date(maxDate);
+    expectedEndDate.setHours(23, 59, 59, 999);
+    expect(mockOnDateRangeChange).toHaveBeenCalledWith(new Date(minDate), expectedEndDate);
   });
 
   it("disables Apply button when dates are not selected", () => {

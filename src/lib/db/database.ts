@@ -159,28 +159,6 @@ export async function loadSessionsFromJSON(jsonData: ChatSession[]): Promise<num
   return successCount;
 }
 
-// Query sessions by date range
-export function getSessionsByDateRange(startDate: Date, endDate: Date): ChatSession[] {
-  if (!db) throw new Error("Database not initialized");
-
-  const stmt = db.prepare(`
-    SELECT * FROM sessions
-    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-    ORDER BY start_time ASC
-  `);
-
-  const rows = [];
-  stmt.bind([startDate.toISOString(), endDate.toISOString()]);
-
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-
-  // TODO: Reconstruct full ChatSession objects with transcript and questions
-  return rows as unknown as ChatSession[];
-}
-
 // Get database statistics
 export function getDatabaseStats(): {
   totalSessions: number;

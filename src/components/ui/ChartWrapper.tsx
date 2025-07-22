@@ -49,18 +49,3 @@ export function ChartWrapper({ children, title, onExpand, className = "" }: Char
     </div>
   );
 }
-
-export function ResponsiveChartGrid({
-  children,
-  columns = 3
-}: {
-  children: ReactNode;
-  columns?: 2 | 3;
-}) {
-  const gridClass =
-    columns === 2
-      ? "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
-      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6";
-
-  return <div className={gridClass}>{children}</div>;
-}

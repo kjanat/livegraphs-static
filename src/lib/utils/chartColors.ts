@@ -67,21 +67,6 @@ export function getChartColors(): ChartColors {
   };
 }
 
-// Get a specific chart color palette
-export function getChartPalette(): string[] {
-  // These colors are chosen to work well in both light and dark themes
-  return [
-    "#3b82f6", // blue
-    "#10b981", // green
-    "#f59e0b", // yellow
-    "#ef4444", // red
-    "#8b5cf6", // purple
-    "#14b8a6", // teal
-    "#ec4899", // pink
-    "#fb923c" // orange
-  ];
-}
-
 // Add transparency to a hex color
 export function hexToRgba(hex: string, alpha: number): string {
   // Validate hex format

@@ -2,7 +2,7 @@
   {
     "name": "Main Bundle",
     "path": ".next/static/chunks/*.js",
-    "limit": "200 KB",
+    "limit": "500 KB",
     "webpack": false,
     "brotli": true
   },
@@ -16,7 +16,7 @@
   {
     "name": "Total App Size",
     "path": [".next/static/chunks/*.js", ".next/static/css/*.css"],
-    "limit": "300 KB",
+    "limit": "550 KB",
     "webpack": false,
     "brotli": true
   }

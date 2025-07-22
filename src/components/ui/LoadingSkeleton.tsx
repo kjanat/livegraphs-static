@@ -22,11 +22,6 @@ interface MetricsSkeletonProps {
   "aria-live"?: "polite" | "assertive" | "off";
 }
 
-interface TableSkeletonProps {
-  rowCount?: number;
-  "aria-label"?: string;
-}
-
 export function Skeleton({
   className = "",
   "aria-label": ariaLabel = "Loading"
@@ -64,30 +59,6 @@ export function MetricsSkeleton({
           <div key={`metric-skeleton-${index}`} className={SECONDARY_CLASSES}>
             <Skeleton className="h-4 w-24 mb-2" />
             <Skeleton className="h-6 w-16" />
-          </div>
-        ))}
-      </div>
-    </output>
-  );
-}
-
-export function TableSkeleton({
-  rowCount = 5,
-  "aria-label": ariaLabel = "Loading table data"
-}: TableSkeletonProps = {}) {
-  const rows = Array.from({ length: rowCount }, (_, index) => index);
-
-  return (
-    <output className={CARD_CLASSES} aria-busy="true" aria-label={ariaLabel}>
-      <Skeleton className="h-6 w-48 mb-4" />
-      <div className="space-y-3">
-        {rows.map((index) => (
-          <div
-            key={`table-row-skeleton-${index}`}
-            className={`flex justify-between items-center p-3 ${SECONDARY_CLASSES}`}
-          >
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-16" />
           </div>
         ))}
       </div>
