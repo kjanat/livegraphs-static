@@ -60,6 +60,11 @@ case "$header" in
     *": "[A-Z]*) errors="$errors • subject should start lowercase\n" ;;
 esac
 
+# Check for Claude Code attributions
+if grep -qi "claude code\|claude\.ai/code\|Co-Authored-By: Claude\|Generated with.*Claude" "$msg_file"; then
+    errors="$errors • commit message contains Claude Code attribution\n"
+fi
+
 # Output result
 if [ -n "$errors" ]; then
     printf "❌ Commit message rejected\n\n"
