@@ -68,7 +68,8 @@ describe("dataProcessor", () => {
         "Avg. Response Time (sec)": 2.3,
         "Resolved Chats (%)": 85.5,
         "Average Daily Cost (€)": 12.34,
-        "Peak Usage Time": "14:00"
+        "Peak Usage Time": "14:00",
+        "Avg. User Rating": "N/A"
       });
 
       expect(mockDb.prepare).toHaveBeenCalledTimes(2);
@@ -91,7 +92,8 @@ describe("dataProcessor", () => {
         "Avg. Response Time (sec)": 0,
         "Resolved Chats (%)": 0,
         "Average Daily Cost (€)": 0,
-        "Peak Usage Time": "N/A"
+        "Peak Usage Time": "N/A",
+        "Avg. User Rating": "N/A"
       });
     });
 

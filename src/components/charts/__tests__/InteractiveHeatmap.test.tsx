@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InteractiveHeatmap } from "../InteractiveHeatmap";
 
 describe("InteractiveHeatmap", () => {
@@ -10,6 +10,17 @@ describe("InteractiveHeatmap", () => {
     { hour: 16, day: "Fri", count: 5 }
   ];
 
+  beforeEach(() => {
+    // Mock window.innerWidth to ensure desktop view with all hours
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1400
+    });
+    // Trigger resize event to ensure component picks up the width
+    window.dispatchEvent(new Event("resize"));
+  });
+
   it("renders title and legend", () => {
     render(<InteractiveHeatmap data={mockData} title="Test Heatmap" />);
 
@@ -19,7 +30,7 @@ describe("InteractiveHeatmap", () => {
     expect(screen.getByText("High")).toBeInTheDocument();
   });
 
-  it("renders all days and hours", () => {
+  it("renders all days and hours", async () => {
     const { container } = render(<InteractiveHeatmap data={mockData} />);
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -27,13 +38,15 @@ describe("InteractiveHeatmap", () => {
       expect(screen.getByText(day)).toBeInTheDocument();
     }
 
-    // Check for hour labels in the header row specifically
-    const hourLabels = container.querySelectorAll(".flex.mb-2 .flex-1");
-    expect(hourLabels).toHaveLength(24);
+    // Wait for resize event to be processed
+    await vi.waitFor(() => {
+      const hourLabels = container.querySelectorAll(".flex.mb-2 .flex-1");
+      expect(hourLabels).toHaveLength(24);
 
-    // Check that hour labels go from 0 to 23
-    hourLabels.forEach((label, index) => {
-      expect(label.textContent).toBe(index.toString());
+      // Check that hour labels go from 0 to 23
+      hourLabels.forEach((label, index) => {
+        expect(label.textContent).toBe(index.toString());
+      });
     });
   });
 

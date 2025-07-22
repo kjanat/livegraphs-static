@@ -20,6 +20,11 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
+        src: "/favicon.svg",
+        sizes: "any",
+        type: "image/svg+xml"
+      },
+      {
         src: "/favicon-16x16.png",
         sizes: "16x16",
         type: "image/png"
@@ -43,11 +48,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/favicon-256x256.png",
         sizes: "256x256",
         type: "image/png"
-      },
-      {
-        src: "/favicon.svg",
-        sizes: "any",
-        type: "image/svg+xml"
       }
     ],
     categories: ["business", "productivity", "utilities"],
