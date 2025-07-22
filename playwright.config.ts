@@ -22,7 +22,12 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 4 : 6,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [
+    ["html"],
+    ["junit", { outputFile: "results.xml" }],
+    [process.env.CI ? "github" : "list"],
+    [process.env.CI ? "@estruyf/github-actions-reporter" : "list"]
+  ],
   // Individual test timeout (2-3 minutes)
   timeout: 2 * 60 * 1000,
   // Global timeout for entire test suite
@@ -83,7 +88,7 @@ export default defineConfig({
   webServer: {
     command: "pnpm dev",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI || true,
+    reuseExistingServer: !process.env.CI || false,
     timeout: 30 * 60 * 1000
   }
 });
