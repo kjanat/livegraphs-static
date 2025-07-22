@@ -6,10 +6,10 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
 import { Footer } from "@/components/Footer";
 import { StructuredData } from "@/components/StructuredData";
 import { SkipLinks } from "@/components/ui/SkipLinks";
+import { Toaster } from "@/components/ui/sonner";
 import { WebVitals } from "@/components/WebVitals";
 import { generateMetadata } from "@/lib/constants/metadata";
 import { generateViewport } from "@/lib/constants/viewport";
