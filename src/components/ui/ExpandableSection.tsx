@@ -74,7 +74,10 @@ export function ExpandableSection({
   };
 
   return (
-    <Card className={cn("transition-all duration-300 p-0 border", getPriorityStyles(), className)}>
+    <Card
+      className={cn("transition-all duration-300 p-0 border", getPriorityStyles(), className)}
+      data-expandable-section
+    >
       <Button
         variant="ghost"
         onClick={() => setIsExpanded(!isExpanded)}

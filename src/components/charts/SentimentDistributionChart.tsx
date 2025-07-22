@@ -58,6 +58,7 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
       role="img"
       aria-labelledby="sentiment-chart-title"
       aria-describedby="sentiment-chart-desc"
+      data-chart="sentiment-distribution"
     >
       <h3 id="sentiment-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
         Sentiment Distribution

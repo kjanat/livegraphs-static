@@ -25,6 +25,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className="relative h-9 w-9"
       aria-label={`Current theme: ${theme}. Click to change theme`}
+      data-theme-toggle
     >
       {/* Sun icon */}
       <svg

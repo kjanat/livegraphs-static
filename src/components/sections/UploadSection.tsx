@@ -74,6 +74,7 @@ export function UploadSection({
           <UploadIcon size={18} />
           {hasData ? "Upload New JSON File" : "Upload JSON File"}
           <input
+            id="file-upload-input"
             type="file"
             accept=".json"
             onChange={onFileUpload}

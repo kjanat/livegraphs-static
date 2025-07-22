@@ -89,7 +89,7 @@ export function DateRangePicker({ minDate, maxDate, onDateRangeChange }: DateRan
   };
 
   return (
-    <Card className="mb-8 transition-all duration-200 hover:shadow-lg">
+    <Card className="mb-8 transition-all duration-200 hover:shadow-lg" data-date-range-picker>
       <CardHeader>
         <CardTitle className="text-xl sm:text-2xl">Date Range</CardTitle>
       </CardHeader>

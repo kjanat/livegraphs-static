@@ -6,6 +6,7 @@
 
 "use client";
 
+import { CommandPalette } from "@/components/CommandPalette";
 import { DataQualityIndicator } from "@/components/DataQualityIndicator";
 import { InsightsSummary } from "@/components/InsightsSummary";
 import { MobileDashboard } from "@/components/mobile/MobileDashboard";
@@ -71,6 +72,15 @@ export function ClientDashboard() {
 
   return (
     <>
+      {/* Command Palette */}
+      <CommandPalette
+        onFileUpload={handleFileUpload}
+        onClearDatabase={clearAllData}
+        onExportCSV={exportCurrentData}
+        onLoadSampleData={loadSampleData}
+        hasData={hasData}
+      />
+
       {/* Database Status Messages */}
       {!isInitialized && !dbError && (
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8">
