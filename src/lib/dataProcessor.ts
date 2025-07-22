@@ -177,7 +177,7 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
   const dates_values = timeData.map((row) => row.count as number);
 
   // Response time over time
-  const responseTimeData = execQuery<{ date: string; avg_response_time: number }>(`
+  const responseTimeData = execQuery<{ date: string; avg_response: number }>(`
     SELECT 
       DATE(start_time) as date,
       AVG(avg_response_time) as avg_response
@@ -189,8 +189,8 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   const response_time_dates = responseTimeData.map((row) => row.date as string);
   const response_time_values = responseTimeData.map((row) =>
-    row.avg_response_time !== null && row.avg_response_time !== undefined
-      ? Number((row.avg_response_time as number).toFixed(1))
+    row.avg_response !== null && row.avg_response !== undefined
+      ? Number((row.avg_response as number).toFixed(1))
       : 0
   );
 

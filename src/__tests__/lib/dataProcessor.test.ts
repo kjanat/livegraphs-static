@@ -121,7 +121,7 @@ describe("dataProcessor", () => {
           { date: "2024-01-02", count: 15 }
         ])
         // Response time data
-        .mockReturnValueOnce([{ date: "2024-01-01", avg_response_time: 2.5 }])
+        .mockReturnValueOnce([{ date: "2024-01-01", avg_response: 2.5 }])
         // Cost data
         .mockReturnValueOnce([{ date: "2024-01-01", daily_cost: 10.5 }])
         // Country data

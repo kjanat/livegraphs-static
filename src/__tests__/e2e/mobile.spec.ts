@@ -37,8 +37,10 @@ test.describe("Notso AI Dashboard - Mobile", () => {
       await page.waitForTimeout(500);
     }
 
-    // Find the file input by looking for the label
-    const fileInput = page.locator('input[type="file"]');
+    // Find the file input specifically in the upload section to avoid strict mode violation
+    const fileInput = page
+      .getByRole("region", { name: "Data upload section" })
+      .locator('input[type="file"]');
     const testDataFile = path.join(__dirname, "test-data-simple.json");
     await fileInput.setInputFiles(testDataFile);
 
@@ -188,6 +190,8 @@ test.describe("Notso AI Dashboard - Mobile", () => {
     await expect(page.getByText("Total Sessions")).toBeVisible();
   });
 
+  // Known issue: This test may fail if the mobile UI tabs don't load properly
+  // The Top Countries and Top Languages sections are in the Users tab on mobile
   test("collapsible sections work on mobile", async ({ page }) => {
     // Load sample data
     const uploadToggle = page.getByRole("button", { name: "Upload or manage data" });
@@ -205,32 +209,66 @@ test.describe("Notso AI Dashboard - Mobile", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Wait for the UI to settle
+    // Wait for the metrics to be visible, which indicates data has loaded
+    await expect(page.getByText("Total Sessions")).toBeVisible({ timeout: 10000 });
+
+    // Wait for tabs to be visible
     await page.waitForTimeout(2000);
+
+    // On mobile, the Top Countries and Top Languages are in the Users tab
+    // The tabs are button elements with the label text
+    const usersTab = page.locator('button:has-text("Users")').first();
+    await expect(usersTab).toBeVisible({ timeout: 10000 });
+    await usersTab.click();
+    await page.waitForTimeout(1000);
 
     // Check that Top Countries section is visible and collapsible
     const topCountriesButton = page.getByRole("button", { name: /Top Countries/i });
     await expect(topCountriesButton).toBeVisible();
 
     // The section should be expanded by default - verify content is visible
-    await expect(page.getByText("United States").first()).toBeVisible();
+    // Use a more specific selector to avoid conflicts
+    // The data uses country codes like "US", "NL", etc.
+    const countryContent = page.locator('text="US"').first();
+    await expect(countryContent).toBeVisible();
 
     // Click to collapse
     await topCountriesButton.click({ force: true });
     await page.waitForTimeout(500);
 
-    // Content should be hidden
-    await expect(page.getByText("United States").first()).not.toBeVisible();
+    // Content should be hidden - check if parent container has collapsed
+    // The content uses max-h-0 and opacity-0 when collapsed
+    const contentContainer = page.locator(".max-h-0").filter({ hasText: "US" }).first();
+    await expect(contentContainer).toHaveCount(1);
 
     // Check Top Languages section
     const topLanguagesButton = page.getByRole("button", { name: /Top Languages/i });
     await expect(topLanguagesButton).toBeVisible();
 
-    // Click to expand (it should be collapsed after collapsing countries)
+    // Check if the section is already collapsed (Safari might behave differently)
+    // First, let's ensure it's expanded
+    const chevronIcon = topLanguagesButton.locator("svg");
+    const isInitiallyCollapsed = await chevronIcon
+      .evaluate((el) => el.classList.contains("rotate-180"))
+      .catch(() => false);
+
+    if (!isInitiallyCollapsed) {
+      // If collapsed, click to expand first
+      await topLanguagesButton.click({ force: true });
+      await page.waitForTimeout(500);
+    }
+
+    // Now verify content is visible
+    // The data uses language codes like "en", "nl", etc.
+    const languageContent = page.locator('text="en"').first();
+    await expect(languageContent).toBeVisible({ timeout: 5000 });
+
+    // Click to collapse
     await topLanguagesButton.click({ force: true });
     await page.waitForTimeout(500);
 
-    // Language content should be visible
-    await expect(page.getByText("English").first()).toBeVisible();
+    // Language content should be hidden - check if parent container has collapsed
+    const languageContainer = page.locator(".max-h-0").filter({ hasText: "en" }).first();
+    await expect(languageContainer).toHaveCount(1);
   });
 });
