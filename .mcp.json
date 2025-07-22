@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "shadcn-ui": {
+      "command": "npx",
+      "args": ["--yes", "@jpisnice/shadcn-ui-mcp-server"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["--yes", "@playwright/mcp@latest"]
+    }
+  }
+}

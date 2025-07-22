@@ -70,3 +70,5 @@ public/sql-js/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+results.xml
+mobile-before-clear.png

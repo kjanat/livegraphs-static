@@ -13,6 +13,7 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./src/__tests__/e2e",
+  snapshotDir: "./screenshots",
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -34,7 +35,7 @@ export default defineConfig({
   globalTimeout: 30 * 60 * 1000, // 30 minutes for 140 tests
   // Assertion timeout for expect statements
   expect: {
-    timeout: 15_000 // 15 seconds for assertions
+    timeout: 15 * 1000 // 15 seconds for assertions
   },
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
