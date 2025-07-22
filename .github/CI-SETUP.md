@@ -90,7 +90,7 @@ pnpm install  # Installs dependencies and sets up Husky
 ### Testing & Quality
 
 - **Vitest:** `vitest.config.ts` - Test runner configuration
-- **Lighthouse:** `.lighthouserc.js` - Performance audit thresholds
+- **Lighthouse:** `.lighthouserc.mjs` - Performance audit thresholds
 - **Size Limit:** `.size-limit.json` - Bundle size constraints
 
 ### Deployment
