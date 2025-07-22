@@ -8,8 +8,8 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { ChartSkeleton } from "@/components/ui/ChartSkeleton";
 import { ExpandableSection } from "@/components/ui/ExpandableSection";
+import { ChartSkeleton } from "@/components/ui/skeleton";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
 import { getChartColors } from "@/lib/utils/chartColors";

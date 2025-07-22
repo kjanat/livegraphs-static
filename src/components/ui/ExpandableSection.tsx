@@ -1,5 +1,5 @@
 /**
- * Notso AI - A web dashboard for visualizing chatbot conversation analytics
+ * Notso AI - A web dashboard for visualizing chatbot conversation analytics (enhanced with shadcn/ui)
  * Copyright (C) 2025  Kaj Kowalski
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
@@ -8,6 +8,10 @@
 
 import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@/components/icons";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface ExpandableSectionProps {
   title: string;
@@ -45,21 +49,24 @@ export function ExpandableSection({
     switch (priority) {
       case "high":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-primary/10 text-primary rounded-full">
+          <Badge variant="default" className="bg-primary/10 text-primary hover:bg-primary/20">
             Essential
-          </span>
+          </Badge>
         );
       case "medium":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
+          >
             Detailed
-          </span>
+          </Badge>
         );
       case "low":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-muted text-muted-foreground rounded-full">
+          <Badge variant="outline" className="text-muted-foreground">
             Advanced
-          </span>
+          </Badge>
         );
       default:
         return null;
@@ -67,11 +74,9 @@ export function ExpandableSection({
   };
 
   return (
-    <section
-      className={`border rounded-lg transition-all duration-300 ${getPriorityStyles()} ${className}`}
-    >
-      <button
-        type="button"
+    <Card className={cn("transition-all duration-300 p-0 border", getPriorityStyles(), className)}>
+      <Button
+        variant="ghost"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -79,7 +84,7 @@ export function ExpandableSection({
             setIsExpanded(!isExpanded);
           }
         }}
-        className="w-full p-4 sm:p-6 text-left flex items-center justify-between hover:bg-background/50 focus:bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transition-all duration-200 rounded-t-lg min-h-[44px]"
+        className="w-full p-4 sm:p-6 text-left flex items-center justify-between h-auto hover:bg-background/50 focus:bg-background/50 rounded-t-lg min-h-[44px] font-normal"
         aria-expanded={isExpanded}
         aria-controls={`section-${title.replace(/\s+/g, "-").toLowerCase()}`}
         aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
@@ -98,7 +103,7 @@ export function ExpandableSection({
             <ChevronDownIcon size={24} className="text-muted-foreground" />
           )}
         </div>
-      </button>
+      </Button>
 
       <div
         id={`section-${title.replace(/\s+/g, "-").toLowerCase()}`}
@@ -118,6 +123,6 @@ export function ExpandableSection({
           {children}
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
