@@ -142,6 +142,30 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
     }
   }
 
+  // Category quality insight - check for high percentage of unrecognized/other
+  if (chartData.category_labels && chartData.category_values) {
+    const totalCategorySessions = chartData.category_values.reduce((sum, val) => sum + val, 0);
+    const unrecognizedIndex = chartData.category_labels.findIndex(
+      (label) => label === "Unrecognized / Other"
+    );
+
+    if (unrecognizedIndex !== -1 && totalCategorySessions > 0) {
+      const unrecognizedPercentage =
+        (chartData.category_values[unrecognizedIndex] / totalCategorySessions) * 100;
+
+      if (unrecognizedPercentage > 25) {
+        insights.push({
+          type: "warning",
+          title: "High Unrecognized Categories",
+          description:
+            "Many conversations lack proper categorization - consider reviewing classification rules",
+          value: `${unrecognizedPercentage.toFixed(1)}% unrecognized`,
+          icon: AlertTriangleIcon
+        });
+      }
+    }
+  }
+
   // Data quality insight
   if (totalSessions < 20) {
     insights.push({

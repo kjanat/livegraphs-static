@@ -44,7 +44,8 @@ export const SAMPLE_DATA_CONSTANTS = {
     "General Inquiry",
     "Feature Request",
     "Bug Report",
-    "Onboarding"
+    "Onboarding",
+    "Unrecognized / Other"
   ],
   sentiments: ["Positive", "Neutral", "Negative"],
   negativeKeywords: [
@@ -177,7 +178,11 @@ function generateSession(index: number, date: Date): SampleSession {
     sentiment: sentimentValue.toLowerCase() as "positive" | "neutral" | "negative",
     escalated,
     forwarded_hr: false,
-    category: randomElement(categories),
+    // 15% chance to use "Unrecognized / Other" category
+    category:
+      Math.random() < 0.15
+        ? "Unrecognized / Other"
+        : randomElement(categories.filter((c) => c !== "Unrecognized / Other")),
     questions: [selectedQuestion],
     summary: `User asked about: ${selectedQuestion}. The conversation was ${sentimentValue.toLowerCase()} and ${escalated ? "was escalated" : "resolved successfully"}.`,
     user_rating:
@@ -189,16 +194,29 @@ function generateSession(index: number, date: Date): SampleSession {
   };
 }
 
-export function generateSampleData(): SampleSession[] {
+export function generateSampleData(daysOfHistory = 365): SampleSession[] {
   const sessions: SampleSession[] = [];
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 30); // 30 days of data
+  startDate.setDate(startDate.getDate() - daysOfHistory); // Default to 1 year of data
 
-  // Generate 10-30 sessions per day
+  // Generate variable sessions per day (more realistic pattern)
   let currentDate = new Date(startDate);
   while (currentDate <= endDate) {
-    const sessionsPerDay = randomInt(10, 30);
+    // Vary session count by day of week and month
+    const dayOfWeek = currentDate.getDay();
+    const month = currentDate.getMonth();
+
+    // Lower activity on weekends
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const weekendFactor = isWeekend ? 0.3 : 1.0;
+
+    // Seasonal variation (lower in summer months)
+    const seasonalFactor = month >= 5 && month <= 7 ? 0.7 : 1.0;
+
+    const baseSessionCount = randomInt(15, 40);
+    const sessionsPerDay = Math.floor(baseSessionCount * weekendFactor * seasonalFactor);
+
     for (let i = 0; i < sessionsPerDay; i++) {
       sessions.push(generateSession(i, new Date(currentDate)));
     }
