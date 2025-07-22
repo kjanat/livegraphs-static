@@ -6,6 +6,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { CommandPalette } from "@/components/CommandPalette";
 import { DataQualityIndicator } from "@/components/DataQualityIndicator";
 import { InsightsSummary } from "@/components/InsightsSummary";
@@ -14,8 +15,10 @@ import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
 import { MobileDateRangePicker } from "@/components/mobile/MobileDateRangePicker";
 import { MobileUploadSection } from "@/components/mobile/MobileUploadSection";
 import { ChartsDashboard } from "@/components/sections/ChartsDashboard";
+import { ChartsDashboardTabs } from "@/components/sections/ChartsDashboardTabs";
 import { DatabaseStatsSection } from "@/components/sections/DatabaseStatsSection";
 import { UploadSection } from "@/components/sections/UploadSection";
+import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EnhancedLoadingState } from "@/components/ui/EnhancedLoadingState";
@@ -34,6 +37,7 @@ export function ClientDashboard() {
   useKeyboardNavigation();
 
   const isMobile = useIsMobile();
+  const [useTabView, setUseTabView] = useState(false);
   const { isInitialized, error: dbError, loadSessionsFromJSON } = useDatabase();
 
   // Database operations
@@ -194,7 +198,24 @@ export function ClientDashboard() {
 
               <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />
 
-              <ChartsDashboard metrics={metrics} chartData={chartData} />
+              {/* View Toggle */}
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUseTabView(!useTabView)}
+                  className="gap-2"
+                >
+                  {useTabView ? "Switch to Expandable View" : "Switch to Tab View"}
+                </Button>
+              </div>
+
+              {/* Charts - Conditional rendering based on view preference */}
+              {useTabView ? (
+                <ChartsDashboardTabs metrics={metrics} chartData={chartData} />
+              ) : (
+                <ChartsDashboard metrics={metrics} chartData={chartData} />
+              )}
             </>
           )}
 
