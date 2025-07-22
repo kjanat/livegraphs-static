@@ -215,4 +215,4 @@ GitHub Actions workflows:
 
 - Logo component at `/components/Logo.tsx` - reusable SVG with theme support
 - Logo as SVG in `/public/notso-{black,white}.svg`
-- Favicons in `/public/favicon{,16,32,64,128,256}{,x}{,16,32,64,128,256}.{svg,png}` for static export compatibility
+- Favicons in `/public/favicon.svg` for static export compatibility

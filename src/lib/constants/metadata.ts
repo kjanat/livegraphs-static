@@ -34,7 +34,7 @@ export const FONT_CONFIG = {
   }
 };
 
-export const ICON_SIZES = [16, 32, 64, 128, 256] as const;
+// export const ICON_SIZES = [16, 32, 64, 128, 256] as const;
 
 export const generateMetadata = (): Metadata => ({
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || SITE_CONFIG.url),
@@ -76,13 +76,7 @@ export const generateMetadata = (): Metadata => ({
     }
   },
   icons: {
-    icon: [
-      { url: "./favicon.svg", type: "image/svg+xml" },
-      ...ICON_SIZES.map((size) => ({
-        url: `./favicon-${size}x${size}.png`,
-        sizes: `${size}x${size}`
-      }))
-    ],
+    icon: [{ url: "./favicon.svg", type: "image/svg+xml" }],
     apple: [{ url: "./apple-touch-icon.png", sizes: "180x180" }]
   }
 });

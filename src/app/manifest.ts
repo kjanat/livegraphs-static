@@ -23,31 +23,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/favicon.svg",
         sizes: "any",
         type: "image/svg+xml"
-      },
-      {
-        src: "/favicon-16x16.png",
-        sizes: "16x16",
-        type: "image/png"
-      },
-      {
-        src: "/favicon-32x32.png",
-        sizes: "32x32",
-        type: "image/png"
-      },
-      {
-        src: "/favicon-64x64.png",
-        sizes: "64x64",
-        type: "image/png"
-      },
-      {
-        src: "/favicon-128x128.png",
-        sizes: "128x128",
-        type: "image/png"
-      },
-      {
-        src: "/favicon-256x256.png",
-        sizes: "256x256",
-        type: "image/png"
       }
     ],
     categories: ["business", "productivity", "utilities"],
