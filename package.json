@@ -14,7 +14,8 @@
   "license": "AGPL-3.0-or-later",
   "author": "Kaj Kowalski <dev@kajkowalski.nl>",
   "scripts": {
-    "build": "next build",
+    "build": "pnpm run copy:sql-wasm && next build",
+    "copy:sql-wasm": "node scripts/copy-sql-wasm.mjs",
     "dev": "next dev",
     "dev:turbo": "next dev --turbopack",
     "format": "biome format --write",

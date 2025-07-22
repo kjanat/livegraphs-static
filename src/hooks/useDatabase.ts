@@ -6,350 +6,254 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { schema } from "@/lib/db/schema";
+import type { Database } from "@/lib/db/sql-wrapper";
+import {
+  closeDatabase,
+  createDatabase,
+  executeUpdate,
+  exportDatabase,
+  initSqlJs,
+  queryOne,
+  transaction
+} from "@/lib/db/sql-wrapper";
 import type { ChatSession } from "@/lib/types/session";
 
-// Extend window interface for sql.js
-declare global {
-  interface Window {
-    initSqlJs?: (config?: { locateFile?: (file: string) => string }) => Promise<SqlJsStatic>;
-  }
+interface DatabaseStats {
+  totalSessions: number;
+  dateRange: {
+    min: string;
+    max: string;
+  };
 }
 
-// Define minimal types for sql.js
-interface SqlJsStatic {
-  Database: new (data?: Uint8Array) => SqlDatabase;
+interface DatabaseHook {
+  db: Database | null;
+  isInitialized: boolean;
+  error: Error | null;
+  loadSessionsFromJSON: (jsonData: ChatSession[]) => Promise<number>;
+  getDatabaseStats: () => DatabaseStats;
+  clearDatabase: () => void;
 }
 
-interface Statement {
-  bind(values: unknown[]): void;
-  step(): boolean;
-  getAsObject(): Record<string, unknown>;
-  free(): void;
-  run(values?: unknown[]): void;
-}
+const STORAGE_KEY = "livegraphs_db";
 
-interface ExecResult {
-  columns: string[];
-  values: unknown[][];
-}
-
-interface SqlDatabase {
-  run(sql: string): void;
-  prepare(sql: string): Statement;
-  exec(sql: string): ExecResult[];
-  export(): Uint8Array;
-  close(): void;
-  create_function(name: string, fn: (...args: unknown[]) => unknown): void;
-  each(
-    sql: string,
-    params: unknown[],
-    callback: (row: Record<string, unknown>) => void,
-    done: () => void
-  ): void;
-  getRowsModified(): number;
-  handleError(): void;
-  iterateStatements(sql: string): Generator<string, void, unknown>;
-}
-
-// Configurable CDN URL - can be overridden via environment variable or parameter
-const DEFAULT_SQL_JS_CDN_URL = "https://sql.js.org/dist";
-
-let SQL: SqlJsStatic | null = null;
-let db: SqlDatabase | null = null;
-
-export function useDatabase(cdnUrl?: string) {
-  const SQL_JS_CDN_URL = cdnUrl || process.env.NEXT_PUBLIC_SQL_JS_CDN_URL || DEFAULT_SQL_JS_CDN_URL;
+export function useDatabase(): DatabaseHook {
+  const [db, setDb] = useState<Database | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
+  // Initialize database
   useEffect(() => {
     const initDb = async () => {
       try {
-        if (!SQL) {
-          // Load sql.js from CDN to avoid bundling issues
-          if (typeof window !== "undefined") {
-            // Check if initSqlJs is already available globally
-            let initSqlJs = window.initSqlJs;
-
-            if (!initSqlJs) {
-              // Load sql.js script from CDN
-              const script = document.createElement("script");
-              script.src = `${SQL_JS_CDN_URL}/sql-wasm.js`;
-
-              await new Promise<void>((resolve, reject) => {
-                script.onload = () => {
-                  // Clean up script element after successful load
-                  script.onload = null;
-                  script.onerror = null;
-                  resolve();
-                };
-                script.onerror = () => {
-                  // Clean up script element on error
-                  script.onload = null;
-                  script.onerror = null;
-                  document.head.removeChild(script);
-                  reject(new Error("Failed to load sql.js from CDN"));
-                };
-                document.head.appendChild(script);
-              });
-
-              initSqlJs = window.initSqlJs;
-
-              // Remove script element after successful initialization
-              if (script.parentNode) {
-                document.head.removeChild(script);
-              }
-            }
-
-            if (!initSqlJs) {
-              throw new Error("initSqlJs not found after loading script");
-            }
-
-            SQL = await initSqlJs({
-              locateFile: (file: string) => `${SQL_JS_CDN_URL}/${file}`
-            });
-          } else {
-            throw new Error("sql.js can only be initialized in browser environment");
-          }
-        }
-
-        // guard against SQL being null after import
-        if (SQL === null) {
-          throw new Error("SQL.js failed to initialize");
-        }
-        const SQLStatic = SQL;
+        // Initialize sql.js with local files
+        await initSqlJs();
 
         // Try to load existing database from localStorage
-        const savedDb = localStorage.getItem("livegraphs_db");
-        if (savedDb && !db) {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        let database: Database;
+
+        if (savedData) {
           try {
-            const data = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
-            db = new SQLStatic.Database(data);
-          } catch (error) {
-            console.error("Failed to load saved database:", error);
-            db = new SQLStatic.Database();
+            const dataArray = Uint8Array.from(atob(savedData), (c) => c.charCodeAt(0));
+            database = await createDatabase(dataArray);
+            console.log("Loaded existing database from localStorage");
+          } catch (err) {
+            console.warn("Failed to load saved database, creating new one", err);
+            database = await createDatabase();
           }
-        } else if (!db) {
-          db = new SQLStatic.Database();
+        } else {
+          database = await createDatabase();
         }
 
-        // Load schema
-        try {
-          db.run(schema);
-        } catch (error) {
-          console.error("Failed to load schema:", error);
-        }
+        // Initialize schema
+        database.run(schema);
 
+        setDb(database);
         setIsInitialized(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to initialize database");
-        console.error("Database initialization error:", err);
+        console.error("Failed to initialize database:", err);
+        setError(err instanceof Error ? err : new Error("Database initialization failed"));
       }
     };
 
-    if (typeof window !== "undefined") {
-      initDb();
-    }
-  }, [SQL_JS_CDN_URL]);
+    initDb();
 
+    // Cleanup on unmount
+    return () => {
+      if (db) {
+        closeDatabase(db);
+      }
+    };
+  }, [db]);
+
+  // Save database to localStorage
   const saveDatabase = useCallback(() => {
     if (!db) return;
 
-    const data = db.export();
-    // Convert Uint8Array to base64 in chunks to avoid stack overflow
-    const uint8Array = new Uint8Array(data);
-    let binary = "";
-    const chunkSize = 0x8000; // 32KB chunks
-
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-
-    const encoded = btoa(binary);
-
-    // Check localStorage quota (5MB typical limit)
-    const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5MB to leave some buffer
-    if (encoded.length > MAX_SIZE) {
-      console.warn(
-        `Database size (${(encoded.length / 1024 / 1024).toFixed(2)}MB) exceeds safe localStorage limit`
-      );
-      // Consider implementing IndexedDB fallback here
-      return;
-    }
-
     try {
-      localStorage.setItem("livegraphs_db", encoded);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "QuotaExceededError") {
-        console.error("LocalStorage quota exceeded. Consider using IndexedDB.");
-        // Optionally clear old data or implement cleanup strategy
-      }
-      throw e;
+      const data = exportDatabase(db);
+      const base64 = btoa(String.fromCharCode.apply(null, Array.from(data)));
+      localStorage.setItem(STORAGE_KEY, base64);
+    } catch (err) {
+      console.error("Failed to save database:", err);
     }
-  }, []);
+  }, [db]);
 
-  // Define insertSessionSync for use in loadSessionsFromJSON
-  const insertSessionSync = useCallback((session: ChatSession): void => {
-    if (!db) throw new Error("Database not initialized");
+  // Insert a single session (internal helper)
+  const insertSessionSync = useCallback(
+    (session: ChatSession) => {
+      if (!db) throw new Error("Database not initialized");
 
-    const startTime = new Date(session.start_time);
-    const endTime = new Date(session.end_time);
-    const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      // Calculate conversation duration in seconds
+      const startTime = new Date(session.start_time).getTime();
+      const endTime = new Date(session.end_time).getTime();
+      const durationSeconds = Math.round((endTime - startTime) / 1000);
 
-    const stmt = db.prepare(`
-      INSERT INTO sessions (
-        session_id, start_time, end_time, ip_hash, country, language,
-        sentiment, escalated, forwarded_hr, category, summary, user_rating,
-        conversation_duration_seconds, total_messages, user_messages,
-        avg_response_time, total_tokens, cost_eur_cents, source_url
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-    `);
+      // Insert session
+      executeUpdate(
+        db,
+        `INSERT INTO sessions (
+          session_id, start_time, end_time, ip_hash, country, language,
+          sentiment, escalated, forwarded_hr, category, summary,
+          conversation_duration_seconds, avg_response_time, total_messages,
+          user_messages, total_tokens, cost_eur_cents, user_rating, source_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          session.session_id,
+          session.start_time,
+          session.end_time,
+          session.user.ip,
+          session.user.country,
+          session.user.language,
+          session.sentiment,
+          session.escalated ? 1 : 0,
+          session.forwarded_hr ? 1 : 0,
+          session.category,
+          session.summary,
+          durationSeconds,
+          session.messages.response_time.avg,
+          session.messages.amount.total,
+          session.messages.amount.user,
+          session.messages.tokens,
+          Math.round(session.messages.cost.eur.cent),
+          session.user_rating || null,
+          session.messages.source_url
+        ]
+      );
 
-    stmt.run([
-      session.session_id,
-      session.start_time,
-      session.end_time,
-      session.user.ip,
-      session.user.country,
-      session.user.language,
-      session.sentiment,
-      session.escalated ? 1 : 0,
-      session.forwarded_hr ? 1 : 0,
-      session.category,
-      session.summary,
-      session.user_rating || null,
-      durationSeconds,
-      session.messages.amount.total,
-      session.messages.amount.user,
-      session.messages.response_time.avg,
-      session.messages.tokens,
-      session.messages.cost.eur.cent,
-      session.messages.source_url
-    ]);
-    stmt.free();
+      // Insert messages
+      session.transcript.forEach((msg) => {
+        executeUpdate(
+          db,
+          `INSERT INTO messages (session_id, timestamp, role, content)
+           VALUES (?, ?, ?, ?)`,
+          [session.session_id, msg.timestamp, msg.role, msg.content]
+        );
+      });
 
-    // Insert transcript messages
-    const msgStmt = db.prepare(
-      "INSERT INTO messages (session_id, timestamp, role, content) VALUES (?, ?, ?, ?)"
-    );
+      // Insert questions
+      session.questions.forEach((question) => {
+        executeUpdate(db, `INSERT INTO questions (session_id, question) VALUES (?, ?)`, [
+          session.session_id,
+          question
+        ]);
+      });
+    },
+    [db]
+  );
 
-    session.transcript.forEach((msg) => {
-      msgStmt.run([session.session_id, msg.timestamp, msg.role, msg.content]);
-    });
-    msgStmt.free();
-
-    // Insert questions
-    const qStmt = db.prepare("INSERT INTO questions (session_id, question) VALUES (?, ?)");
-
-    session.questions.forEach((question) => {
-      qStmt.run([session.session_id, question]);
-    });
-    qStmt.free();
-  }, []);
-
+  // Load sessions from JSON
   const loadSessionsFromJSON = useCallback(
     async (jsonData: ChatSession[]): Promise<number> => {
       if (!db) throw new Error("Database not initialized");
 
       let successCount = 0;
-      let transactionStarted = false;
 
-      try {
-        db.run("BEGIN TRANSACTION");
-        transactionStarted = true;
+      await transaction(db, () => {
+        // Clear existing data
+        db.run("DELETE FROM messages");
+        db.run("DELETE FROM questions");
+        db.run("DELETE FROM sessions");
 
+        // Insert new sessions
         for (const session of jsonData) {
           try {
-            // Don't use await inside transaction - sql.js is synchronous
             insertSessionSync(session);
             successCount++;
-          } catch (error) {
-            console.error(`Failed to insert session ${session.session_id}:`, error);
+          } catch (err) {
+            console.error(`Failed to insert session ${session.session_id}:`, err);
           }
         }
+      });
 
-        db.run("COMMIT");
-      } catch (error) {
-        if (transactionStarted) {
-          try {
-            db.run("ROLLBACK");
-          } catch (rollbackError) {
-            console.error("Rollback failed:", rollbackError);
-          }
-        }
-        throw error;
-      }
-
+      // Save to localStorage after successful load
       saveDatabase();
+
       return successCount;
     },
-    [saveDatabase, insertSessionSync]
+    [db, insertSessionSync, saveDatabase]
   );
 
-  const getDatabaseStats = useCallback((): {
-    totalSessions: number;
-    dateRange: { min: string; max: string };
-  } => {
-    if (!db) return { totalSessions: 0, dateRange: { min: "", max: "" } };
+  // Get database statistics
+  const getDatabaseStats = useCallback((): DatabaseStats => {
+    if (!db) {
+      return {
+        totalSessions: 0,
+        dateRange: { min: "", max: "" }
+      };
+    }
 
     try {
-      const result = db.exec(`
-        SELECT 
-          COUNT(*) as total,
-          MIN(start_time) as min_date,
-          MAX(start_time) as max_date
-        FROM sessions
-      `);
-
-      if (!result || result.length === 0) {
-        return { totalSessions: 0, dateRange: { min: "", max: "" } };
-      }
-
-      const row = result[0];
-      if (!row.values || row.values.length === 0) {
-        return { totalSessions: 0, dateRange: { min: "", max: "" } };
-      }
-
-      const [total, min_date, max_date] = row.values[0];
+      const stats = queryOne<{
+        total_sessions: number;
+        min_date: string | null;
+        max_date: string | null;
+      }>(
+        db,
+        `SELECT 
+          COUNT(*) as total_sessions,
+          MIN(DATE(start_time)) as min_date,
+          MAX(DATE(start_time)) as max_date
+        FROM sessions`
+      );
 
       return {
-        totalSessions: Number(total) || 0,
+        totalSessions: stats?.total_sessions || 0,
         dateRange: {
-          min: (min_date as string) || "",
-          max: (max_date as string) || ""
+          min: stats?.min_date || "",
+          max: stats?.max_date || ""
         }
       };
-    } catch (error) {
-      console.error("Error getting database stats:", error);
-      return { totalSessions: 0, dateRange: { min: "", max: "" } };
+    } catch (err) {
+      console.error("Error getting database stats:", err);
+      return {
+        totalSessions: 0,
+        dateRange: { min: "", max: "" }
+      };
     }
-  }, []);
+  }, [db]);
 
-  const clearDatabase = useCallback((): void => {
+  // Clear database
+  const clearDatabase = useCallback(() => {
     if (!db) return;
 
     try {
-      db.run("DELETE FROM sessions");
       db.run("DELETE FROM messages");
       db.run("DELETE FROM questions");
-    } catch (error) {
-      console.error("Error clearing database:", error);
+      db.run("DELETE FROM sessions");
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.error("Error clearing database:", err);
     }
-
-    localStorage.removeItem("livegraphs_db");
-    saveDatabase();
-  }, [saveDatabase]);
+  }, [db]);
 
   return {
+    db,
     isInitialized,
     error,
     loadSessionsFromJSON,
     getDatabaseStats,
-    clearDatabase,
-    // Export the database instance for advanced usage
-    db
+    clearDatabase
   };
 }

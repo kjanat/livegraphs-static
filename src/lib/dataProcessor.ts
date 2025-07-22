@@ -4,19 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+import type { Database } from "./db/sql-wrapper";
+import { executeQuery, queryOne } from "./db/sql-wrapper";
 import type { ChartData, DateRange, Metrics } from "./types/session";
-
-interface Statement {
-  bind(values: unknown[]): void;
-  step(): boolean;
-  getAsObject(): Record<string, unknown>;
-  free(): void;
-}
-
-interface SqlDatabase {
-  prepare(sql: string): Statement;
-  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
-}
 
 // Type guards for safer type assertions
 function isString(value: unknown): value is string {
@@ -35,10 +25,19 @@ function safeNumber(value: unknown, defaultValue = 0): number {
   return isNumber(value) ? value : defaultValue;
 }
 
-export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): Promise<Metrics> {
+export async function calculateMetrics(db: Database, dateRange: DateRange): Promise<Metrics> {
   // Get basic metrics
-  const stmt = db.prepare(`
-    SELECT 
+  const metricsRow = queryOne<{
+    total_conversations: number;
+    unique_users: number;
+    avg_conversation_minutes: number;
+    avg_response_seconds: number;
+    resolved_percentage: number;
+    avg_daily_cost: number;
+    avg_user_rating: number | null;
+  }>(
+    db,
+    `SELECT 
       COUNT(*) as total_conversations,
       COUNT(DISTINCT ip_hash) as unique_users,
       AVG(conversation_duration_seconds) / 60.0 as avg_conversation_minutes,
@@ -47,12 +46,9 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
       SUM(cost_eur_cents) / 100.0 / COUNT(DISTINCT DATE(start_time)) as avg_daily_cost,
       AVG(user_rating) as avg_user_rating
     FROM sessions
-    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-  `);
-  stmt.bind([dateRange.start.toISOString(), dateRange.end.toISOString()]);
-  stmt.step();
-  const metricsRow = stmt.getAsObject();
-  stmt.free();
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)`,
+    [dateRange.start.toISOString(), dateRange.end.toISOString()]
+  );
 
   const metrics = metricsRow
     ? [
@@ -67,20 +63,18 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
     : [0, 0, 0, 0, 0, 0, null];
 
   // Get peak usage time
-  const peakStmt = db.prepare(`
-    SELECT 
+  const peakRow = queryOne<{ hour: string; count: number }>(
+    db,
+    `SELECT 
       strftime('%H:00', start_time) as hour,
       COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
     GROUP BY hour
     ORDER BY count DESC
-    LIMIT 1
-  `);
-  peakStmt.bind([dateRange.start.toISOString(), dateRange.end.toISOString()]);
-  peakStmt.step();
-  const peakRow = peakStmt.getAsObject();
-  peakStmt.free();
+    LIMIT 1`,
+    [dateRange.start.toISOString(), dateRange.end.toISOString()]
+  );
 
   const peakHour = peakRow?.hour || "N/A";
 
@@ -100,24 +94,17 @@ export async function calculateMetrics(db: SqlDatabase, dateRange: DateRange): P
   };
 }
 
-export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): Promise<ChartData> {
+export async function prepareChartData(db: Database, dateRange: DateRange): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
   const endStr = dateRange.end.toISOString();
 
   // Helper function to execute query and get results
-  function executeQuery(sql: string): Array<Record<string, unknown>> {
-    const stmt = db.prepare(sql);
-    stmt.bind([startStr, endStr]);
-    const results = [];
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    stmt.free();
-    return results;
+  function execQuery<T = Record<string, unknown>>(sql: string): T[] {
+    return executeQuery<T>(db, sql, [startStr, endStr]);
   }
 
   // Sentiment data
-  const sentimentData = executeQuery(`
+  const sentimentData = execQuery<{ sentiment: string; count: number }>(`
     SELECT sentiment, COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -128,7 +115,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const sentiment_values = sentimentData.map((row) => safeNumber(row.count));
 
   // Resolution data
-  const resolutionData = executeQuery(`
+  const resolutionData = execQuery<{ status: string; count: number }>(`
     SELECT 
       CASE 
         WHEN escalated = 1 THEN 'Escalated'
@@ -145,7 +132,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const resolution_values = resolutionData.map((row) => safeNumber(row.count));
 
   // Category data
-  const categoryData = executeQuery(`
+  const categoryData = execQuery<{ category: string; count: number }>(`
     SELECT category, COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -158,7 +145,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const category_values = categoryData.map((row) => safeNumber(row.count));
 
   // Top questions
-  const questionsData = executeQuery(`
+  const questionsData = execQuery<{ question: string; count: number }>(`
     SELECT question, COUNT(*) as count
     FROM questions q
     JOIN sessions s ON q.session_id = s.session_id
@@ -176,7 +163,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const questions_values = questionsData.map((row) => row.count as number);
 
   // Time series data
-  const timeData = executeQuery(`
+  const timeData = execQuery<{ date: string; count: number }>(`
     SELECT 
       DATE(start_time) as date,
       COUNT(*) as count
@@ -190,7 +177,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const dates_values = timeData.map((row) => row.count as number);
 
   // Response time over time
-  const responseTimeData = executeQuery(`
+  const responseTimeData = execQuery<{ date: string; avg_response_time: number }>(`
     SELECT 
       DATE(start_time) as date,
       AVG(avg_response_time) as avg_response
@@ -202,11 +189,11 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
 
   const response_time_dates = responseTimeData.map((row) => row.date as string);
   const response_time_values = responseTimeData.map((row) =>
-    Number((row.avg_response as number).toFixed(1))
+    Number((row.avg_response_time as number).toFixed(1))
   );
 
   // Cost over time
-  const costData = executeQuery(`
+  const costData = execQuery<{ date: string; daily_cost: number }>(`
     SELECT 
       DATE(start_time) as date,
       SUM(cost_eur_cents) / 100.0 as daily_cost
@@ -220,7 +207,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const cost_values = costData.map((row) => Number((row.daily_cost as number).toFixed(2)));
 
   // Geographic distribution
-  const countryData = executeQuery(`
+  const countryData = execQuery<{ country: string; count: number }>(`
     SELECT country, COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -233,7 +220,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const country_values = countryData.map((row) => row.count as number);
 
   // Language distribution
-  const languageData = executeQuery(`
+  const languageData = execQuery<{ language: string; count: number }>(`
     SELECT language, COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -246,7 +233,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const language_values = languageData.map((row) => row.count as number);
 
   // Hourly heatmap data
-  const heatmapData = executeQuery(`
+  const heatmapData = execQuery<{ hour: number; day_of_week: string; count: number }>(`
     SELECT 
       CAST(strftime('%H', start_time) as INTEGER) as hour,
       strftime('%w', start_time) as day_of_week,
@@ -259,12 +246,12 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const hourly_data = heatmapData.map((row) => ({
     hour: row.hour as number,
-    day: dayNames[parseInt(row.day_of_week as string)],
+    day: dayNames[Number.parseInt(row.day_of_week as string)],
     count: row.count as number
   }));
 
   // Conversation durations
-  const durationData = executeQuery(`
+  const durationData = execQuery<{ duration_minutes: number }>(`
     SELECT conversation_duration_seconds / 60.0 as duration_minutes
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -276,7 +263,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   );
 
   // Messages per conversation
-  const messagesData = executeQuery(`
+  const messagesData = execQuery<{ total_messages: number }>(`
     SELECT total_messages
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -286,7 +273,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   const messages_per_conversation = messagesData.map((row) => row.total_messages as number);
 
   // Rating distribution
-  const ratingData = executeQuery(`
+  const ratingData = execQuery<{ user_rating: number; count: number }>(`
     SELECT 
       user_rating,
       COUNT(*) as count
@@ -303,7 +290,7 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
   }));
 
   // Average rating
-  const avgRatingData = executeQuery(`
+  const avgRatingData = execQuery<{ avg_rating: number | null }>(`
     SELECT AVG(user_rating) as avg_rating
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
@@ -316,7 +303,12 @@ export async function prepareChartData(db: SqlDatabase, dateRange: DateRange): P
       : null;
 
   // Cost by category
-  const categoryCostData = executeQuery(`
+  const categoryCostData = execQuery<{
+    category: string;
+    total_cost: number;
+    avg_cost: number;
+    count: number;
+  }>(`
     SELECT 
       category,
       SUM(cost_eur_cents) / 100.0 as total_cost,
@@ -376,7 +368,7 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 // Export data as CSV
-export function exportToCSV(db: SqlDatabase, dateRange: DateRange): string {
+export function exportToCSV(db: Database, dateRange: DateRange): string {
   const stmt = db.prepare(`
     SELECT 
       session_id,

@@ -79,7 +79,7 @@ export function ClientDashboard() {
 
       {dbError && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-8">
-          <p className="text-destructive">Database error: {dbError}</p>
+          <p className="text-destructive">Database error: {dbError.message}</p>
         </div>
       )}
 
