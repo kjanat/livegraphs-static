@@ -58,8 +58,7 @@ export function ClientDashboard() {
     handleDragEnter,
     handleDragLeave,
     handleDragOver,
-    handleDrop,
-    triggerFileInput
+    handleDrop
   } = useFileUpload(loadSessionsFromJSON, {
     onSuccess: async () => {
       await refreshStats();
@@ -199,7 +198,7 @@ export function ClientDashboard() {
               className={isDragging ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""}
               aria-label="Drop zone for JSON files"
             >
-              <EmptyState onSampleData={loadSampleData} onUploadClick={triggerFileInput} />
+              <EmptyState onSampleData={loadSampleData} onFileUpload={handleFileUpload} />
             </section>
           )}
         </>

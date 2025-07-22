@@ -11,9 +11,10 @@ import { ChartIcon, FileIcon } from "@/components/icons";
 interface EmptyStateProps {
   onSampleData?: () => void;
   onUploadClick?: () => void;
+  onFileUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function EmptyState({ onSampleData, onUploadClick }: EmptyStateProps) {
+export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyStateProps) {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -54,7 +55,18 @@ export function EmptyState({ onSampleData, onUploadClick }: EmptyStateProps) {
               >
                 Try Sample Data
               </button>
-              {onUploadClick ? (
+              {onFileUpload ? (
+                <label className="text-primary hover:text-primary/80 underline transition-colors cursor-pointer">
+                  or upload your own data
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={onFileUpload}
+                    className="hidden"
+                    aria-label="Upload JSON file"
+                  />
+                </label>
+              ) : onUploadClick ? (
                 <button
                   type="button"
                   onClick={onUploadClick}
@@ -155,7 +167,16 @@ export function EmptyState({ onSampleData, onUploadClick }: EmptyStateProps) {
           <p className="text-sm text-muted-foreground mb-3">
             Your JSON file should contain a{" "}
             <code className="px-1 py-0.5 bg-background rounded text-foreground">sessions</code>{" "}
-            array with conversation data:
+            array with conversation data. View the full{" "}
+            <a
+              href="https://raw.githubusercontent.com/kjanat/livegraphs-static/master/public/data-schema.json"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              JSON Schema
+            </a>{" "}
+            for detailed specifications.
           </p>
           <pre className="text-sm text-muted-foreground overflow-x-auto">
             {`{

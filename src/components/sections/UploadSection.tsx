@@ -72,7 +72,7 @@ export function UploadSection({
           }`}
         >
           <UploadIcon size={18} />
-          {hasData ? "Upload New File" : "Upload File"}
+          {hasData ? "Upload New JSON File" : "Upload JSON File"}
           <input
             type="file"
             accept=".json"

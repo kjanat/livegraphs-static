@@ -101,7 +101,7 @@ export function MobileUploadSection({
               }`}
             >
               <UploadIcon size={16} />
-              {hasData ? "Upload New File" : "Upload JSON File"}
+              {hasData ? "Upload New JSON File" : "Upload JSON File"}
               <input
                 type="file"
                 accept=".json"

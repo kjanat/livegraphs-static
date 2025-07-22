@@ -20,14 +20,14 @@ test.describe("Notso AI Dashboard", () => {
     await page.waitForSelector('h1:has-text("Notso AI Dashboard")', { timeout: 10000 });
 
     await expect(page.getByRole("heading", { name: "Notso AI Dashboard" })).toBeVisible();
-    await expect(page.getByText("Upload File")).toBeVisible();
+    await expect(page.getByText("Upload JSON File")).toBeVisible();
     await expect(page.getByText("Transform Your Chatbot Data Into Insights")).toBeVisible();
     await expect(page.getByRole("button", { name: "Try Sample Data" })).toBeVisible();
   });
 
   test("can upload a JSON file and display data", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByText("Upload File").click();
+    await page.getByText("Upload JSON File").click();
     const fileChooser = await fileChooserPromise;
 
     const testDataFile = path.join(__dirname, "test-data-simple.json");
@@ -51,9 +51,9 @@ test.describe("Notso AI Dashboard", () => {
 
   test("displays UI after database initialization", async ({ page }) => {
     // Wait for database to initialize and UI to load
-    await page.waitForSelector("text=Upload File", { timeout: 10000 });
+    await page.waitForSelector("text=Upload JSON File", { timeout: 10000 });
     // After initialization, the upload UI should be visible
-    await expect(page.getByText("Upload File")).toBeVisible();
+    await expect(page.getByText("Upload JSON File")).toBeVisible();
     await expect(page.getByRole("button", { name: "Try Sample Data" })).toBeVisible();
   });
 
@@ -79,7 +79,7 @@ test.describe("Notso AI Dashboard", () => {
 
   test("date range picker appears after data upload", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByText("Upload File").click();
+    await page.getByText("Upload JSON File").click();
     const fileChooser = await fileChooserPromise;
 
     const testDataFile = path.join(__dirname, "test-data-simple.json");
@@ -98,7 +98,7 @@ test.describe("Notso AI Dashboard", () => {
 
   test("can clear database", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByText("Upload File").click();
+    await page.getByText("Upload JSON File").click();
     const fileChooser = await fileChooserPromise;
 
     const testDataFile = path.join(__dirname, "test-data-simple.json");
@@ -126,7 +126,7 @@ test.describe("Notso AI Dashboard", () => {
 
   test("displays various chart types", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByText("Upload File").click();
+    await page.getByText("Upload JSON File").click();
     const fileChooser = await fileChooserPromise;
 
     const testDataFile = path.join(__dirname, "test-data-simple.json");
@@ -147,7 +147,7 @@ test.describe("Notso AI Dashboard", () => {
 
   test("export data functionality", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByText("Upload File").click();
+    await page.getByText("Upload JSON File").click();
     const fileChooser = await fileChooserPromise;
 
     const testDataFile = path.join(__dirname, "test-data-simple.json");
