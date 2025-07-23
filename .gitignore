@@ -73,3 +73,6 @@ public/sql-js/
 /playwright/.cache/
 results.xml
 mobile-before-clear.png
+
+# json
+data.json
