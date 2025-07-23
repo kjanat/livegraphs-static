@@ -6,7 +6,9 @@
 #   "jsonschema[format-nongpl]",
 #   "requests",
 #   "types-requests",
-#   "types-jsonschema"
+#   "types-jsonschema",
+#   "pydantic",
+#   "pydantic3"
 # ]
 # ///
 #
@@ -19,278 +21,511 @@
 """
 Synthetic session generator
 ---------------------------
-Generate N synthetic support/chat "sessions" and dump them to a JSON file.
-Validates against a JSON Schema (your schema) by default.
+Generate N synthetic support/chat sessions and dump them to a JSON file.
+Validates against a JSON Schema by default.
 
 Usage examples:
-    ./sample_json_generator.py -n 100 -o output.json
-    ./sample_json_generator.py -n 10 -o data.json --seed 42 --no-rating
-    ./sample_json_generator.py -n 50 -o data.json --schema ./public/data-schema.json
-
-Default schema URL (can be overridden with --schema):
-    https://raw.githubusercontent.com/kjanat/livegraphs-static/refs/heads/develop/public/data-schema.json
-
-Allowed topics/categories hard-coded from your list:
-    "Technical Support", "Billing", "Account Management", "Product Information",
-    "General Inquiry", "Feature Request", "Bug Report", "Onboarding", "Unrecognized / Other"
-
-Tip: Edit make_session() if your schema evolves.
+    ./scripts/sample_json_generator.py --help
+    ./scripts/sample_json_generator.py -n 100 -o output.json
+    ./scripts/sample_json_generator.py -n 10 -o data.json --seed 42 --no-rating
+    ./scripts/sample_json_generator.py -n 50 -o data.json --schema ./public/data-schema.json
+    ./scripts/sample_json_generator.py -n 100 -o output.jsonl --jsonl --pretty
+    ./scripts/sample_json_generator.py -n 1000 -o large_dataset.json --compressed  # Compact + uncompressed by default
+    ./scripts/sample_json_generator.py -n 100 -o pretty_output.json --pretty
 """
 
 from __future__ import annotations
+
 import argparse
+import gzip
 import json
+import logging
 import random
+import sys
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
 
 import requests
 from jsonschema import Draft7Validator, FormatChecker
+from pydantic import BaseModel, HttpUrl
 
-# ------------------------- Constants & vocab ------------------------- #
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+# ------------------------- Configuration ------------------------- #
+
 DEFAULT_SCHEMA_URL = "https://raw.githubusercontent.com/kjanat/livegraphs-static/refs/heads/develop/public/data-schema.json"
 
-ALLOWED_CATEGORIES = [
-    "Technical Support",
-    "Billing",
-    "Account Management",
-    "Product Information",
-    "General Inquiry",
-    "Feature Request",
-    "Bug Report",
-    "Onboarding",
-    "Unrecognized / Other",
-]
 
-QUESTIONS = [
-    "How do I reset my password?",
-    "What are your pricing plans?",
-    "How can I upgrade my account?",
-    "I'm having trouble logging in",
-    "Can you explain this feature?",
-    "How do I export my data?",
-    "Is there a mobile app available?",
-    "How secure is my data?",
-    "Can I integrate with other tools?",
-    "What's included in the free plan?",
-    "How do I cancel my subscription?",
-    "Can I get a demo?",
-    "What payment methods do you accept?",
-    "How do I add team members?",
-    "Is there an API available?",
-]
+class Category(str, Enum):
+    """Supported session categories."""
 
-COUNTRIES = ["NL", "DE", "FR", "GB", "US", "ES", "IT", "BE", "PL", "SE"]
-LANGS = ["en", "nl", "de", "fr", "es", "it", "pl", "sv"]
-SENTIMENTS = ["positive", "neutral", "negative"]
-ROLES = ["User", "Assistant"]
-
-VOCAB = (
-    "user clicked button saw error page loaded slowly feedback suggested feature "
-    "broken flow needs work improved filter sort option lag issue fixed release "
-    "beta test variant copy cta layout confusing clearer steps cart added removed quantity"
-).split()
-
-# ------------------------- Helper functions ------------------------- #
+    TECHNICAL_SUPPORT = "Technical Support"
+    BILLING = "Billing"
+    ACCOUNT_MANAGEMENT = "Account Management"
+    PRODUCT_INFORMATION = "Product Information"
+    GENERAL_INQUIRY = "General Inquiry"
+    FEATURE_REQUEST = "Feature Request"
+    BUG_REPORT = "Bug Report"
+    ONBOARDING = "Onboarding"
+    OTHER = "Unrecognized / Other"
 
 
-def rand_iso(start: datetime, days_span: int) -> str:
-    """Return an ISO8601 timestamp randomly offset from start within days_span days."""
-    delta = timedelta(
-        days=random.randint(0, days_span), seconds=random.randint(0, 86_400)
+class Sentiment(str, Enum):
+    """Session sentiment options."""
+
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"
+
+
+class Role(str, Enum):
+    """Chat participant roles."""
+
+    USER = "User"
+    ASSISTANT = "Assistant"
+
+
+@dataclass
+class DataConfig:
+    """Configuration for data generation."""
+
+    questions: list[str] = field(
+        default_factory=lambda: [
+            "How do I reset my password?",
+            "What are your pricing plans?",
+            "How can I upgrade my account?",
+            "I'm having trouble logging in",
+            "Can you explain this feature?",
+            "How do I export my data?",
+            "Is there a mobile app available?",
+            "How secure is my data?",
+            "Can I integrate with other tools?",
+            "What's included in the free plan?",
+            "How do I cancel my subscription?",
+            "Can I get a demo?",
+            "What payment methods do you accept?",
+            "How do I add team members?",
+            "Is there an API available?",
+        ]
     )
-    return (start + delta).astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    countries: list[str] = field(
+        default_factory=lambda: [
+            "NL",
+            "DE",
+            "FR",
+            "GB",
+            "US",
+            "ES",
+            "IT",
+            "BE",
+            "PL",
+            "SE",
+        ]
+    )
+
+    languages: list[str] = field(
+        default_factory=lambda: ["en", "nl", "de", "fr", "es", "it", "pl", "sv"]
+    )
+
+    vocab: list[str] = field(
+        default_factory=lambda: [
+            "user",
+            "clicked",
+            "button",
+            "saw",
+            "error",
+            "page",
+            "loaded",
+            "slowly",
+            "feedback",
+            "suggested",
+            "feature",
+            "broken",
+            "flow",
+            "needs",
+            "work",
+            "improved",
+            "filter",
+            "sort",
+            "option",
+            "lag",
+            "issue",
+            "fixed",
+            "release",
+            "beta",
+            "test",
+            "variant",
+            "copy",
+            "cta",
+            "layout",
+            "confusing",
+            "clearer",
+            "steps",
+            "cart",
+            "added",
+            "removed",
+            "quantity",
+        ]
+    )
 
 
-def rand_sentence(words: int = 12) -> str:
-    return " ".join(random.choices(VOCAB, k=words)).capitalize() + "."
+# ------------------------- Data Models ------------------------- #
 
 
-def fake_ipv4() -> str:
-    return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}"
+class TranscriptEntry(BaseModel):
+    """Single transcript entry."""
+
+    timestamp: str
+    role: Role
+    content: str
 
 
-def make_transcript(start_anchor: datetime, span_days: int) -> List[Dict[str, Any]]:
-    out = []
-    for _ in range(random.randint(3, 8)):
-        out.append(
-            {
-                "timestamp": rand_iso(start_anchor, span_days),
-                "role": random.choice(ROLES),
-                "content": rand_sentence(random.randint(8, 16)),
-            }
+class MessageStats(BaseModel):
+    """Message statistics."""
+
+    response_time: dict[str, float]
+    amount: dict[str, int]
+    tokens: int
+    cost: dict[str, dict[str, float]]
+    source_url: HttpUrl
+
+
+class User(BaseModel):
+    """User information."""
+
+    ip: str
+    country: str
+    language: str
+
+
+class Session(BaseModel):
+    """Complete session data."""
+
+    session_id: str
+    start_time: str
+    end_time: str
+    transcript: list[TranscriptEntry]
+    messages: MessageStats
+    user: User
+    sentiment: Sentiment
+    escalated: bool
+    forwarded_hr: bool
+    category: Category
+    questions: list[str]
+    summary: str
+    user_rating: Optional[float] = None
+
+
+# ------------------------- Data Generation ------------------------- #
+
+
+class SessionGenerator:
+    """Generates synthetic session data."""
+
+    def __init__(self, config: DataConfig, seed: Optional[int] = None):
+        self.config = config
+        if seed is not None:
+            random.seed(seed)
+
+    def generate_ipv4(self) -> str:
+        """Generate a random IPv4 address."""
+        octets = [
+            random.randint(1, 254),
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(1, 254),
+        ]
+        return ".".join(map(str, octets))
+
+    def generate_timestamp(self, base: datetime, days_span: int) -> str:
+        """Generate random ISO8601 timestamp within days_span from base."""
+        offset = timedelta(
+            days=random.randint(0, days_span), seconds=random.randint(0, 86_400)
         )
-    return out
+        return (
+            (base + offset).astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
+
+    def generate_sentence(self, min_words: int = 8, max_words: int = 16) -> str:
+        """Generate a random sentence from vocabulary."""
+        num_words = random.randint(min_words, max_words)
+        words = random.choices(self.config.vocab, k=num_words)
+        return " ".join(words).capitalize() + "."
+
+    def generate_transcript(
+        self, base_date: datetime, days_span: int
+    ) -> list[TranscriptEntry]:
+        """Generate conversation transcript."""
+        entries = []
+        num_entries = random.randint(3, 8)
+
+        for _ in range(num_entries):
+            entry = TranscriptEntry(
+                timestamp=self.generate_timestamp(base_date, days_span),
+                role=random.choice(list(Role)),
+                content=self.generate_sentence(),
+            )
+            entries.append(entry)
+
+        return entries
+
+    def generate_session(
+        self, base_date: datetime, days_span: int, include_rating: bool = True
+    ) -> Session:
+        """Generate a complete session."""
+        session_id = str(uuid.uuid4())
+
+        # Generate timestamps ensuring end > start
+        start_time = self.generate_timestamp(base_date, days_span)
+        end_time = self.generate_timestamp(base_date, days_span)
+        if end_time < start_time:
+            start_time, end_time = end_time, start_time
+
+        # Generate message stats
+        messages = MessageStats(
+            response_time={"avg": round(random.uniform(0, 120), 2)},
+            amount={
+                "user": random.randint(1, 10),
+                "total": random.randint(3, 20),
+            },
+            tokens=random.randint(50, 5000),
+            cost={
+                "eur": {
+                    "cent": round(random.uniform(0, 500), 2),
+                    "full": round(random.uniform(0, 5), 4),
+                }
+            },
+            source_url=HttpUrl(f"https://redacted.local/chat/{session_id}"),
+        )
+
+        # Generate user
+        user = User(
+            ip=self.generate_ipv4(),
+            country=random.choice(self.config.countries),
+            language=random.choice(self.config.languages),
+        )
+
+        # Generate questions (2-5 random questions)
+        num_questions = random.randint(2, min(5, len(self.config.questions)))
+        questions = random.sample(self.config.questions, k=num_questions)
+
+        # Generate summary
+        summary = " ".join(self.generate_sentence(10, 10) for _ in range(2))
+
+        # Optionally generate rating
+        user_rating = None
+        if include_rating and random.random() < 0.8:
+            user_rating = random.choice([1, 2, 3, 4, 4.5, 5])
+
+        # Create session directly
+        return Session(
+            session_id=session_id,
+            start_time=start_time,
+            end_time=end_time,
+            transcript=self.generate_transcript(base_date, days_span),
+            messages=messages,
+            user=user,
+            sentiment=random.choice(list(Sentiment)),
+            escalated=random.choice([True, False]),
+            forwarded_hr=random.choice([True, False]),
+            category=random.choice(list(Category)),
+            questions=questions,
+            summary=summary,
+            user_rating=user_rating,
+        )
 
 
-def make_messages(session_id: str) -> Dict[str, Any]:
-    return {
-        "response_time": {"avg": round(random.uniform(0, 120), 2)},
-        "amount": {
-            "user": random.randint(1, 10),
-            "total": random.randint(3, 20),
-        },
-        "tokens": random.randint(50, 5000),
-        "cost": {
-            "eur": {
-                "cent": round(random.uniform(0, 500), 2),
-                "full": round(random.uniform(0, 5), 4),
-            }
-        },
-        # Required by your schema complaint earlier
-        "source_url": f"https://redacted.local/chat/{session_id}",
-    }
+# ------------------------- Schema Validation ------------------------- #
 
 
-def make_user() -> Dict[str, Any]:
-    return {
-        "ip": fake_ipv4(),  # schema requires ip
-        "country": random.choice(COUNTRIES),
-        "language": random.choice(LANGS),
-    }
+class SchemaValidator:
+    """Handles JSON schema validation."""
+
+    @staticmethod
+    def fetch_schema(path_or_url: str) -> dict[str, Any]:
+        """Fetch schema from file or URL."""
+        if path_or_url.startswith(("http://", "https://")):
+            try:
+                response = requests.get(path_or_url, timeout=15)
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                raise ValueError(f"Failed to fetch schema: {e}")
+
+        path = Path(path_or_url)
+        if not path.exists():
+            raise FileNotFoundError(f"Schema file not found: {path}")
+
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @staticmethod
+    def validate(data: list[dict[str, Any]], schema: dict[str, Any]) -> list[str]:
+        """Validate data against schema, return error messages."""
+        validator = Draft7Validator(schema, format_checker=FormatChecker())
+        errors = sorted(validator.iter_errors(data), key=lambda e: list(e.path))
+
+        messages = []
+        for error in errors:
+            path = ".".join(map(str, error.path)) or "$"
+            messages.append(f"{path}: {error.message}")
+
+        return messages
 
 
-def make_questions() -> List[str]:
-    n = random.randint(2, min(5, len(QUESTIONS)))
-    return random.sample(QUESTIONS, k=n)
+# ------------------------- CLI ------------------------- #
 
 
-def make_summary() -> str:
-    return " ".join(rand_sentence(10) for _ in range(2))
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Generate synthetic session dataset JSON.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
 
-
-def make_session(
-    start_anchor: datetime, span_days: int, include_rating: bool = True
-) -> Dict[str, Any]:
-    sid = str(uuid.uuid4())
-    start_time = rand_iso(start_anchor, span_days)
-    end_time = rand_iso(start_anchor, span_days)
-    if end_time < start_time:
-        start_time, end_time = end_time, start_time
-
-    session: Dict[str, Any] = {
-        "session_id": sid,
-        "start_time": start_time,
-        "end_time": end_time,
-        "transcript": make_transcript(start_anchor, span_days),
-        "messages": make_messages(sid),
-        "user": make_user(),
-        "sentiment": random.choice(SENTIMENTS),
-        "escalated": random.choice([True, False]),
-        "forwarded_hr": random.choice([True, False]),
-        "category": random.choice(ALLOWED_CATEGORIES),
-        "questions": make_questions(),
-        "summary": make_summary(),
-    }
-
-    if include_rating and random.random() < 0.8:
-        session["user_rating"] = random.choice([1, 2, 3, 4, 5, 4.5])
-
-    return session
-
-
-# ------------------------- Validation helpers ------------------------- #
-
-
-def fetch_schema(path_or_url: str) -> Dict[str, Any]:
-    if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        resp = requests.get(path_or_url, timeout=15)
-        resp.raise_for_status()
-        return resp.json()
-    with open(path_or_url, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def validate_dataset(data: List[Dict[str, Any]], schema: Dict[str, Any]) -> List[str]:
-    """Return list of human-readable error messages (empty if valid)."""
-    validator = Draft7Validator(schema, format_checker=FormatChecker())
-    errors = sorted(validator.iter_errors(data), key=lambda e: list(e.path))
-    msgs = []
-    for err in errors:
-        path = ".".join(map(str, err.path)) or "$"
-        msgs.append(f"{path}: {err.message}")
-    return msgs
-
-
-# ------------------------------- main() -------------------------------- #
-
-
-def main() -> None:
-    p = argparse.ArgumentParser(
-        description="Generate synthetic session dataset JSON.")
-    p.add_argument(
+    parser.add_argument(
         "-n", "--num", type=int, required=True, help="Number of sessions to generate"
     )
-    p.add_argument("-o", "--out", type=str, required=True,
-                   help="Output JSON file path")
-    p.add_argument(
-        "--seed", type=int, default=None, help="Random seed for reproducibility"
+    parser.add_argument(
+        "-o", "--out", type=Path, required=True, help="Output JSON file path"
     )
-    p.add_argument(
+    parser.add_argument("--seed", type=int, help="Random seed for reproducibility")
+    parser.add_argument(
         "--start-date",
         type=str,
         default="2024-01-01",
         help="Earliest date (YYYY-MM-DD)",
     )
-    p.add_argument(
+    parser.add_argument(
         "--days",
         type=int,
         default=365,
         help="Number of days from start-date to sample timestamps",
     )
-    p.add_argument(
+    parser.add_argument(
         "--no-rating", action="store_true", help="Never include user_rating field"
     )
-    p.add_argument(
+    parser.add_argument(
         "--schema",
         type=str,
         default=DEFAULT_SCHEMA_URL,
         help="Path or URL to JSON Schema",
     )
-    p.add_argument(
+    parser.add_argument(
         "--skip-validate", action="store_true", help="Skip schema validation step"
     )
+    parser.add_argument(
+        "--indent", type=int, default=2, help="JSON indentation (0 for compact)"
+    )
+    parser.add_argument(
+        "--compressed",
+        action="store_true",
+        help="Output gzip compressed file (default is uncompressed)",
+    )
+    parser.add_argument(
+        "--jsonl", action="store_true", help="Output JSONL format instead of JSON"
+    )
+    parser.add_argument(
+        "--pretty",
+        action="store_true",
+        help="Pretty-print JSON with indentation (default is compact)",
+    )
 
-    args = p.parse_args()
+    return parser.parse_args()
 
-    if args.seed is not None:
-        random.seed(args.seed)
 
+def main() -> None:
+    """Main entry point."""
+    args = parse_args()
+
+    # Parse start date
     try:
-        start_anchor = datetime.strptime(args.start_date, "%Y-%m-%d").replace(
+        start_date = datetime.strptime(args.start_date, "%Y-%m-%d").replace(
             tzinfo=timezone.utc
         )
-    except ValueError as exc:
-        raise SystemExit(f"Invalid --start-date: {exc}")
+    except ValueError as e:
+        logger.error(f"Invalid --start-date: {e}")
+        sys.exit(1)
 
-    data = [
-        make_session(start_anchor, args.days,
-                     include_rating=not args.no_rating)
-        for _ in range(args.num)
-    ]
+    # Initialize generator
+    config = DataConfig()
+    generator = SessionGenerator(config, seed=args.seed)
 
-    # Write file
-    with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"Wrote {len(data)} sessions to {args.out}")
+    # Generate sessions
+    logger.info(f"Generating {args.num} sessions...")
+    sessions = []
 
-    # Validate
-    if not args.skip_validate:
-        try:
-            schema = fetch_schema(args.schema)
-        except Exception as exc:  # network / IO errors
-            print(
-                f"WARNING: Could not fetch schema ({exc}). Skipping validation.")
-            return
-        errors = validate_dataset(data, schema)
-        if errors:
-            print("\nSchema validation errors:")
-            for e in errors:
-                print(f"- {e}")
-            raise SystemExit(1)
+    for i in range(args.num):
+        session = generator.generate_session(
+            start_date, args.days, include_rating=not args.no_rating
+        )
+        sessions.append(session.model_dump(exclude_none=True, mode="json"))
+
+        # Progress indicator for large datasets
+        if args.num >= 1000 and (i + 1) % 100 == 0:
+            logger.info(f"Generated {i + 1}/{args.num} sessions...")
+
+    # Write output
+    logger.info(f"Writing {len(sessions)} sessions to {args.out}")
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+
+    # Determine output format and compression
+    output_file = args.out
+    use_compression = args.compressed
+
+    # Adjust file extension for compression
+    if use_compression and not str(output_file).endswith(".gz"):
+        output_file = output_file.with_suffix(output_file.suffix + ".gz")
+
+    # Prepare the output content
+    if args.jsonl:
+        # JSONL format (one JSON object per line) - always compact
+        content = "\n".join(
+            json.dumps(session, ensure_ascii=False, separators=(",", ":"))
+            for session in sessions
+        )
+        content += "\n"  # Add final newline
+    else:
+        # JSON format (array of objects)
+        if args.pretty:
+            content = json.dumps(sessions, ensure_ascii=False, indent=args.indent)
         else:
-            print("Schema validation passed ✔")
+            content = json.dumps(sessions, ensure_ascii=False, separators=(",", ":"))
+
+    # Write the file
+    if use_compression:
+        with gzip.open(output_file, "wt", encoding="utf-8") as f:
+            f.write(content)
+    else:
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(content)
+
+    # Validate if requested
+    if not args.skip_validate:
+        logger.info("Validating against schema...")
+        try:
+            schema = SchemaValidator.fetch_schema(args.schema)
+            errors = SchemaValidator.validate(sessions, schema)
+
+            if errors:
+                logger.error("Schema validation failed:")
+                for error in errors:
+                    logger.error(f"  - {error}")
+                sys.exit(1)
+            else:
+                logger.info("✅ Schema validation passed")
+        except Exception as e:
+            logger.warning(f"Could not validate: {e}")
+
+    logger.info("✨ Done!")
 
 
 if __name__ == "__main__":
