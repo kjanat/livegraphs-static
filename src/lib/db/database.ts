@@ -4,39 +4,38 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import type initSqlJs from "sql.js";
 import type { ChatSession } from "../types/session";
 import { schema } from "./schema";
-
-type Database = Awaited<ReturnType<typeof initSqlJs>>["Database"];
-type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
+import type { Database, SqlJsStatic } from "./sql-wrapper";
+import { initSqlJs } from "./sql-wrapper";
 
 let SQL: SqlJsStatic | null = null;
-let db: InstanceType<Database> | null = null;
+let db: Database | null = null;
 
 // Initialize SQL.js with the WASM file
-export async function initializeDatabase(): Promise<InstanceType<Database>> {
+export async function initializeDatabase(): Promise<Database> {
   if (db) return db;
 
   if (!SQL) {
-    // Dynamic import to avoid SSR issues
-    const initSqlJs = (await import("sql.js")).default;
+    // Use our wrapper which handles client-side only execution
     SQL = await initSqlJs({
       // Use CDN for WASM file to avoid bundling issues
       locateFile: (file) => `https://sql.js.org/dist/${file}`
     });
   }
 
-  // Try to load existing database from localStorage first
-  const savedDb = localStorage.getItem("livegraphs_db");
-  if (savedDb) {
-    try {
-      const data = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
-      db = new SQL.Database(data);
-      return db;
-    } catch (error) {
-      console.error("Failed to load saved database:", error);
-      // Continue with new database
+  // Try to load existing database from localStorage first (only on client)
+  if (typeof window !== "undefined") {
+    const savedDb = localStorage.getItem("livegraphs_db");
+    if (savedDb) {
+      try {
+        const data = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
+        db = new SQL.Database(data);
+        return db;
+      } catch (error) {
+        console.error("Failed to load saved database:", error);
+        // Continue with new database
+      }
     }
   }
 
@@ -56,7 +55,7 @@ export async function initializeDatabase(): Promise<InstanceType<Database>> {
 
 // Save database to localStorage
 export function saveDatabase(): void {
-  if (!db) return;
+  if (!db || typeof window === "undefined") return;
 
   const data = db.export();
   const binary = String.fromCharCode(...new Uint8Array(data));

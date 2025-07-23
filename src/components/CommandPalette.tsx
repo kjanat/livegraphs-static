@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/command";
 
 interface CommandPaletteProps {
-  onFileUpload?: () => void;
   onClearDatabase?: () => void;
   onExportCSV?: () => void;
   onLoadSampleData?: () => void;
@@ -40,7 +39,6 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({
-  onFileUpload,
   onClearDatabase,
   onExportCSV,
   onLoadSampleData,
@@ -159,11 +157,9 @@ export function CommandPalette({
         <CommandGroup heading="Actions">
           <CommandItem
             onSelect={() => {
-              if (onFileUpload) {
-                handleAction(() => {
-                  document.getElementById("file-upload-input")?.click();
-                });
-              }
+              handleAction(() => {
+                document.getElementById("file-upload-input")?.click();
+              });
             }}
           >
             <FileJson className="mr-2 h-4 w-4" />

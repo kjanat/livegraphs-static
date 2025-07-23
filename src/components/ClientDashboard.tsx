@@ -52,7 +52,7 @@ export function ClientDashboard() {
     clearAllData,
     loadSampleData,
     exportCurrentData,
-    refreshStats
+    loadNewDataset
   } = useDatabaseOperations();
 
   // File upload handling
@@ -67,7 +67,8 @@ export function ClientDashboard() {
     handleDrop
   } = useFileUpload(loadSessionsFromJSON, {
     onSuccess: async () => {
-      await refreshStats();
+      // Use atomic function to avoid race conditions
+      await loadNewDataset();
     }
   });
 
@@ -79,7 +80,6 @@ export function ClientDashboard() {
     <>
       {/* Command Palette */}
       <CommandPalette
-        onFileUpload={handleFileUpload}
         onClearDatabase={clearAllData}
         onExportCSV={exportCurrentData}
         onLoadSampleData={loadSampleData}

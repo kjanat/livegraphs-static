@@ -7,7 +7,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
@@ -121,6 +121,7 @@ interface ChartVisibility {
 export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsProps) {
   const colors = getChartColors();
   const totalSessions = metrics["Total Conversations"] || 0;
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   // Memoize chart visibility calculations
   const visibility = useMemo<ChartVisibility>(
@@ -137,125 +138,150 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
     [chartData, totalSessions]
   );
 
+  const handleTabChange = () => {
+    // Only scroll to tabs if they're above the viewport or too far down
+    if (tabsRef.current) {
+      setTimeout(() => {
+        const element = tabsRef.current;
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const yOffset = -100; // Offset for fixed header
+
+          // Only scroll if tabs are above viewport or more than 200px below viewport top
+          if (rect.top < 0 || rect.top > 200) {
+            const y = element.offsetTop + yOffset;
+
+            window.scrollTo({
+              top: y,
+              behavior: "smooth"
+            });
+          }
+        }
+      }, 50); // Reduced delay for faster response
+    }
+  };
+
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="performance">Performance</TabsTrigger>
-        {(visibility.hasCountryData || visibility.hasLanguageData) && (
-          <TabsTrigger value="geographic">Geographic</TabsTrigger>
-        )}
-        <TabsTrigger value="cost">Cost Analysis</TabsTrigger>
-        <TabsTrigger value="detailed">Detailed Stats</TabsTrigger>
-      </TabsList>
-
-      {/* Overview Tab */}
-      <TabsContent value="overview" className="space-y-6">
-        <h3 className="text-xl font-bold mb-4">Essential Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <SentimentDistributionChart
-            data={{
-              labels: chartData.sentiment_labels,
-              values: chartData.sentiment_values
-            }}
-          />
-          <ResolutionStatusChart
-            data={{
-              labels: chartData.resolution_labels,
-              values: chartData.resolution_values
-            }}
-          />
-          {visibility.hasRatings && (
-            <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
+    <div ref={tabsRef}>
+      <Tabs defaultValue="overview" className="w-full" onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          {(visibility.hasCountryData || visibility.hasLanguageData) && (
+            <TabsTrigger value="geographic">Geographic</TabsTrigger>
           )}
-        </div>
-      </TabsContent>
+          <TabsTrigger value="cost">Cost Analysis</TabsTrigger>
+          <TabsTrigger value="detailed">Detailed Stats</TabsTrigger>
+        </TabsList>
 
-      {/* Performance Tab */}
-      <TabsContent value="performance" className="space-y-6">
-        <h3 className="text-xl font-bold mb-4">Performance Trends</h3>
-        <PerformanceTrendsChart
-          data={{
-            dates_labels: chartData.dates_labels,
-            dates_values: chartData.dates_values,
-            response_time_values: chartData.response_time_values
-          }}
-        />
-        <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
-      </TabsContent>
-
-      {/* Geographic Tab - Conditional */}
-      {(visibility.hasCountryData || visibility.hasLanguageData) && (
-        <TabsContent value="geographic" className="space-y-6">
-          <h3 className="text-xl font-bold mb-4">Geographic & Language Analysis</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {visibility.hasCountryData && (
-              <SessionsByCountryChart
-                data={{
-                  labels: chartData.country_labels,
-                  values: chartData.country_values
-                }}
-              />
-            )}
-            {visibility.hasLanguageData && (
-              <LanguageDistributionChart
-                data={{
-                  labels: chartData.language_labels,
-                  values: chartData.language_values
-                }}
-              />
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <h3 className="text-xl font-bold mb-4">Essential Overview</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <SentimentDistributionChart
+              data={{
+                labels: chartData.sentiment_labels,
+                values: chartData.sentiment_values
+              }}
+            />
+            <ResolutionStatusChart
+              data={{
+                labels: chartData.resolution_labels,
+                values: chartData.resolution_values
+              }}
+            />
+            {visibility.hasRatings && (
+              <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
             )}
           </div>
         </TabsContent>
-      )}
 
-      {/* Cost Analysis Tab */}
-      <TabsContent value="cost" className="space-y-6">
-        <h3 className="text-xl font-bold mb-4">Category & Cost Analysis</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <TopCategoriesChart
+        {/* Performance Tab */}
+        <TabsContent value="performance" className="space-y-6">
+          <h3 className="text-xl font-bold mb-4">Performance Trends</h3>
+          <PerformanceTrendsChart
             data={{
-              labels: chartData.category_labels,
-              values: chartData.category_values
+              dates_labels: chartData.dates_labels,
+              dates_values: chartData.dates_values,
+              response_time_values: chartData.response_time_values
             }}
           />
-          <CostAnalysisChart data={chartData.category_costs} />
-        </div>
-        <DailyCostTrendChart
-          data={{
-            dates: chartData.cost_dates,
-            values: chartData.cost_values,
-            message_counts: chartData.daily_message_counts
-          }}
-        />
-      </TabsContent>
+          <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
+        </TabsContent>
 
-      {/* Detailed Statistics Tab */}
-      <TabsContent value="detailed" className="space-y-6">
-        <h3 className="text-xl font-bold mb-4">Detailed Statistics</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <HistogramChart
-            data={chartData.conversation_durations}
-            title="Conversation Duration Distribution"
-            xLabel="Duration (minutes)"
-            bins={15}
-            color={colors.teal}
+        {/* Geographic Tab - Conditional */}
+        {(visibility.hasCountryData || visibility.hasLanguageData) && (
+          <TabsContent value="geographic" className="space-y-6">
+            <h3 className="text-xl font-bold mb-4">Geographic & Language Analysis</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {visibility.hasCountryData && (
+                <SessionsByCountryChart
+                  data={{
+                    labels: chartData.country_labels,
+                    values: chartData.country_values
+                  }}
+                />
+              )}
+              {visibility.hasLanguageData && (
+                <LanguageDistributionChart
+                  data={{
+                    labels: chartData.language_labels,
+                    values: chartData.language_values
+                  }}
+                />
+              )}
+            </div>
+          </TabsContent>
+        )}
+
+        {/* Cost Analysis Tab */}
+        <TabsContent value="cost" className="space-y-6">
+          <h3 className="text-xl font-bold mb-4">Category & Cost Analysis</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <TopCategoriesChart
+              data={{
+                labels: chartData.category_labels,
+                values: chartData.category_values
+              }}
+            />
+            <CostAnalysisChart data={chartData.category_costs} />
+          </div>
+          <DailyCostTrendChart
+            data={{
+              dates: chartData.cost_dates,
+              values: chartData.cost_values,
+              message_counts: chartData.daily_message_counts
+            }}
           />
-          <HistogramChart
-            data={chartData.messages_per_conversation}
-            title="Messages per Conversation"
-            xLabel="Number of Messages"
-            bins={10}
-            color={colors.pink}
+        </TabsContent>
+
+        {/* Detailed Statistics Tab */}
+        <TabsContent value="detailed" className="space-y-6">
+          <h3 className="text-xl font-bold mb-4">Detailed Statistics</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <HistogramChart
+              data={chartData.conversation_durations}
+              title="Conversation Duration Distribution"
+              xLabel="Duration (minutes)"
+              bins={15}
+              color={colors.teal}
+            />
+            <HistogramChart
+              data={chartData.messages_per_conversation}
+              title="Messages per Conversation"
+              xLabel="Number of Messages"
+              bins={10}
+              color={colors.pink}
+            />
+          </div>
+          <TopQuestionsSection
+            data={{
+              labels: chartData.questions_labels,
+              values: chartData.questions_values
+            }}
           />
-        </div>
-        <TopQuestionsSection
-          data={{
-            labels: chartData.questions_labels,
-            values: chartData.questions_values
-          }}
-        />
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

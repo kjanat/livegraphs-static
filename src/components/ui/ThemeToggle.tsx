@@ -7,10 +7,17 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by only rendering theme-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => {
     if (theme === "light") setTheme("dark");
@@ -18,13 +25,22 @@ export function ThemeToggle() {
     else setTheme("light");
   };
 
+  // Don't render theme-specific content until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="sm" className="relative h-9 w-9" data-theme-toggle disabled>
+        <span className="sr-only">Loading theme toggle</span>
+      </Button>
+    );
+  }
+
   return (
     <Button
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
       className="relative h-9 w-9"
-      aria-label={`Current theme: ${theme}. Click to change theme`}
+      aria-label={`Current theme: ${theme || "system"}. Click to change theme`}
       data-theme-toggle
     >
       {/* Sun icon */}

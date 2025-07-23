@@ -31,7 +31,9 @@ interface UseDatabaseOperationsReturn {
   clearAllData: () => void;
   loadSampleData: () => Promise<void>;
   exportCurrentData: () => void;
-  refreshStats: () => void;
+  refreshStats: (forceReload?: boolean) => void;
+  resetDateRange: () => void;
+  loadNewDataset: () => Promise<void>;
 }
 
 /**
@@ -88,6 +90,12 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     [db]
   );
 
+  const resetDateRange = useCallback(() => {
+    setDateRange(null);
+    setMetrics(null);
+    setChartData(null);
+  }, []);
+
   const clearAllData = useCallback(() => {
     showConfirmClearDatabaseToast(() => {
       clearDatabase();
@@ -98,16 +106,69 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     });
   }, [clearDatabase]);
 
+  const loadNewDataset = useCallback(async () => {
+    if (!isInitialized || dbError) {
+      console.warn("Cannot load dataset: database not initialized or has error");
+      return;
+    }
+
+    try {
+      console.log("Loading new dataset...");
+
+      // Clear all existing state first
+      setDateRange(null);
+      setMetrics(null);
+      setChartData(null);
+      setIsLoadingData(true);
+
+      // Get fresh database stats
+      const stats = getDatabaseStats();
+      console.log("Database stats:", stats);
+      setDbStats(stats);
+
+      // If we have data, load the complete dataset
+      if (stats.totalSessions > 0 && stats.dateRange.min && stats.dateRange.max) {
+        console.log("Loading data for full range:", stats.dateRange);
+
+        const startDate = new Date(stats.dateRange.min);
+        const endDate = new Date(stats.dateRange.max);
+        // Set end date to end of day
+        endDate.setHours(23, 59, 59, 999);
+
+        // Create the date range
+        const range: DateRange = { start: startDate, end: endDate };
+        setDateRange(range);
+
+        // Calculate metrics and prepare chart data
+        if (!db) {
+          throw new Error("Database not available");
+        }
+        const [newMetrics, newChartData] = await Promise.all([
+          calculateMetrics(db, range),
+          prepareChartData(db, range)
+        ]);
+
+        console.log("Loaded metrics and chart data successfully");
+        setMetrics(newMetrics);
+        setChartData(newChartData);
+      } else {
+        console.log("No data to load or invalid date range");
+      }
+    } catch (error) {
+      console.error("Error loading new dataset:", error);
+      toast.error("Failed to load data after upload");
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [isInitialized, dbError, getDatabaseStats, db]);
+
   const loadSampleData = useCallback(async () => {
     try {
       const sampleData = generateSampleData();
       const count = await loadSessionsFromJSON(sampleData);
 
-      const stats = getDatabaseStats();
-      setDbStats(stats);
-      setMetrics(null);
-      setChartData(null);
-      setDateRange(null);
+      // Use atomic function to avoid race conditions
+      await loadNewDataset();
 
       toast.success(`Successfully loaded ${count} sample sessions`);
     } catch (err) {
@@ -115,7 +176,7 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
       toast.error(errorMessage);
       console.error(err);
     }
-  }, [loadSessionsFromJSON, getDatabaseStats]);
+  }, [loadSessionsFromJSON, loadNewDataset]);
 
   const exportCurrentData = useCallback(() => {
     if (!db || !dateRange) {
@@ -142,21 +203,29 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     }
   }, [db, dateRange]);
 
-  const refreshStats = useCallback(async () => {
-    if (isInitialized && !dbError) {
-      const stats = getDatabaseStats();
-      setDbStats(stats);
+  const refreshStats = useCallback(
+    async (forceReload = false) => {
+      if (isInitialized && !dbError) {
+        const stats = getDatabaseStats();
+        setDbStats(stats);
 
-      // If we have data but no date range selected, automatically load all data
-      if (stats.totalSessions > 0 && !dateRange && stats.dateRange.min && stats.dateRange.max) {
-        const startDate = new Date(stats.dateRange.min);
-        const endDate = new Date(stats.dateRange.max);
-        // Set end date to end of day
-        endDate.setHours(23, 59, 59, 999);
-        await loadDataForDateRange(startDate, endDate);
+        // If we have data and either no date range selected or forceReload is true, automatically load all data
+        if (
+          stats.totalSessions > 0 &&
+          (!dateRange || forceReload) &&
+          stats.dateRange.min &&
+          stats.dateRange.max
+        ) {
+          const startDate = new Date(stats.dateRange.min);
+          const endDate = new Date(stats.dateRange.max);
+          // Set end date to end of day
+          endDate.setHours(23, 59, 59, 999);
+          await loadDataForDateRange(startDate, endDate);
+        }
       }
-    }
-  }, [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]);
+    },
+    [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]
+  );
 
   return {
     dbStats,
@@ -168,6 +237,8 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     clearAllData,
     loadSampleData,
     exportCurrentData,
-    refreshStats
+    refreshStats,
+    resetDateRange,
+    loadNewDataset
   };
 }

@@ -7,7 +7,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,6 +31,31 @@ export function ExpandableSection({
   className = ""
 }: ExpandableSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to section when expanded
+  useEffect(() => {
+    if (isExpanded && sectionRef.current && !defaultExpanded) {
+      // Small delay to let expansion animation start
+      setTimeout(() => {
+        const element = sectionRef.current;
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const yOffset = -100; // Offset for fixed header
+
+          // Only scroll if section header is above viewport or too far down
+          if (rect.top < 0 || rect.top > 200) {
+            const y = element.offsetTop + yOffset;
+
+            window.scrollTo({
+              top: y,
+              behavior: "smooth"
+            });
+          }
+        }
+      }, 100);
+    }
+  }, [isExpanded, defaultExpanded]);
 
   const getPriorityStyles = () => {
     switch (priority) {
@@ -75,6 +100,7 @@ export function ExpandableSection({
 
   return (
     <Card
+      ref={sectionRef}
       className={cn("transition-all duration-300 p-0 border", getPriorityStyles(), className)}
       data-expandable-section
     >
