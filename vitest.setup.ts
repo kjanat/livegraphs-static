@@ -2,6 +2,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
+globalThis.global = globalThis;
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();
@@ -91,8 +93,22 @@ global.HTMLCanvasElement.prototype.getContext = vi.fn(function (
   return null;
 }) as typeof HTMLCanvasElement.prototype.getContext;
 
+// Replaces: Mock localStorage
+Object.defineProperty(window, "localStorage", {
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    length: 0,
+    key: vi.fn()
+  },
+  writable: true,
+  configurable: true
+});
+
 // Mock localStorage
-const localStorageMock: Storage = {
+/* const localStorageMock: Storage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
@@ -100,7 +116,7 @@ const localStorageMock: Storage = {
   length: 0,
   key: vi.fn()
 };
-global.localStorage = localStorageMock;
+global.localStorage = localStorageMock; */
 
 // Mock fetch
 global.fetch = vi.fn();

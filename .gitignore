@@ -89,3 +89,6 @@ test_pretty_compressed.json.gz
 test_pretty.json
 
 src/components/calendar-components.md
+
+*storybook.log
+storybook-static
