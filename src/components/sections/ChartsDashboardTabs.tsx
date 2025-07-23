@@ -164,15 +164,37 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
   return (
     <div ref={tabsRef}>
       <Tabs defaultValue="overview" className="w-full" onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          {(visibility.hasCountryData || visibility.hasLanguageData) && (
-            <TabsTrigger value="geographic">Geographic</TabsTrigger>
-          )}
-          <TabsTrigger value="cost">Cost Analysis</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed Stats</TabsTrigger>
-        </TabsList>
+        <div className="relative w-full">
+          <div className="w-full overflow-x-auto scrollbar-none lg:overflow-visible">
+            <TabsList className="inline-flex h-10 min-w-full items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground lg:grid lg:w-full lg:grid-cols-5">
+              <TabsTrigger value="overview" className="min-w-[120px] whitespace-nowrap lg:min-w-0">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="performance"
+                className="min-w-[120px] whitespace-nowrap lg:min-w-0"
+              >
+                Performance
+              </TabsTrigger>
+              {(visibility.hasCountryData || visibility.hasLanguageData) && (
+                <TabsTrigger
+                  value="geographic"
+                  className="min-w-[120px] whitespace-nowrap lg:min-w-0"
+                >
+                  Geographic
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="cost" className="min-w-[120px] whitespace-nowrap lg:min-w-0">
+                Cost Analysis
+              </TabsTrigger>
+              <TabsTrigger value="detailed" className="min-w-[120px] whitespace-nowrap lg:min-w-0">
+                Detailed Stats
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          {/* Scroll indicator for mobile/tablet */}
+          <div className="absolute right-0 top-0 h-10 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none lg:hidden" />
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
