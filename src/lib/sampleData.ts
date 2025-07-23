@@ -214,7 +214,7 @@ export function generateSampleData(daysOfHistory = 365): SampleSession[] {
     // Seasonal variation (lower in summer months)
     const seasonalFactor = month >= 5 && month <= 7 ? 0.7 : 1.0;
 
-    const baseSessionCount = randomInt(15, 40);
+    const baseSessionCount = randomInt(2, 5);
     const sessionsPerDay = Math.floor(baseSessionCount * weekendFactor * seasonalFactor);
 
     for (let i = 0; i < sessionsPerDay; i++) {

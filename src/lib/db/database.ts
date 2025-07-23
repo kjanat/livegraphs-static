@@ -57,9 +57,27 @@ export async function initializeDatabase(): Promise<Database> {
 export function saveDatabase(): void {
   if (!db || typeof window === "undefined") return;
 
-  const data = db.export();
-  const binary = String.fromCharCode(...new Uint8Array(data));
-  localStorage.setItem("livegraphs_db", btoa(binary));
+  try {
+    const data = db.export();
+    const binary = String.fromCharCode(...new Uint8Array(data));
+    const encoded = btoa(binary);
+
+    // Check size before saving (localStorage typically has 5-10MB limit)
+    const sizeInMB = (encoded.length * 0.75) / (1024 * 1024); // Approximate size in MB
+    if (sizeInMB > 4) {
+      console.warn(`Database size (${sizeInMB.toFixed(2)}MB) may exceed localStorage limits`);
+    }
+
+    localStorage.setItem("livegraphs_db", encoded);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "QuotaExceededError") {
+      console.error("localStorage quota exceeded. Database too large to persist.");
+      // Optionally clear old data and retry
+      localStorage.removeItem("livegraphs_db");
+    } else {
+      console.error("Failed to save database:", error);
+    }
+  }
 }
 
 // Insert a chat session into the database
@@ -125,8 +143,7 @@ export async function insertSession(session: ChatSession): Promise<void> {
   });
   qStmt.free();
 
-  // Save to localStorage after each insert
-  saveDatabase();
+  // Note: Saving after each insert is handled at the transaction level
 }
 
 // Load sessions from JSON file
@@ -154,6 +171,7 @@ export async function loadSessionsFromJSON(jsonData: ChatSession[]): Promise<num
     throw error;
   }
 
+  // Save once after all inserts
   saveDatabase();
   return successCount;
 }

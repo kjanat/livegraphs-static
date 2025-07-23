@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DASHBOARD_CONFIG } from "@/lib/config/dashboard";
 import { cn } from "@/lib/utils";
 
 interface MobileDateRangePickerProps {
@@ -31,20 +32,51 @@ export function MobileDateRangePicker({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-  // Set default to last month when dates are available
+  // Set default date range based on config
   useEffect(() => {
     if (minDate && maxDate && !dateRange) {
       const max = new Date(maxDate);
-      const lastMonthStart = subMonths(max, 1);
-      const defaultStart = lastMonthStart < new Date(minDate) ? new Date(minDate) : lastMonthStart;
+      const min = new Date(minDate);
+      let defaultStart: Date;
+
+      switch (DASHBOARD_CONFIG.defaultDateRange) {
+        case "all":
+          defaultStart = min;
+          break;
+        case "last-month":
+          defaultStart = subMonths(max, 1);
+          break;
+        case "last-3-months":
+          defaultStart = subMonths(max, 3);
+          break;
+        case "last-week":
+          defaultStart = new Date(max);
+          defaultStart.setDate(defaultStart.getDate() - 7);
+          break;
+        default:
+          // Custom number of days
+          if (typeof DASHBOARD_CONFIG.defaultDateRange === "number") {
+            defaultStart = new Date(max);
+            defaultStart.setDate(defaultStart.getDate() - DASHBOARD_CONFIG.defaultDateRange);
+          } else {
+            defaultStart = min; // Fallback to all data
+          }
+      }
+
+      // Ensure defaultStart is not before minDate
+      if (defaultStart < min) {
+        defaultStart = min;
+      }
 
       const initialRange = { from: defaultStart, to: max };
       setDateRange(initialRange);
 
       // Trigger initial load with end date at end of day
-      const endOfDay = new Date(max);
-      endOfDay.setHours(23, 59, 59, 999);
-      onDateRangeChange(defaultStart, endOfDay);
+      if (DASHBOARD_CONFIG.autoLoadData) {
+        const endOfDay = new Date(max);
+        endOfDay.setHours(23, 59, 59, 999);
+        onDateRangeChange(defaultStart, endOfDay);
+      }
     }
   }, [minDate, maxDate, dateRange, onDateRangeChange]);
 

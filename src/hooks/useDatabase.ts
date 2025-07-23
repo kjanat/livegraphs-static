@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { schema } from "@/lib/db/schema";
 import type { Database } from "@/lib/db/sql-wrapper";
 import {
@@ -102,9 +103,25 @@ export function useDatabase(): DatabaseHook {
         binary += String.fromCharCode(bytes[i]);
       }
       const base64 = btoa(binary);
+
+      // Check size before saving
+      const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
+      if (sizeInMB > 4) {
+        console.warn(`Database size (${sizeInMB.toFixed(2)}MB) may exceed localStorage limits`);
+      }
+
       localStorage.setItem(STORAGE_KEY, base64);
     } catch (err) {
-      console.error("Failed to save database:", err);
+      if (err instanceof DOMException && err.name === "QuotaExceededError") {
+        console.error("localStorage quota exceeded");
+        toast.error(
+          "Database too large to save. Try reducing the amount of data or clearing old data first."
+        );
+        // Clear the storage key to prevent issues
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        console.error("Failed to save database:", err);
+      }
     }
   }, [db]);
 
