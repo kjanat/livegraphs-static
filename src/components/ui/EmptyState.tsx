@@ -6,7 +6,7 @@
 
 "use client";
 
-import { BarChart3, File } from "lucide-react";
+import { BarChart3, File, LineChart, Lock, Target, Zap } from "lucide-react";
 
 interface EmptyStateProps {
   onSampleData?: () => void;
@@ -85,7 +85,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
       {/* Value Proposition */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-green-500 mb-2">📊</div>
+          <div className="mb-3 flex justify-center">
+            <LineChart className="h-10 w-10 text-green-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Smart Insights</h3>
           <p className="text-sm text-muted-foreground">
             AI-generated findings highlight critical patterns and recommendations
@@ -93,7 +95,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-blue-500 mb-2">🎯</div>
+          <div className="mb-3 flex justify-center">
+            <Target className="h-10 w-10 text-blue-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Progressive Disclosure</h3>
           <p className="text-sm text-muted-foreground">
             Essential metrics first, detailed analytics when you need them
@@ -101,7 +105,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-purple-500 mb-2">🔒</div>
+          <div className="mb-3 flex justify-center">
+            <Lock className="h-10 w-10 text-purple-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Privacy First</h3>
           <p className="text-sm text-muted-foreground">
             All processing happens in your browser - no data leaves your device
@@ -109,7 +115,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-orange-500 mb-2">⚡</div>
+          <div className="mb-3 flex justify-center">
+            <Zap className="h-10 w-10 text-orange-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Instant Results</h3>
           <p className="text-sm text-muted-foreground">
             Real-time analytics with interactive charts and export capabilities
