@@ -10,12 +10,22 @@ import { toast } from "sonner";
 import { showConfirmClearDatabaseToast } from "@/components/toasts/ConfirmClearDatabaseToast";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
+import type { Database } from "@/lib/db/sql-wrapper";
 import { generateSampleData } from "@/lib/sampleData";
-import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
+import type { ChartData, ChatSession, DateRange, Metrics } from "@/lib/types/session";
 
 interface DatabaseStats {
   totalSessions: number;
   dateRange: { min: string; max: string };
+}
+
+interface DatabaseHookData {
+  isInitialized: boolean;
+  error: Error | null;
+  loadSessionsFromJSON: (jsonData: ChatSession[]) => Promise<number>;
+  getDatabaseStats: () => DatabaseStats;
+  clearDatabase: () => void;
+  db: Database | null;
 }
 
 interface UseDatabaseOperationsReturn {
@@ -39,7 +49,10 @@ interface UseDatabaseOperationsReturn {
 /**
  * Custom hook for database operations and data management
  */
-export function useDatabaseOperations(): UseDatabaseOperationsReturn {
+export function useDatabaseOperations(
+  databaseHook?: DatabaseHookData
+): UseDatabaseOperationsReturn {
+  const defaultHook = useDatabase();
   const {
     isInitialized,
     error: dbError,
@@ -47,7 +60,7 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     getDatabaseStats,
     clearDatabase,
     db
-  } = useDatabase();
+  } = databaseHook || defaultHook;
 
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -55,13 +68,8 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  // Initialize database stats
-  useEffect(() => {
-    if (isInitialized && !dbError) {
-      const stats = getDatabaseStats();
-      setDbStats(stats);
-    }
-  }, [isInitialized, dbError, getDatabaseStats]);
+  // State to track if we should auto-load data after stats update
+  const [shouldAutoLoad, setShouldAutoLoad] = useState(false);
 
   const loadDataForDateRange = useCallback(
     async (startDate: Date, endDate: Date) => {
@@ -107,60 +115,9 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
   }, [clearDatabase]);
 
   const loadNewDataset = useCallback(async () => {
-    if (!isInitialized || dbError) {
-      console.warn("Cannot load dataset: database not initialized or has error");
-      return;
-    }
-
-    try {
-      console.log("Loading new dataset...");
-
-      // Clear all existing state first
-      setDateRange(null);
-      setMetrics(null);
-      setChartData(null);
-      setIsLoadingData(true);
-
-      // Get fresh database stats
-      const stats = getDatabaseStats();
-      console.log("Database stats:", stats);
-      setDbStats(stats);
-
-      // If we have data, load the complete dataset
-      if (stats.totalSessions > 0 && stats.dateRange.min && stats.dateRange.max) {
-        console.log("Loading data for full range:", stats.dateRange);
-
-        const startDate = new Date(stats.dateRange.min);
-        const endDate = new Date(stats.dateRange.max);
-        // Set end date to end of day
-        endDate.setHours(23, 59, 59, 999);
-
-        // Create the date range
-        const range: DateRange = { start: startDate, end: endDate };
-        setDateRange(range);
-
-        // Calculate metrics and prepare chart data
-        if (!db) {
-          throw new Error("Database not available");
-        }
-        const [newMetrics, newChartData] = await Promise.all([
-          calculateMetrics(db, range),
-          prepareChartData(db, range)
-        ]);
-
-        console.log("Loaded metrics and chart data successfully");
-        setMetrics(newMetrics);
-        setChartData(newChartData);
-      } else {
-        console.log("No data to load or invalid date range");
-      }
-    } catch (error) {
-      console.error("Error loading new dataset:", error);
-      toast.error("Failed to load data after upload");
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [isInitialized, dbError, getDatabaseStats, db]);
+    // Just set the flag - the useEffect will handle loading when stats are ready
+    setShouldAutoLoad(true);
+  }, []);
 
   const loadSampleData = useCallback(async () => {
     try {
@@ -226,6 +183,39 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     },
     [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]
   );
+
+  // Initialize database stats - re-run when database updates
+  useEffect(() => {
+    if (isInitialized && !dbError) {
+      const stats = getDatabaseStats();
+      setDbStats(stats);
+    }
+  }, [isInitialized, dbError, getDatabaseStats]);
+
+  // Auto-load data when stats are ready and flag is set
+  useEffect(() => {
+    const loadData = async () => {
+      if (
+        shouldAutoLoad &&
+        dbStats &&
+        dbStats.totalSessions > 0 &&
+        dbStats.dateRange.min &&
+        dbStats.dateRange.max
+      ) {
+        const startDate = new Date(dbStats.dateRange.min);
+        const endDate = new Date(dbStats.dateRange.max);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Clear the flag first to prevent multiple loads
+        setShouldAutoLoad(false);
+
+        // Load the data
+        await loadDataForDateRange(startDate, endDate);
+      }
+    };
+
+    loadData();
+  }, [shouldAutoLoad, dbStats, loadDataForDateRange]);
 
   return {
     dbStats,

@@ -34,6 +34,7 @@ interface DatabaseHook {
   loadSessionsFromJSON: (jsonData: ChatSession[]) => Promise<number>;
   getDatabaseStats: () => DatabaseStats;
   clearDatabase: () => void;
+  dbVersion: number;
 }
 
 const STORAGE_KEY = "livegraphs_db";
@@ -42,6 +43,7 @@ export function useDatabase(): DatabaseHook {
   const [db, setDb] = useState<Database | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [dbVersion, setDbVersion] = useState(0);
 
   // Initialize database
   useEffect(() => {
@@ -215,6 +217,9 @@ export function useDatabase(): DatabaseHook {
       // Save to localStorage after successful load
       saveDatabase();
 
+      // Bump version to trigger re-renders
+      setDbVersion((v) => v + 1);
+
       return successCount;
     },
     [db, insertSessionSync, saveDatabase]
@@ -222,6 +227,9 @@ export function useDatabase(): DatabaseHook {
 
   // Get database statistics
   const getDatabaseStats = useCallback((): DatabaseStats => {
+    // Access dbVersion to ensure this callback is recreated when database changes
+    void dbVersion;
+
     if (!db) {
       return {
         totalSessions: 0,
@@ -257,7 +265,7 @@ export function useDatabase(): DatabaseHook {
         dateRange: { min: "", max: "" }
       };
     }
-  }, [db]);
+  }, [db, dbVersion]);
 
   // Clear database
   const clearDatabase = useCallback(() => {
@@ -268,6 +276,7 @@ export function useDatabase(): DatabaseHook {
       db.run("DELETE FROM questions");
       db.run("DELETE FROM sessions");
       localStorage.removeItem(STORAGE_KEY);
+      setDbVersion((v) => v + 1);
     } catch (err) {
       console.error("Error clearing database:", err);
     }
@@ -279,6 +288,7 @@ export function useDatabase(): DatabaseHook {
     error,
     loadSessionsFromJSON,
     getDatabaseStats,
-    clearDatabase
+    clearDatabase,
+    dbVersion
   };
 }

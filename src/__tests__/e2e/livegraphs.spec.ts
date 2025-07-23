@@ -36,11 +36,7 @@ test.describe("Notso AI Dashboard", () => {
     // Wait for success toast
     await page.waitForSelector("text=Successfully loaded", { timeout: 10000 });
 
-    // The data is loaded but UI needs to update - reload the page to see the changes
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-
-    // Wait for data to load from localStorage
+    // Dashboard should appear immediately without reload
     await page.waitForSelector("text=Total Sessions", { timeout: 10000 });
 
     await expect(page.getByText("Transform Your Chatbot Data Into Insights")).not.toBeVisible();
@@ -77,6 +73,29 @@ test.describe("Notso AI Dashboard", () => {
     await expect(page.getByRole("button", { name: "Try Sample Data" })).toBeVisible();
   });
 
+  test("dashboard appears after sample data load", async ({ page }) => {
+    // Click Try Sample Data button
+    await page.getByRole("button", { name: "Try Sample Data" }).click();
+
+    // Wait for success toast
+    await page.waitForSelector("text=Successfully loaded", { timeout: 10000 });
+
+    // Wait a moment for UI to update
+    await page.waitForTimeout(1000);
+
+    // Check if dashboard elements are visible
+    const dateRangeVisible = await page
+      .getByRole("heading", { name: "Date Range" })
+      .isVisible()
+      .catch(() => false);
+    const dbStatsVisible = await page
+      .getByText(/sessions in database/)
+      .isVisible()
+      .catch(() => false);
+
+    expect(dateRangeVisible || dbStatsVisible).toBe(true);
+  });
+
   test("date range picker appears after data upload", async ({ page }) => {
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.getByText("Upload JSON File").click();
@@ -88,12 +107,12 @@ test.describe("Notso AI Dashboard", () => {
     // Wait for success toast
     await page.waitForSelector("text=Successfully loaded", { timeout: 10000 });
 
-    // The data is loaded but UI needs to update - reload the page to see the changes
-    await page.reload();
-    await page.waitForLoadState("networkidle");
+    // After data is loaded, the dashboard should appear immediately without reload
+    // Wait for the dashboard elements to appear
+    await page.waitForSelector("text=Total Sessions", { timeout: 10000 });
 
-    // After data is loaded, we should see the date range heading
-    await expect(page.getByRole("heading", { name: "Date Range" })).toBeVisible();
+    // Now the Date Range picker should be visible
+    await expect(page.getByText("Date Range").first()).toBeVisible();
   });
 
   test("can clear database", async ({ page }) => {

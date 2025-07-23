@@ -39,7 +39,8 @@ export function ClientDashboard() {
 
   const isMobile = useIsMobile();
   const [useTabView, setUseTabView] = useState(false);
-  const { isInitialized, error: dbError, loadSessionsFromJSON } = useDatabase();
+  const databaseHook = useDatabase();
+  const { isInitialized, error: dbError, loadSessionsFromJSON } = databaseHook;
 
   // Database operations
   const {
@@ -53,7 +54,7 @@ export function ClientDashboard() {
     loadSampleData,
     exportCurrentData,
     loadNewDataset
-  } = useDatabaseOperations();
+  } = useDatabaseOperations(databaseHook);
 
   // File upload handling
   const {
