@@ -7,6 +7,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp } from "lucide-react";
+import { ANALYTICS_THRESHOLDS } from "@/lib/config/analytics-thresholds";
 import type { ChartData, Metrics } from "@/lib/types/session";
 
 interface InsightsSummaryProps {
@@ -33,7 +34,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
   );
   const avgSessionsPerDay = totalSessions / Math.max(daysDiff, 1);
 
-  if (avgSessionsPerDay > 50) {
+  if (avgSessionsPerDay > ANALYTICS_THRESHOLDS.activity.highPerDay) {
     insights.push({
       type: "positive",
       title: "High Activity Volume",
@@ -41,7 +42,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       value: `${totalSessions} total sessions`,
       icon: TrendingUp
     });
-  } else if (avgSessionsPerDay < 10) {
+  } else if (avgSessionsPerDay < ANALYTICS_THRESHOLDS.activity.lowPerDayInsight) {
     insights.push({
       type: "warning",
       title: "Low Activity Volume",
@@ -53,7 +54,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
 
   // User satisfaction insight
   if (chartData.avg_rating) {
-    if (chartData.avg_rating >= 4.0) {
+    if (chartData.avg_rating >= ANALYTICS_THRESHOLDS.rating.excellent) {
       insights.push({
         type: "positive",
         title: "Excellent User Satisfaction",
@@ -61,7 +62,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
         value: `${chartData.avg_rating.toFixed(1)}/5.0 stars`,
         icon: CheckCircle
       });
-    } else if (chartData.avg_rating < 3.0) {
+    } else if (chartData.avg_rating < ANALYTICS_THRESHOLDS.rating.needsAttention) {
       insights.push({
         type: "negative",
         title: "User Satisfaction Needs Attention",
@@ -76,7 +77,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
   const resolvedPercentage = metrics["Resolved Chats (%)"];
   const escalationRate = 100 - resolvedPercentage;
 
-  if (escalationRate > 20) {
+  if (escalationRate > ANALYTICS_THRESHOLDS.escalation.high) {
     insights.push({
       type: "warning",
       title: "High Escalation Rate",
@@ -84,7 +85,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       value: `${escalationRate.toFixed(1)}% escalated`,
       icon: AlertTriangle
     });
-  } else if (escalationRate < 10) {
+  } else if (escalationRate < ANALYTICS_THRESHOLDS.escalation.low) {
     insights.push({
       type: "positive",
       title: "Effective Self-Service",
@@ -96,7 +97,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
 
   // Response time insight
   const avgResponseTime = metrics["Avg. Response Time (sec)"];
-  if (avgResponseTime > 5) {
+  if (avgResponseTime > ANALYTICS_THRESHOLDS.responseTime.slowInsight) {
     insights.push({
       type: "warning",
       title: "Slow Response Times",
@@ -104,7 +105,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       value: `${avgResponseTime.toFixed(1)}s average`,
       icon: TrendingDown
     });
-  } else if (avgResponseTime < 2) {
+  } else if (avgResponseTime < ANALYTICS_THRESHOLDS.responseTime.fast) {
     insights.push({
       type: "positive",
       title: "Fast Response Times",
@@ -125,7 +126,7 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       const negativePercentage =
         (chartData.sentiment_values[negativeIndex] / totalSentimentSessions) * 100;
 
-      if (negativePercentage > 30) {
+      if (negativePercentage > ANALYTICS_THRESHOLDS.sentiment.highNegative) {
         insights.push({
           type: "negative",
           title: "High Negative Sentiment",
@@ -137,32 +138,10 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
     }
   }
 
-  // Category quality insight - check for high percentage of unrecognized/other
-  if (chartData.category_labels && chartData.category_values) {
-    const totalCategorySessions = chartData.category_values.reduce((sum, val) => sum + val, 0);
-    const unrecognizedIndex = chartData.category_labels.findIndex(
-      (label) => label === "Unrecognized / Other"
-    );
-
-    if (unrecognizedIndex !== -1 && totalCategorySessions > 0) {
-      const unrecognizedPercentage =
-        (chartData.category_values[unrecognizedIndex] / totalCategorySessions) * 100;
-
-      if (unrecognizedPercentage > 25) {
-        insights.push({
-          type: "warning",
-          title: "High Unrecognized Categories",
-          description:
-            "Many conversations lack proper categorization - consider reviewing classification rules",
-          value: `${unrecognizedPercentage.toFixed(1)}% unrecognized`,
-          icon: AlertTriangle
-        });
-      }
-    }
-  }
+  // Removed category quality insight - this belongs in Data Quality Assessment
 
   // Data quality insight
-  if (totalSessions < 20) {
+  if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.minForInsights) {
     insights.push({
       type: "warning",
       title: "Limited Data Sample",

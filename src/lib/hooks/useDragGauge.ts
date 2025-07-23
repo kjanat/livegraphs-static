@@ -7,6 +7,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 
 type GaugeMode = "idle" | "hover" | "drag" | "spring";
 
@@ -75,7 +76,7 @@ export function useDragGauge(value: number | null, max = 5): UseDragGaugeReturn 
 
       const rect = gaugeRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
-      const centerY = rect.bottom - 20; // Bottom of semicircle
+      const centerY = rect.bottom - DATA_PROCESSING_THRESHOLDS.gauge.dragRadiusPadding; // Bottom of semicircle
 
       // Calculate angle from center
       const deltaX = e.clientX - centerX;
@@ -83,14 +84,16 @@ export function useDragGauge(value: number | null, max = 5): UseDragGaugeReturn 
       let angle = Math.atan2(deltaY, deltaX);
 
       // Convert to degrees and adjust for semicircle
-      angle = (angle * 180) / Math.PI;
-      angle = 90 - angle;
+      angle = (angle * DATA_PROCESSING_THRESHOLDS.gauge.semicircleAngle) / Math.PI;
+      angle = DATA_PROCESSING_THRESHOLDS.gauge.angleOffset - angle;
 
       // Clamp to valid semicircle range
-      angle = Math.max(0, Math.min(180, angle));
+      angle = Math.max(0, Math.min(DATA_PROCESSING_THRESHOLDS.gauge.semicircleAngle, angle));
 
       // Convert angle to rating value
-      const percentage = (angle / 180) * 100;
+      const percentage =
+        (angle / DATA_PROCESSING_THRESHOLDS.gauge.semicircleAngle) *
+        DATA_PROCESSING_THRESHOLDS.percentages.multiplier;
       const newValue = 1 + (percentage / 100) * (max - 1);
       setDragValue(Math.max(1, Math.min(max, newValue)));
     },
@@ -152,7 +155,7 @@ export function useDragGauge(value: number | null, max = 5): UseDragGaugeReturn 
       setMode("spring");
 
       // Spring back after a moment
-      setTimeout(() => springBack(), 1000);
+      setTimeout(() => springBack(), DATA_PROCESSING_THRESHOLDS.gauge.animationSpringbackDelay);
     },
     [value, max, springBack]
   );

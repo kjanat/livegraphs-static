@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import type { ChatSession } from "../types/session";
 import { schema } from "./schema";
 import type { Database, SqlJsStatic } from "./sql-wrapper";
@@ -26,7 +27,7 @@ export async function initializeDatabase(): Promise<Database> {
 
   // Try to load existing database from localStorage first (only on client)
   if (typeof window !== "undefined") {
-    const savedDb = localStorage.getItem("livegraphs_db");
+    const savedDb = localStorage.getItem(DATA_PROCESSING_THRESHOLDS.database.localStorageKey);
     if (savedDb) {
       try {
         const data = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
@@ -63,17 +64,19 @@ export function saveDatabase(): void {
     const encoded = btoa(binary);
 
     // Check size before saving (localStorage typically has 5-10MB limit)
-    const sizeInMB = (encoded.length * 0.75) / (1024 * 1024); // Approximate size in MB
-    if (sizeInMB > 4) {
+    const sizeInMB =
+      (encoded.length * DATA_PROCESSING_THRESHOLDS.database.sizeCalculationFactor) /
+      DATA_PROCESSING_THRESHOLDS.database.mbConversionFactor;
+    if (sizeInMB > DATA_PROCESSING_THRESHOLDS.database.maxSizeMB) {
       console.warn(`Database size (${sizeInMB.toFixed(2)}MB) may exceed localStorage limits`);
     }
 
-    localStorage.setItem("livegraphs_db", encoded);
+    localStorage.setItem(DATA_PROCESSING_THRESHOLDS.database.localStorageKey, encoded);
   } catch (error) {
     if (error instanceof DOMException && error.name === "QuotaExceededError") {
       console.error("localStorage quota exceeded. Database too large to persist.");
       // Optionally clear old data and retry
-      localStorage.removeItem("livegraphs_db");
+      localStorage.removeItem(DATA_PROCESSING_THRESHOLDS.database.localStorageKey);
     } else {
       console.error("Failed to save database:", error);
     }
@@ -88,7 +91,10 @@ export async function insertSession(session: ChatSession): Promise<void> {
   // Calculate derived fields
   const startTime = new Date(session.start_time);
   const endTime = new Date(session.end_time);
-  const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+  const durationSeconds = Math.floor(
+    (endTime.getTime() - startTime.getTime()) /
+      DATA_PROCESSING_THRESHOLDS.timeConversions.millisecondsToSeconds
+  );
 
   // Insert main session
   const stmt = db.prepare(`
@@ -228,6 +234,6 @@ export function clearDatabase(): void {
     console.error("Error clearing database:", error);
   }
 
-  localStorage.removeItem("livegraphs_db");
+  localStorage.removeItem(DATA_PROCESSING_THRESHOLDS.database.localStorageKey);
   saveDatabase();
 }

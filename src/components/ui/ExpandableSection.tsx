@@ -145,7 +145,7 @@ export function ExpandableSection({
         }}
       >
         <div
-          className={`pb-6 px-6 transition-all duration-300 ${
+          className={`pb-4 px-6 transition-all duration-300 ${
             isExpanded ? "animate-in fade-in slide-in-from-top-2" : ""
           }`}
         >

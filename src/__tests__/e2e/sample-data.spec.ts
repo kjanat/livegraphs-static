@@ -40,7 +40,7 @@ test.describe("Notso AI Dashboard - Sample Data", () => {
     await page.waitForLoadState("networkidle");
 
     // Check statistics are visible
-    await expect(page.getByText("Database Statistics")).toBeVisible();
+    await expect(page.getByText("Data Statistics")).toBeVisible();
     await expect(page.getByText("Total Sessions")).toBeVisible();
     await expect(page.getByText(/\d+/).first()).toBeVisible(); // Session count
   });

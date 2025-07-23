@@ -32,7 +32,7 @@ export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabase
       >
         <div className="flex items-center gap-2">
           <File className="h-[18px] w-[18px] text-muted-foreground" />
-          <h2 className="text-base font-semibold">Database Statistics</h2>
+          <h2 className="text-base font-semibold">Data Statistics</h2>
           <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
             {totalSessions} sessions
           </span>

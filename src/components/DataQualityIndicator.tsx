@@ -7,37 +7,50 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import {
+  ANALYTICS_THRESHOLDS,
+  type ImpactLevel,
+  type IssueType
+} from "@/lib/config/analytics-thresholds";
 import type { Metrics } from "@/lib/types/session";
 
 interface DataQualityIndicatorProps {
   metrics: Metrics;
   totalSessions: number;
   dateRange: { start: Date; end: Date };
+  chartData?: {
+    category_labels?: string[];
+    category_values?: number[];
+    resolution_labels?: string[];
+    resolution_values?: number[];
+    avg_rating?: number | null;
+  };
 }
 
 interface QualityIssue {
-  type: "warning" | "info" | "error";
+  type: IssueType;
   title: string;
   description: string;
-  impact: "high" | "medium" | "low";
+  impact: ImpactLevel;
 }
 
 export function DataQualityIndicator({
   metrics,
   totalSessions,
-  dateRange
+  dateRange,
+  chartData
 }: DataQualityIndicatorProps) {
   const issues: QualityIssue[] = [];
 
   // Sample size analysis
-  if (totalSessions < 10) {
+  if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.verySmall) {
     issues.push({
       type: "error",
       title: "Very Small Sample Size",
       description: `Only ${totalSessions} conversations available. Results may not be statistically significant.`,
       impact: "high"
     });
-  } else if (totalSessions < 50) {
+  } else if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.small) {
     issues.push({
       type: "warning",
       title: "Small Sample Size",
@@ -52,7 +65,7 @@ export function DataQualityIndicator({
   );
   const avgPerDay = totalSessions / Math.max(daysDiff, 1);
 
-  if (daysDiff < 3) {
+  if (daysDiff < ANALYTICS_THRESHOLDS.timePeriod.shortDays) {
     issues.push({
       type: "info",
       title: "Short Time Period",
@@ -61,7 +74,7 @@ export function DataQualityIndicator({
     });
   }
 
-  if (avgPerDay < 2) {
+  if (avgPerDay < ANALYTICS_THRESHOLDS.activity.lowPerDay) {
     issues.push({
       type: "warning",
       title: "Low Activity Volume",
@@ -72,7 +85,7 @@ export function DataQualityIndicator({
 
   // Response time quality
   const avgResponseTime = metrics["Avg. Response Time (sec)"];
-  if (avgResponseTime > 10) {
+  if (avgResponseTime > ANALYTICS_THRESHOLDS.responseTime.slow) {
     issues.push({
       type: "warning",
       title: "Slow Response Times",
@@ -81,15 +94,104 @@ export function DataQualityIndicator({
     });
   }
 
-  // Resolution rate quality
+  // Resolution rate quality - moved to Key Insights
+  // Keep only suspicious values check here
   const resolvedPercentage = metrics["Resolved Chats (%)"];
-  if (resolvedPercentage < 60) {
+  const escalationRate = 100 - resolvedPercentage;
+
+  // Check for suspicious 0% or 100% values
+  if (escalationRate === ANALYTICS_THRESHOLDS.escalation.suspiciousZero) {
     issues.push({
       type: "warning",
-      title: "Low Resolution Rate",
-      description: `Only ${resolvedPercentage.toFixed(1)}% of conversations are resolved successfully.`,
+      title: "Suspicious Zero Escalation Rate",
+      description: "0% escalation rate may indicate missing or incorrect data tracking.",
+      impact: "medium"
+    });
+  } else if (escalationRate === ANALYTICS_THRESHOLDS.escalation.suspicious100) {
+    issues.push({
+      type: "warning",
+      title: "Suspicious 100% Escalation Rate",
+      description: "100% escalation rate may indicate system configuration issues.",
       impact: "high"
     });
+  }
+
+  // Check for high unrecognized categories
+  if (chartData?.category_labels && chartData?.category_values) {
+    const totalCategorySessions = chartData.category_values.reduce((sum, val) => sum + val, 0);
+    const unrecognizedIndex = chartData.category_labels.findIndex(
+      (label) => label === "Unrecognized / Other"
+    );
+
+    if (unrecognizedIndex !== -1 && totalCategorySessions > 0) {
+      const unrecognizedPercentage =
+        (chartData.category_values[unrecognizedIndex] / totalCategorySessions) * 100;
+
+      if (unrecognizedPercentage > ANALYTICS_THRESHOLDS.categorization.highUnrecognized) {
+        issues.push({
+          type: "warning",
+          title: "High Unrecognized Categories",
+          description: `${unrecognizedPercentage.toFixed(1)}% of conversations lack proper categorization. Consider reviewing classification rules.`,
+          impact: "medium"
+        });
+      }
+    }
+  }
+
+  // Check for HR forwarding suspicious values
+  if (chartData?.resolution_labels && chartData?.resolution_values) {
+    const forwardedHRIndex = chartData.resolution_labels.indexOf("Forwarded to HR");
+
+    if (forwardedHRIndex !== -1) {
+      const forwardedHRCount = chartData.resolution_values[forwardedHRIndex];
+      const totalConversations = metrics["Total Conversations"];
+
+      if (forwardedHRCount === totalConversations && totalConversations > 0) {
+        issues.push({
+          type: "warning",
+          title: "All Conversations Forwarded to HR",
+          description: "100% HR forwarding rate suggests potential configuration issues.",
+          impact: "high"
+        });
+      } else if (
+        forwardedHRCount === 0 &&
+        totalConversations > ANALYTICS_THRESHOLDS.hrForwarding.minSessionsForZeroCheck
+      ) {
+        issues.push({
+          type: "info",
+          title: "No HR Escalations",
+          description:
+            "Zero HR escalations across all conversations - verify if HR forwarding is properly configured.",
+          impact: "low"
+        });
+      }
+    }
+  }
+
+  // Check for suspicious rating values
+  if (chartData?.avg_rating !== undefined && chartData.avg_rating !== null) {
+    if (
+      chartData.avg_rating === ANALYTICS_THRESHOLDS.rating.perfectScore &&
+      totalSessions > ANALYTICS_THRESHOLDS.rating.minSessionsForPerfectCheck
+    ) {
+      issues.push({
+        type: "info",
+        title: "Perfect Rating Score",
+        description:
+          "5.0/5.0 rating across all sessions - verify rating collection is working correctly.",
+        impact: "low"
+      });
+    } else if (
+      chartData.avg_rating === ANALYTICS_THRESHOLDS.rating.zeroScore &&
+      totalSessions > ANALYTICS_THRESHOLDS.rating.minSessionsForZeroCheck
+    ) {
+      issues.push({
+        type: "warning",
+        title: "Zero Rating Score",
+        description: "0.0 average rating may indicate rating data is not being collected.",
+        impact: "medium"
+      });
+    }
   }
 
   // No issues case
@@ -160,7 +262,7 @@ export function DataQualityIndicator({
     (issue) =>
       issue.type === "error" ||
       (issue.type === "warning" && issue.impact === "high") ||
-      totalSessions < 30
+      totalSessions < ANALYTICS_THRESHOLDS.qualityDisplay.alwaysShowBelowSessions
   );
 
   if (!shouldShow) {

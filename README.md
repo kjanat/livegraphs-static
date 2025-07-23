@@ -12,7 +12,7 @@ LiveGraphs Static transforms chatbot conversation logs into actionable insights 
 
 ### Key Features
 
-- **🔐 Privacy-First**: Client-side processing with automatic IP anonymization (GDPR/CCPA compliant)
+- **🔐 Privacy-First**: Client-side processing, and no network requests, data isn't stored anywhere
 - **📊 Comprehensive Analytics**: 15+ chart types covering sentiment, performance, costs, and geographic trends
 - **⚡ Real-Time Processing**: Instant metric calculations using in-browser SQLite
 - **📱 Responsive Design**: Works seamlessly across desktop and mobile devices
@@ -76,7 +76,7 @@ Upload JSON files with the following structure:
 | **Sentiment Analysis**      | Track conversation sentiment distribution   | `sentiment` field                |
 | **Performance Metrics**     | Monitor response times and escalation rates | `avg_response_time`, `escalated` |
 | **Cost Analysis**           | Daily spending and category breakdown       | `tokens_eur`, `category`         |
-| **Geographic Distribution** | User locations and language preferences     | `ip_address` (anonymized)        |
+| **Geographic Distribution** | User locations and language preferences     | `ip_address`                     |
 | **Usage Heatmaps**          | Hourly and daily activity patterns          | `start_time`                     |
 | **Rating Trends**           | Customer satisfaction over time             | `rating`                         |
 

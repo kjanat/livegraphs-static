@@ -246,8 +246,8 @@ export function useDatabase(): DatabaseHook {
         db,
         `SELECT 
           COUNT(*) as total_sessions,
-          MIN(DATE(start_time)) as min_date,
-          MAX(DATE(start_time)) as max_date
+          MIN(start_time) as min_date,
+          MAX(start_time) as max_date
         FROM sessions`
       );
 

@@ -38,7 +38,7 @@ export function ClientDashboard() {
   useKeyboardNavigation();
 
   const isMobile = useIsMobile();
-  const [useTabView, setUseTabView] = useState(false);
+  const [useTabView, setUseTabView] = useState(true);
   const databaseHook = useDatabase();
   const { isInitialized, error: dbError, loadSessionsFromJSON } = databaseHook;
 
@@ -197,6 +197,7 @@ export function ClientDashboard() {
                 metrics={metrics}
                 totalSessions={metrics["Total Conversations"]}
                 dateRange={dateRange}
+                chartData={chartData}
               />
 
               <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />

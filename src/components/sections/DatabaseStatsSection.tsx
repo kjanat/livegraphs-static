@@ -20,7 +20,7 @@ export function DatabaseStatsSection({ totalSessions, dateRange }: DatabaseStats
       className="bg-card rounded-lg shadow-md p-4 sm:p-6 mb-8 transition-all duration-200 hover:shadow-lg"
       aria-label="Database statistics"
     >
-      <h2 className="text-[1.25rem] sm:text-2xl font-bold mb-4">Database Statistics</h2>
+      <h2 className="text-[1.25rem] sm:text-2xl font-bold mb-4">Data Statistics</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-primary/10 p-4 rounded transition-colors hover:bg-primary/15">
           <div className="text-sm text-muted-foreground">Total Sessions</div>
