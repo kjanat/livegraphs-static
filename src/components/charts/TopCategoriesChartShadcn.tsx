@@ -79,26 +79,46 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
             accessibilityLayer
             data={chartData}
             layout="horizontal"
-            margin={{ top: 20, right: 50, bottom: 20, left: 20 }}
+            margin={{ top: 20, right: 60, bottom: 20, left: 120 }}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={10} />
-            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+            <CartesianGrid horizontal={false} />
+            <XAxis type="number" tickLine={false} axisLine={false} />
+            <YAxis
+              dataKey="category"
+              type="category"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              width={110}
+            />
             <ChartTooltip
               cursor={false}
               content={
                 <ChartTooltipContent
                   hideLabel
-                  formatter={(value) => (
-                    <div className="flex items-center justify-between gap-8">
-                      <span className="font-semibold">{value} sessions</span>
+                  formatter={(value, _name, item) => (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Category:</span>
+                        <span className="font-semibold">{item.payload.category}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Sessions:</span>
+                        <span className="font-semibold">{value}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Percentage:</span>
+                        <span className="font-semibold">
+                          {((Number(value) / totalSessions) * 100).toFixed(1)}%
+                        </span>
+                      </div>
                     </div>
                   )}
                 />
               }
             />
-            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
-              <LabelList position="top" offset={12} className="fill-foreground" fontSize={12} />
+            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[0, 8, 8, 0]}>
+              <LabelList position="right" offset={8} className="fill-foreground" fontSize={12} />
             </Bar>
           </BarChart>
         </ChartContainer>
