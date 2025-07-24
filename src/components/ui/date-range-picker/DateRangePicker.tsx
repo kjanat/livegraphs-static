@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useIsDesktop } from "./hooks/useBreakpoint";
-import { PresetCombobox } from "./PresetCombobox";
+import { PresetSelector } from "./PresetSelector";
 import { Presets } from "./Presets";
 import type { DateRangePickerProps, Preset } from "./types";
 import {
@@ -288,7 +288,7 @@ export function DateRangePicker({
           {presets.length > 0 &&
             (showPresetCombobox ? (
               <div className="p-3 border-t">
-                <PresetCombobox presets={presets} onSelect={handlePresetSelect} />
+                <PresetSelector presets={presets} onSelect={handlePresetSelect} />
               </div>
             ) : (
               <Presets
