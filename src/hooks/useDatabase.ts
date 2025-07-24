@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import { schema } from "@/lib/db/schema";
 import type { Database } from "@/lib/db/sql-wrapper";
 import {
@@ -37,7 +38,7 @@ interface DatabaseHook {
   dbVersion: number;
 }
 
-const STORAGE_KEY = "livegraphs_db";
+const STORAGE_KEY = DATA_PROCESSING_THRESHOLDS.database.localStorageKey;
 
 export function useDatabase(): DatabaseHook {
   const [db, setDb] = useState<Database | null>(null);
@@ -107,8 +108,10 @@ export function useDatabase(): DatabaseHook {
       const base64 = btoa(binary);
 
       // Check size before saving
-      const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
-      if (sizeInMB > 4) {
+      const sizeInMB =
+        (base64.length * DATA_PROCESSING_THRESHOLDS.database.sizeCalculationFactor) /
+        DATA_PROCESSING_THRESHOLDS.database.mbConversionFactor;
+      if (sizeInMB > DATA_PROCESSING_THRESHOLDS.database.maxSizeMB) {
         console.warn(`Database size (${sizeInMB.toFixed(2)}MB) may exceed localStorage limits`);
       }
 

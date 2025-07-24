@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useDatabase } from "@/hooks/useDatabase";
+import { getQueryCache } from "@/lib/cache/QueryCache";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
 import type { Database } from "@/lib/db/sql-wrapper";
 import { generateSampleData } from "@/lib/sampleData";
@@ -159,11 +160,29 @@ export function useDatabaseOperations(
         // Save the selected range to localStorage
         saveDateRangeToStorage(range);
 
-        // Calculate metrics and prepare chart data
-        const [newMetrics, newChartData] = await Promise.all([
-          calculateMetrics(db, range),
-          prepareChartData(db, range)
-        ]);
+        // Check cache first
+        const cache = getQueryCache();
+        const cachedMetrics = cache.getMetrics(range);
+        const cachedChartData = cache.getChartData(range);
+
+        let newMetrics: Metrics;
+        let newChartData: ChartData;
+
+        if (cachedMetrics && cachedChartData) {
+          // Use cached data
+          newMetrics = cachedMetrics;
+          newChartData = cachedChartData;
+        } else {
+          // Calculate metrics and prepare chart data
+          [newMetrics, newChartData] = await Promise.all([
+            cachedMetrics || calculateMetrics(db, range),
+            cachedChartData || prepareChartData(db, range)
+          ]);
+
+          // Store in cache
+          if (!cachedMetrics) cache.setMetrics(range, newMetrics);
+          if (!cachedChartData) cache.setChartData(range, newChartData);
+        }
 
         setMetrics(newMetrics);
         setChartData(newChartData);
@@ -191,6 +210,8 @@ export function useDatabaseOperations(
     setDateRange(null);
     // Clear saved date range from localStorage
     clearDateRangeFromStorage();
+    // Clear cache
+    getQueryCache().clear();
     toast.success("Database cleared successfully");
   }, [clearDatabase]);
 
@@ -203,6 +224,9 @@ export function useDatabaseOperations(
     try {
       const sampleData = generateSampleData();
       const count = await loadSessionsFromJSON(sampleData);
+
+      // Clear cache when loading new data
+      getQueryCache().clear();
 
       // Use atomic function to avoid race conditions
       await loadNewDataset();
