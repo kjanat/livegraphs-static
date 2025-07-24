@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { type ComponentType, lazy, type ReactElement } from "react";
+import { type ComponentType, lazy } from "react";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
 

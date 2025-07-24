@@ -5,7 +5,6 @@
  */
 
 "use client";
-"use memo"; // React Compiler directive for automatic optimization
 
 import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExpandableSection } from "@/components/ui/ExpandableSection";

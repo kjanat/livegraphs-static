@@ -39,7 +39,7 @@ export function TopQuestionsSection({ data }: TopQuestionsSectionProps) {
             key={`question-${index}-${question.slice(0, 20)}`}
             className="flex justify-between items-center p-3 bg-secondary rounded transition-colors hover:bg-secondary/80"
           >
-            <span className="flex-1 mr-4">{question}</span>
+            <span className="flex-1 mr-4 truncate">{question}</span>
             <span className="text-muted-foreground font-semibold whitespace-nowrap">
               {data.values[index] ?? 0} times
             </span>

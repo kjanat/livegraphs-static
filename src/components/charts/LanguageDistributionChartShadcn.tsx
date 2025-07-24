@@ -86,7 +86,7 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
             layout="vertical"
             margin={{
               top: 5,
-              right: 20,
+              right: 30,
               bottom: 5,
               left: 10
             }}

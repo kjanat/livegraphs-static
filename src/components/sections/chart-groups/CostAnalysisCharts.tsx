@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-"use memo"; // React Compiler directive for automatic optimization
-
 import dynamic from "next/dynamic";
 import { memo } from "react";
 import { ChartSkeleton } from "@/components/ui/skeleton";
