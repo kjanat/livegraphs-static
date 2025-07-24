@@ -126,10 +126,10 @@ export function PerformanceTrendsShadcn({ data }: PerformanceTrendsShadcnProps) 
           <AreaChart
             data={filteredData}
             margin={{
-              top: 10,
-              right: 10,
-              bottom: 40,
-              left: 10
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0
             }}
           >
             <defs>

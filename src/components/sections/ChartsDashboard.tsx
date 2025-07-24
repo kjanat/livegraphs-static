@@ -24,8 +24,8 @@ const GaugeChartDemo = dynamic(
 
 const CostAnalysisChart = dynamic(
   () =>
-    import("@/components/charts/CostAnalysisChart").then((mod) => ({
-      default: mod.CostAnalysisChart
+    import("@/components/charts/CostAnalysisChartShadcn").then((mod) => ({
+      default: mod.CostAnalysisChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
