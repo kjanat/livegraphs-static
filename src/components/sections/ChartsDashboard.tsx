@@ -287,7 +287,6 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
               data={chartData.conversation_durations}
               title="Conversation Duration"
               description="How long customer conversations typically last"
-              xLabel="Duration (minutes)"
               bins={8}
               color="hsl(var(--chart-3))"
               formatLabel={(value) => `${Math.round(value)}m`}
@@ -296,7 +295,6 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
               data={chartData.messages_per_conversation}
               title="Messages per Conversation"
               description="Distribution of message exchanges in conversations"
-              xLabel="Number of Messages"
               bins={8}
               color="hsl(var(--chart-4))"
               formatLabel={(value) => Math.round(value).toString()}

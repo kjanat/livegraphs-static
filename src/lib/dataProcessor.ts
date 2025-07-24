@@ -7,6 +7,7 @@
 import type { Database } from "./db/sql-wrapper";
 import { executeQuery, queryOne } from "./db/sql-wrapper";
 import type { ChartData, DateRange, Metrics } from "./types/session";
+import { countryName, getUserLocale, languageName } from "./utils/i18n";
 
 // Type guards for safer type assertions
 function isString(value: unknown): value is string {
@@ -97,6 +98,9 @@ export async function calculateMetrics(db: Database, dateRange: DateRange): Prom
 export async function prepareChartData(db: Database, dateRange: DateRange): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
   const endStr = dateRange.end.toISOString();
+
+  // Get user's locale for internationalization
+  const locale = getUserLocale();
 
   // Helper function to execute query and get results
   function execQuery<T = Record<string, unknown>>(sql: string): T[] {
@@ -262,7 +266,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     LIMIT 10
   `);
 
-  const country_labels = countryData.map((row) => row.country as string);
+  // Convert country codes to localized names
+  const country_labels = countryData.map((row) => {
+    const code = row.country as string;
+    return countryName(code, locale);
+  });
   const country_values = countryData.map((row) => row.count as number);
 
   // Language distribution
@@ -275,7 +283,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     LIMIT 8
   `);
 
-  const language_labels = languageData.map((row) => row.language as string);
+  // Convert language codes to localized names
+  const language_labels = languageData.map((row) => {
+    const code = row.language as string;
+    return languageName(code, locale);
+  });
   const language_values = languageData.map((row) => row.count as number);
 
   // Hourly heatmap data
