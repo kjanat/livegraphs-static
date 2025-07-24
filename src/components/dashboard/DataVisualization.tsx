@@ -6,7 +6,7 @@
 
 "use client";
 
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { DataQualityIndicator } from "@/components/DataQualityIndicator";
 import { InsightsSummary } from "@/components/InsightsSummary";
 import { MobileDashboard } from "@/components/mobile/MobileDashboard";
@@ -17,16 +17,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
 
-// Lazy load chart components for better performance
-const ChartsDashboard = lazy(() =>
-  import("@/components/sections/ChartsDashboard").then((m) => ({ default: m.ChartsDashboard }))
-);
-
-const ChartsDashboardTabs = lazy(() =>
-  import("@/components/sections/ChartsDashboardTabs").then((m) => ({
-    default: m.ChartsDashboardTabs
+// Lazy load unified chart dashboard
+const ChartsDashboardUnified = lazy(() =>
+  import("@/components/sections/ChartsDashboardUnified").then((m) => ({
+    default: m.ChartsDashboardUnified
   }))
 );
+
+const VIEW_MODE_STORAGE_KEY = "livegraphs_chart_view_mode";
 
 interface DataVisualizationProps {
   metrics: Metrics | null;
@@ -44,7 +42,24 @@ export function DataVisualization({
   totalSessions
 }: DataVisualizationProps) {
   const isMobile = useIsMobile();
-  const [useTabView, setUseTabView] = useState(true);
+
+  // Load view preference from localStorage with default to tabs
+  const [viewMode, setViewMode] = useState<"tabs" | "expandable">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+      return saved === "expandable" ? "expandable" : "tabs";
+    }
+    return "tabs";
+  });
+
+  // Save view preference to localStorage
+  useEffect(() => {
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+  }, [viewMode]);
+
+  const toggleViewMode = () => {
+    setViewMode((prev) => (prev === "tabs" ? "expandable" : "tabs"));
+  };
 
   // Loading State
   if (isLoadingData && dateRange) {
@@ -86,17 +101,12 @@ export function DataVisualization({
 
       {/* View Toggle */}
       <div className="flex justify-end mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setUseTabView(!useTabView)}
-          className="gap-2"
-        >
-          {useTabView ? "Switch to Expandable View" : "Switch to Tab View"}
+        <Button variant="outline" size="sm" onClick={toggleViewMode} className="gap-2">
+          {viewMode === "tabs" ? "Switch to Expandable View" : "Switch to Tab View"}
         </Button>
       </div>
 
-      {/* Charts - Conditional rendering based on view preference */}
+      {/* Charts - Unified component with view mode */}
       <Suspense
         fallback={
           <div className="space-y-4">
@@ -105,11 +115,7 @@ export function DataVisualization({
           </div>
         }
       >
-        {useTabView ? (
-          <ChartsDashboardTabs metrics={metrics} chartData={chartData} />
-        ) : (
-          <ChartsDashboard metrics={metrics} chartData={chartData} />
-        )}
+        <ChartsDashboardUnified metrics={metrics} chartData={chartData} viewMode={viewMode} />
       </Suspense>
     </>
   );

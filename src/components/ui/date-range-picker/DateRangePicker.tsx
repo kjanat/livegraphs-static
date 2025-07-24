@@ -288,7 +288,11 @@ export function DateRangePicker({
           {presets.length > 0 &&
             (showPresetCombobox ? (
               <div className="p-3 border-t">
-                <PresetSelector presets={presets} onSelect={handlePresetSelect} />
+                <PresetSelector
+                  presets={presets}
+                  onSelect={handlePresetSelect}
+                  currentValue={displayValue}
+                />
               </div>
             ) : (
               <Presets

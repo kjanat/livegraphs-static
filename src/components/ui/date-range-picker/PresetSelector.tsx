@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { DateRange } from "react-day-picker";
 import {
   Select,
   SelectContent,
@@ -14,10 +15,16 @@ import type { Preset } from "./types";
 interface PresetSelectorProps {
   presets: Preset[];
   onSelect: (preset: Preset) => void;
+  currentValue?: DateRange;
   className?: string;
 }
 
-export function PresetSelector({ presets, onSelect, className }: PresetSelectorProps) {
+export function PresetSelector({
+  presets,
+  onSelect,
+  currentValue,
+  className
+}: PresetSelectorProps) {
   const handleValueChange = (value: string) => {
     const selectedPreset = presets.find((p) => p.label === value);
     if (selectedPreset) {
@@ -25,8 +32,17 @@ export function PresetSelector({ presets, onSelect, className }: PresetSelectorP
     }
   };
 
+  const selectedPreset = presets.find((preset) => {
+    const range = preset.value();
+    return (
+      currentValue &&
+      range.from?.getTime() === currentValue.from?.getTime() &&
+      range.to?.getTime() === currentValue.to?.getTime()
+    );
+  });
+
   return (
-    <Select onValueChange={handleValueChange}>
+    <Select onValueChange={handleValueChange} defaultValue={selectedPreset?.label}>
       <SelectTrigger className={className}>
         <SelectValue placeholder="Select time range..." />
       </SelectTrigger>
