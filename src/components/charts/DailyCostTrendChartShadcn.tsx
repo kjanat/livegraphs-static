@@ -90,6 +90,7 @@ export function DailyCostTrendChartShadcn({ data }: DailyCostTrendChartShadcnPro
         </div>
         <div className="flex">
           <button
+            type="button"
             data-active={activeChart === "cost"}
             className="data-[active=true]:bg-muted/50 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
             onClick={() => setActiveChart("cost")}
@@ -101,6 +102,7 @@ export function DailyCostTrendChartShadcn({ data }: DailyCostTrendChartShadcnPro
           </button>
           {showMessages && (
             <button
+              type="button"
               data-active={activeChart === "messages"}
               className="data-[active=true]:bg-muted/50 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
               onClick={() => setActiveChart("messages")}

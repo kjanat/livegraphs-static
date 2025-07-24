@@ -58,7 +58,9 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
   const totalSessions = data.values.reduce((sum, val) => sum + val, 0);
   const topLanguage = chartData[0];
   const languageCount = data.labels.length;
-  const topPercentage = topLanguage ? ((topLanguage.sessions / totalSessions) * 100).toFixed(1) : 0;
+  const _topPercentage = topLanguage
+    ? ((topLanguage.sessions / totalSessions) * 100).toFixed(1)
+    : 0;
 
   const chartConfig = {
     sessions: {
@@ -77,7 +79,10 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
         <CardDescription>Sessions across different languages</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] lg:h-[400px] w-full sm:max-w-[500px] lg:max-w-[600px] mx-auto">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[300px] sm:h-[350px] lg:h-[400px] w-full sm:max-w-[500px] lg:max-w-[600px] mx-auto"
+        >
           <BarChart
             accessibilityLayer
             data={chartData}
@@ -97,19 +102,25 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
             />
             <XAxis dataKey="sessions" type="number" hide />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-            <Bar dataKey="sessions" layout="vertical" fill="var(--color-sessions)" radius={4} minPointSize={5}>
+            <Bar
+              dataKey="sessions"
+              layout="vertical"
+              fill="var(--color-sessions)"
+              radius={4}
+              minPointSize={5}
+            >
               <LabelList
                 dataKey="language"
                 position="insideLeft"
                 offset={8}
                 className="fill-white"
                 fontSize={12}
-                formatter={(value: string, entry: any) => {
+                formatter={(value: string, entry: { sessions?: number } | undefined) => {
                   // If the bar is too small, truncate the language name
                   const sessions = entry?.sessions || 0;
                   const percentage = (sessions / totalSessions) * 100;
                   if (percentage < 5 && value.length > 10) {
-                    return value.substring(0, 10) + "...";
+                    return `${value.substring(0, 10)}...`;
                   }
                   return value;
                 }}

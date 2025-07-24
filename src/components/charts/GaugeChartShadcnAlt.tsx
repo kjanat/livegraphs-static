@@ -7,12 +7,8 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
 
 interface GaugeChartShadcnAltProps {
   value: number;
@@ -78,16 +74,25 @@ export function GaugeChartShadcnAlt({
                   <div className="space-y-2">
                     <h4 className="text-sm font-semibold">Semi-Circular Arc Gauge Design</h4>
                     <p className="text-sm text-muted-foreground">
-                      This gauge displays values as a semi-circular arc that fills from left to right.
+                      This gauge displays values as a semi-circular arc that fills from left to
+                      right.
                     </p>
                     <p className="text-sm text-muted-foreground">
                       The stroke color indicates performance:
                     </p>
                     <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-                      <li><span className="text-red-500">Red</span>: Below 40%</li>
-                      <li><span className="text-orange-500">Orange</span>: 40% - 60%</li>
-                      <li><span className="text-yellow-500">Yellow</span>: 60% - 80%</li>
-                      <li><span className="text-green-500">Green</span>: Above 80%</li>
+                      <li>
+                        <span className="text-red-500">Red</span>: Below 40%
+                      </li>
+                      <li>
+                        <span className="text-orange-500">Orange</span>: 40% - 60%
+                      </li>
+                      <li>
+                        <span className="text-yellow-500">Yellow</span>: 60% - 80%
+                      </li>
+                      <li>
+                        <span className="text-green-500">Green</span>: Above 80%
+                      </li>
                     </ul>
                     <p className="text-xs text-muted-foreground italic">
                       Clean, minimalist design ideal for dashboards with multiple metrics.

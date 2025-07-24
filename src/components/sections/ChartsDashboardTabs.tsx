@@ -12,33 +12,37 @@ import { ChartSkeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
-import { getChartColors } from "@/lib/utils/chartColors";
 
 // Dynamic imports for all chart components
 const CostAnalysisChart = dynamic(
   () =>
-    import("@/components/charts/CostAnalysisChart").then((mod) => ({
-      default: mod.CostAnalysisChart
+    import("@/components/charts/CostAnalysisChartShadcn").then((mod) => ({
+      default: mod.CostAnalysisChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
 
 const DailyCostTrendChart = dynamic(
   () =>
-    import("@/components/charts/DailyCostTrendChart").then((mod) => ({
-      default: mod.DailyCostTrendChart
+    import("@/components/charts/DailyCostTrendChartShadcn").then((mod) => ({
+      default: mod.DailyCostTrendChartShadcn
     })),
   { loading: () => <ChartSkeleton height={400} />, ssr: false }
 );
 
 const GaugeChart = dynamic(
-  () => import("@/components/charts/GaugeChart").then((mod) => ({ default: mod.GaugeChart })),
+  () =>
+    import("@/components/charts/GaugeChartCircular").then((mod) => ({
+      default: mod.GaugeChartCircular
+    })),
   { loading: () => <ChartSkeleton height={250} />, ssr: false }
 );
 
-const HistogramChart = dynamic(
+const DistributionBarChart = dynamic(
   () =>
-    import("@/components/charts/HistogramChart").then((mod) => ({ default: mod.HistogramChart })),
+    import("@/components/charts/DistributionBarChart").then((mod) => ({
+      default: mod.DistributionBarChart
+    })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
 
@@ -52,8 +56,8 @@ const InteractiveHeatmap = dynamic(
 
 const LanguageDistributionChart = dynamic(
   () =>
-    import("@/components/charts/LanguageDistributionChart").then((mod) => ({
-      default: mod.LanguageDistributionChart
+    import("@/components/charts/LanguageDistributionChartShadcn").then((mod) => ({
+      default: mod.LanguageDistributionChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -84,16 +88,16 @@ const SentimentDistributionChart = dynamic(
 
 const SessionsByCountryChart = dynamic(
   () =>
-    import("@/components/charts/SessionsByCountryChart").then((mod) => ({
-      default: mod.SessionsByCountryChart
+    import("@/components/charts/SessionsByCountryChartShadcn").then((mod) => ({
+      default: mod.SessionsByCountryChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
 
 const TopCategoriesChart = dynamic(
   () =>
-    import("@/components/charts/TopCategoriesChart").then((mod) => ({
-      default: mod.TopCategoriesChart
+    import("@/components/charts/TopCategoriesChartShadcn").then((mod) => ({
+      default: mod.TopCategoriesChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -119,7 +123,6 @@ interface ChartVisibility {
 }
 
 export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsProps) {
-  const colors = getChartColors();
   const totalSessions = metrics["Total Conversations"] || 0;
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -210,9 +213,26 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
                 values: chartData.resolution_values
               }}
             />
-            {visibility.hasRatings && (
-              <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
+            {visibility.hasRatings && chartData.avg_rating !== null && (
+              <GaugeChart
+                value={chartData.avg_rating}
+                max={5}
+                title="Average User Rating"
+                subtitle="Customer satisfaction score"
+                formatValue={(val) => val.toFixed(1)}
+                segments={[
+                  { threshold: 20, color: "rgb(239, 68, 68)", label: "Poor" },
+                  { threshold: 40, color: "rgb(251, 146, 60)", label: "Fair" },
+                  { threshold: 60, color: "rgb(250, 204, 21)", label: "Good" },
+                  { threshold: 80, color: "rgb(34, 197, 94)", label: "Very Good" },
+                  { threshold: 100, color: "rgb(16, 185, 129)", label: "Excellent" }
+                ]}
+              />
             )}
+          </div>
+          {/* Sentiment Trends Over Time */}
+          <div className="mt-6">
+            <PerformanceTrendsChart data={chartData.sentiment_time_series} />
           </div>
         </TabsContent>
 
@@ -273,19 +293,21 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         <TabsContent value="detailed" className="space-y-6 min-h-[600px]">
           <h3 className="text-xl font-bold mb-4">Detailed Statistics</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <HistogramChart
+            <DistributionBarChart
               data={chartData.conversation_durations}
-              title="Conversation Duration Distribution"
-              xLabel="Duration (minutes)"
-              bins={15}
-              color={colors.teal}
+              title="Conversation Duration"
+              description="How long customer conversations typically last"
+              bins={8}
+              color="hsl(var(--chart-3))"
+              formatLabel={(value) => `${Math.round(value)}m`}
             />
-            <HistogramChart
+            <DistributionBarChart
               data={chartData.messages_per_conversation}
               title="Messages per Conversation"
-              xLabel="Number of Messages"
-              bins={10}
-              color={colors.pink}
+              description="Distribution of message exchanges in conversations"
+              bins={8}
+              color="hsl(var(--chart-4))"
+              formatLabel={(value) => Math.round(value).toString()}
             />
           </div>
           <TopQuestionsSection

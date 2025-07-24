@@ -10,11 +10,7 @@ import { PolarGrid, RadialBar, RadialBarChart } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface GaugeChartShadcnProps {
   value: number;
@@ -85,16 +81,27 @@ export function GaugeChartShadcn({
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">Radial Bar Gauge Design</h4>
                   <p className="text-sm text-muted-foreground">
-                    This gauge uses a radial bar chart that fills from left to right in a semi-circle arc.
+                    This gauge uses a radial bar chart that fills from left to right in a
+                    semi-circle arc.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     The color changes based on thresholds:
                   </p>
                   <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-                    <li><span className="text-red-500">Red</span>: Below {thresholds.low}%</li>
-                    <li><span className="text-orange-500">Orange</span>: {thresholds.low}% - {thresholds.medium}%</li>
-                    <li><span className="text-yellow-500">Yellow</span>: {thresholds.medium}% - {thresholds.high}%</li>
-                    <li><span className="text-green-500">Green</span>: Above {thresholds.high}%</li>
+                    <li>
+                      <span className="text-red-500">Red</span>: Below {thresholds.low}%
+                    </li>
+                    <li>
+                      <span className="text-orange-500">Orange</span>: {thresholds.low}% -{" "}
+                      {thresholds.medium}%
+                    </li>
+                    <li>
+                      <span className="text-yellow-500">Yellow</span>: {thresholds.medium}% -{" "}
+                      {thresholds.high}%
+                    </li>
+                    <li>
+                      <span className="text-green-500">Green</span>: Above {thresholds.high}%
+                    </li>
                   </ul>
                   <p className="text-xs text-muted-foreground italic">
                     Best for showing progress or completion metrics with clear thresholds.

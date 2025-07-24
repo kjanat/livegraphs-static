@@ -6,8 +6,7 @@
 
 "use client";
 
-import * as React from "react";
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
+import { CartesianGrid, Scatter, ScatterChart, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -104,11 +103,11 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
   const yAxisDecimals = getYAxisDecimals(maxTotalCost);
 
   // Custom dot component to render sized bubbles
-  const CustomDot = (props: any) => {
+  const CustomDot = (props: { cx: number; cy: number; payload: ChartDataPoint }) => {
     const { cx, cy, payload } = props;
     const radius = Math.sqrt(payload.size / Math.PI);
     // Ensure radius is a valid number
-    const safeRadius = isNaN(radius) || !isFinite(radius) ? 10 : radius;
+    const safeRadius = Number.isNaN(radius) || !Number.isFinite(radius) ? 10 : radius;
 
     return (
       <circle
@@ -192,7 +191,7 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
               content={
                 <ChartTooltipContent
                   hideLabel
-                  formatter={(value, name, item) => (
+                  formatter={(_value, _name, item) => (
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between gap-8">
                         <span className="text-muted-foreground">Category:</span>
@@ -223,7 +222,10 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
           <HoverCard>
             <HoverCardTrigger asChild>
-              <button className="text-sm text-muted-foreground underline-offset-4 hover:underline cursor-help">
+              <button
+                type="button"
+                className="text-sm text-muted-foreground underline-offset-4 hover:underline cursor-help"
+              >
                 Average Cost per Session (€)
               </button>
             </HoverCardTrigger>
@@ -248,7 +250,10 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
         <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90">
           <HoverCard>
             <HoverCardTrigger asChild>
-              <button className="text-sm text-muted-foreground underline-offset-4 hover:underline cursor-help">
+              <button
+                type="button"
+                className="text-sm text-muted-foreground underline-offset-4 hover:underline cursor-help"
+              >
                 Total Cost (€)
               </button>
             </HoverCardTrigger>
