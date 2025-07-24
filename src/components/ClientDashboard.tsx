@@ -136,9 +136,9 @@ export function ClientDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>No data for current week</AlertDialogTitle>
             <AlertDialogDescription>
-              The current working week (Monday to today) has no data. We've loaded the most recent
-              week with available data instead. You can use the date picker to select any date range
-              you'd like to analyze.
+              The current working week (Monday to today) has no data. We&apos;ve loaded the most
+              recent week with available data instead. You can use the date picker to select any
+              date range you&apos;d like to analyze.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

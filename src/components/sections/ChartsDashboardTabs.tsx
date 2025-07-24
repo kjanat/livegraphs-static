@@ -63,7 +63,7 @@ const PerformanceTrendsChart = dynamic(
     import("@/components/charts/PerformanceTrendsChart").then((mod) => ({
       default: mod.PerformanceTrendsChart
     })),
-  { loading: () => <ChartSkeleton height={400} />, ssr: false }
+  { loading: () => <ChartSkeleton height={320} />, ssr: false }
 );
 
 const ResolutionStatusChart = dynamic(
@@ -139,16 +139,14 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
   );
 
   const handleTabChange = () => {
-    // Only scroll to tabs if they're above the viewport or too far down
+    // Use requestAnimationFrame to ensure layout is stable before scrolling
     if (tabsRef.current) {
-      setTimeout(() => {
-        const element = tabsRef.current;
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const yOffset = -100; // Offset for fixed header
-
-          // Only scroll if tabs are above viewport or more than 200px below viewport top
-          if (rect.top < 0 || rect.top > 200) {
+      // Double RAF to ensure all layout shifts have occurred
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = tabsRef.current;
+          if (element) {
+            const yOffset = -100; // Offset for fixed header
             const y = element.offsetTop + yOffset;
 
             window.scrollTo({
@@ -156,8 +154,8 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
               behavior: "smooth"
             });
           }
-        }
-      }, 50); // Reduced delay for faster response
+        });
+      });
     }
   };
 
@@ -197,7 +195,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         </div>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 min-h-[400px]">
           <h3 className="text-xl font-bold mb-4">Essential Overview</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <SentimentDistributionChart
@@ -219,7 +217,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         </TabsContent>
 
         {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-6">
+        <TabsContent value="performance" className="space-y-6 min-h-[600px]">
           <h3 className="text-xl font-bold mb-4">Performance Trends</h3>
           <PerformanceTrendsChart
             data={{
@@ -233,7 +231,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
 
         {/* Geographic Tab - Conditional */}
         {(visibility.hasCountryData || visibility.hasLanguageData) && (
-          <TabsContent value="geographic" className="space-y-6">
+          <TabsContent value="geographic" className="space-y-6 min-h-[400px]">
             <h3 className="text-xl font-bold mb-4">Geographic & Language Analysis</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {visibility.hasCountryData && (
@@ -257,7 +255,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         )}
 
         {/* Cost Analysis Tab */}
-        <TabsContent value="cost" className="space-y-6">
+        <TabsContent value="cost" className="space-y-6 min-h-[600px]">
           <h3 className="text-xl font-bold mb-4">Category & Cost Analysis</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <TopCategoriesChart
@@ -278,7 +276,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         </TabsContent>
 
         {/* Detailed Statistics Tab */}
-        <TabsContent value="detailed" className="space-y-6">
+        <TabsContent value="detailed" className="space-y-6 min-h-[600px]">
           <h3 className="text-xl font-bold mb-4">Detailed Statistics</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <HistogramChart
