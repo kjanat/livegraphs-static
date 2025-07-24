@@ -7,11 +7,14 @@
 "use client";
 "use memo"; // React Compiler directive for automatic optimization
 
-import { memo, startTransition, useCallback, useMemo, useRef } from "react";
+import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExpandableSection } from "@/components/ui/ExpandableSection";
 import { LazyChart } from "@/components/ui/LazyChart";
+import { TabsScrollIndicators } from "@/components/ui/TabsScrollIndicators";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useHashSync } from "@/hooks/useHashSync";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
+import { getGridColsClass, TAB_STORAGE_KEY } from "@/lib/constants/tabs";
 import type { ChartData, Metrics } from "@/lib/types/session";
 import { calculateChartVisibility, getVisibleGroups, isGroupExpanded } from "./chartConfig";
 
@@ -32,6 +35,12 @@ function ChartsDashboardUnifiedBase({
   const totalSessions = metrics["Total Conversations"] || 0;
   const tabsRef = useRef<HTMLDivElement>(null);
 
+  // State for controlled tabs with localStorage persistence
+  const [selectedTab, setSelectedTab] = useState<string | undefined>();
+
+  // Sync selected tab with URL hash
+  const { getHashValue } = useHashSync(selectedTab, "tab");
+
   // Calculate visibility flags
   const visibility = useMemo(
     () => calculateChartVisibility(chartData, totalSessions),
@@ -41,9 +50,34 @@ function ChartsDashboardUnifiedBase({
   // Filter visible chart groups using helper function
   const visibleGroups = useMemo(() => getVisibleGroups(visibility), [visibility]);
 
-  // Handle tab change with smooth scrolling - memoized to prevent recreation
+  // Initialize selected tab from URL hash, localStorage, or default
+  useEffect(() => {
+    if (viewMode === "tabs" && visibleGroups.length > 0) {
+      const hashTab = getHashValue();
+      const storedTab = localStorage.getItem(TAB_STORAGE_KEY);
+      const defaultTab = visibleGroups[0].id;
+
+      // Priority: URL hash > localStorage > default
+      let initialTab = defaultTab;
+
+      if (hashTab && visibleGroups.some((g) => g.id === hashTab)) {
+        initialTab = hashTab;
+      } else if (storedTab && visibleGroups.some((g) => g.id === storedTab)) {
+        initialTab = storedTab;
+      }
+
+      setSelectedTab(initialTab);
+    }
+  }, [viewMode, visibleGroups, getHashValue]);
+
+  // Handle tab change with smooth scrolling and persistence
   const handleTabChange = useCallback(
-    (_value: string) => {
+    (value: string) => {
+      setSelectedTab(value);
+
+      // Persist to localStorage
+      localStorage.setItem(TAB_STORAGE_KEY, value);
+
       // Use startTransition for non-urgent UI updates
       startTransition(() => {
         if (viewMode === "tabs" && tabsRef.current) {
@@ -99,45 +133,71 @@ function ChartsDashboardUnifiedBase({
   }
 
   // Render tabs view
+  const gridColsClass = getGridColsClass(visibleGroups.length);
+
   return (
     <div ref={tabsRef}>
-      <Tabs
-        defaultValue={visibleGroups[0]?.id || "overview"}
-        className="w-full"
-        onValueChange={handleTabChange}
-      >
-        <div className="relative w-full">
-          <div className="w-full overflow-x-auto scrollbar-none lg:overflow-visible">
-            <TabsList
-              className={`inline-flex h-10 min-w-full items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground lg:grid lg:w-full lg:grid-cols-${visibleGroups.length}`}
-            >
-              {visibleGroups.map((group) => (
-                <TabsTrigger
+      <Tabs value={selectedTab} className="w-full" onValueChange={handleTabChange}>
+        <TabsScrollIndicators className="w-full">
+          <TabsList
+            className={`inline-flex h-10 min-w-full items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground lg:grid lg:w-full ${gridColsClass}`}
+            aria-label="Chart sections"
+          >
+            {visibleGroups.map((group) => (
+              <TabsTrigger
+                key={group.id}
+                value={group.id}
+                className="min-w-[120px] whitespace-nowrap lg:min-w-0"
+                aria-label={`View ${group.title} charts`}
+                aria-controls={`tabpanel-${group.id}`}
+                title={group.subtitle}
+              >
+                <span className="truncate">{group.title.replace(" & ", " ")}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </TabsScrollIndicators>
+
+        {selectedTab &&
+          visibleGroups.map((group) => {
+            const Component = group.Component;
+            const isActive = selectedTab === group.id;
+
+            // Only render the active tab panel for better performance
+            if (!isActive) {
+              return (
+                <TabsContent
                   key={group.id}
                   value={group.id}
-                  className="min-w-[120px] whitespace-nowrap lg:min-w-0"
-                >
-                  {group.title.replace(" & ", " ")}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-          {/* Scroll indicator for mobile/tablet */}
-          <div className="absolute right-0 top-0 h-10 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none lg:hidden" />
-        </div>
+                  className="hidden"
+                  id={`tabpanel-${group.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`tab-${group.id}`}
+                  aria-hidden="true"
+                />
+              );
+            }
 
-        {visibleGroups.map((group) => {
-          const Component = group.Component;
-
-          return (
-            <TabsContent key={group.id} value={group.id} className="space-y-6 min-h-[400px]">
-              <h3 className="text-xl font-bold mb-4">{group.title}</h3>
-              <LazyChart chartName={group.title} minHeight={400}>
-                <Component {...contentProps} />
-              </LazyChart>
-            </TabsContent>
-          );
-        })}
+            return (
+              <TabsContent
+                key={group.id}
+                value={group.id}
+                className="space-y-6 animate-in fade-in-0 duration-200"
+                id={`tabpanel-${group.id}`}
+                role="tabpanel"
+                aria-labelledby={`tab-${group.id}`}
+                tabIndex={0}
+              >
+                <div className="sr-only" aria-live="polite" aria-atomic="true">
+                  Now showing {group.title} charts
+                </div>
+                <h3 className="text-xl font-bold mb-4">{group.title}</h3>
+                <LazyChart chartName={group.title} minHeight={400}>
+                  <Component {...contentProps} />
+                </LazyChart>
+              </TabsContent>
+            );
+          })}
       </Tabs>
     </div>
   );
