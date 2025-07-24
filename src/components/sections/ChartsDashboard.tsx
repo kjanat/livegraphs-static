@@ -12,7 +12,6 @@ import { ExpandableSection } from "@/components/ui/ExpandableSection";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
-import { getChartColors } from "@/lib/utils/chartColors";
 
 // Dynamic imports for all chart components
 const GaugeChartDemo = dynamic(
@@ -47,10 +46,10 @@ const GaugeChart = dynamic(
   { loading: () => <ChartSkeleton height={250} />, ssr: false }
 );
 
-const HistogramChart = dynamic(
+const DistributionBarChart = dynamic(
   () =>
-    import("@/components/charts/HistogramChartShadcn").then((mod) => ({
-      default: mod.HistogramChartShadcn
+    import("@/components/charts/DistributionBarChart").then((mod) => ({
+      default: mod.DistributionBarChart
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -132,7 +131,6 @@ interface ChartVisibility {
 }
 
 export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
-  const colors = getChartColors();
   const totalSessions = metrics["Total Conversations"] || 0;
 
   // Memoize chart visibility calculations
@@ -285,19 +283,23 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
       >
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <HistogramChart
+            <DistributionBarChart
               data={chartData.conversation_durations}
-              title="Conversation Duration Distribution"
+              title="Conversation Duration"
+              description="How long customer conversations typically last"
               xLabel="Duration (minutes)"
-              bins={15}
-              color={colors.teal}
+              bins={8}
+              color="hsl(var(--chart-3))"
+              formatLabel={(value) => `${Math.round(value)}m`}
             />
-            <HistogramChart
+            <DistributionBarChart
               data={chartData.messages_per_conversation}
               title="Messages per Conversation"
+              description="Distribution of message exchanges in conversations"
               xLabel="Number of Messages"
-              bins={10}
-              color={colors.pink}
+              bins={8}
+              color="hsl(var(--chart-4))"
+              formatLabel={(value) => Math.round(value).toString()}
             />
           </div>
           <TopQuestionsSection

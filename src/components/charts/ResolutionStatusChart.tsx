@@ -6,7 +6,9 @@
 
 "use client";
 
-import { Pie, PieChart } from "recharts";
+import { useState } from "react";
+import { Cell, Label, Pie, PieChart, Sector } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import {
   Card,
   CardContent,
@@ -18,6 +20,8 @@ import {
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
@@ -27,6 +31,8 @@ interface ResolutionStatusChartProps {
     labels: string[];
     values: number[];
   };
+  showLegend?: boolean;
+  enableAnimation?: boolean;
 }
 
 const chartConfig = {
@@ -35,19 +41,52 @@ const chartConfig = {
   },
   resolved: {
     label: "Resolved",
-    color: "var(--chart-3)" // green
+    theme: {
+      light: "hsl(142.1 76.2% 36.3%)",
+      dark: "hsl(142.1 70.6% 45.3%)"
+    }
   },
   escalated: {
     label: "Escalated",
-    color: "var(--chart-1)" // red
+    theme: {
+      light: "hsl(346.8 77.2% 49.8%)",
+      dark: "hsl(346.8 77.2% 49.8%)"
+    }
   },
   unresolved: {
     label: "Unresolved",
-    color: "var(--chart-2)" // blue/yellow
+    theme: {
+      light: "hsl(220.9 39.3% 11%)",
+      dark: "hsl(215 20.2% 65.1%)"
+    }
   }
 } satisfies ChartConfig;
 
-export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
+// Custom active shape renderer for enhanced hover effect
+const renderActiveShape = (props: PieSectorDataItem) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius ? outerRadius + 6 : 0}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+export function ResolutionStatusChart({
+  data,
+  showLegend = false,
+  enableAnimation = true
+}: ResolutionStatusChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("ResolutionStatusChart: labels and values arrays must have equal length");
@@ -59,9 +98,6 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
       </Card>
     );
   }
-
-  // Calculate total for percentage calculation
-  const _total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
 
   // Create chart data with safe mapping to prevent undefined values
   const maxLength = Math.min(data.labels.length, data.values.length);
@@ -80,18 +116,13 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
     <Card className="h-full flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>Resolution Status</CardTitle>
-        <CardDescription className="sr-only">
-          Pie chart showing the resolution status of chatbot sessions, including resolved and
-          escalated cases
-        </CardDescription>
+        <CardDescription>Session outcomes and escalation tracking</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0 overflow-visible">
-        <ChartContainer
-          config={chartConfig}
-          className="[&_.recharts-pie-label-text]:fill-foreground [&_svg]:overflow-visible mx-auto aspect-square overflow-visible"
-        >
-          <PieChart margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+          <PieChart accessibilityLayer>
             <ChartTooltip
+              cursor={false}
               content={
                 <ChartTooltipContent
                   hideLabel
@@ -112,22 +143,68 @@ export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
             />
             <Pie
               data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
               dataKey="sessions"
-              label={(entry) => entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
               nameKey="status"
-            />
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+              animationBegin={0}
+              animationDuration={enableAnimation ? 500 : 0}
+            >
+              {chartData.map((entry) => (
+                <Cell key={`cell-${entry.status}`} fill={entry.fill} />
+              ))}
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    const resolvedCount =
+                      chartData.find((d) => d.status === "resolved")?.sessions || 0;
+                    const resolutionRate =
+                      totalSessions > 0 ? ((resolvedCount / totalSessions) * 100).toFixed(0) : "0";
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
+                          {resolutionRate}%
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          Resolved
+                        </tspan>
+                      </text>
+                    );
+                  }
+                }}
+              />
+            </Pie>
+            {showLegend && (
+              <ChartLegend content={<ChartLegendContent />} className="flex-wrap gap-2" />
+            )}
           </PieChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
         <div className="text-muted-foreground leading-none text-center">
           {(() => {
-            const resolvedCount = chartData.find((d) => d.status === "resolved")?.sessions || 0;
             const escalatedCount = chartData.find((d) => d.status === "escalated")?.sessions || 0;
-            const totalCount = chartData.reduce((sum, item) => sum + item.sessions, 0);
-            const resolutionRate =
-              totalCount > 0 ? ((resolvedCount / totalCount) * 100).toFixed(1) : "0";
-            return `${resolutionRate}% resolved • ${escalatedCount.toLocaleString()} escalated`;
+            const unresolvedCount = chartData.find((d) => d.status === "unresolved")?.sessions || 0;
+            return `${escalatedCount.toLocaleString()} escalated • ${unresolvedCount.toLocaleString()} pending`;
           })()}
         </div>
       </CardFooter>

@@ -6,16 +6,22 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { getChartColors } from "@/lib/utils/chartColors";
 
 interface TopCategoriesChartShadcnProps {
   data: {
@@ -26,8 +32,6 @@ interface TopCategoriesChartShadcnProps {
 }
 
 export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChartShadcnProps) {
-  const colors = getChartColors();
-
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("TopCategoriesChart: labels and values arrays must have equal length");
@@ -50,47 +54,65 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
     sessions: slicedValues[index] ?? 0
   }));
 
+  const totalSessions = slicedValues.reduce((sum, val) => sum + val, 0);
+  const topCategory = chartData[0];
+
   const chartConfig: ChartConfig = {
     sessions: {
       label: "Sessions",
-      color: colors.purple
+      theme: {
+        light: "hsl(262.1 83.3% 57.8%)",
+        dark: "hsl(263.4 70% 50.4%)"
+      }
     }
   };
 
   return (
-    <Card
-      className="h-full flex flex-col"
-      role="img"
-      aria-labelledby="categories-chart-title"
-      aria-describedby="categories-chart-desc"
-    >
+    <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle id="categories-chart-title">Top Categories</CardTitle>
-        <CardDescription id="categories-chart-desc" className="sr-only">
-          Horizontal bar chart showing the most common categories of chatbot sessions
-        </CardDescription>
+        <CardTitle>Top Categories</CardTitle>
+        <CardDescription>Most common conversation topics</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
           <BarChart
+            accessibilityLayer
             data={chartData}
-            layout="vertical"
-            margin={{ top: 10, right: 30, bottom: 50, left: 150 }}
+            layout="horizontal"
+            margin={{ top: 20, right: 50, bottom: 20, left: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} />
-            <XAxis
-              type="number"
-              tick={{ fontSize: 12 }}
-              label={{ value: "Sessions", position: "insideBottom", offset: -5 }}
-            />
-            <YAxis dataKey="category" type="category" tick={{ fontSize: 12 }} width={140} />
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={10} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip
-              content={<ChartTooltipContent formatter={(value) => `${value} sessions`} />}
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value) => (
+                    <div className="flex items-center justify-between gap-8">
+                      <span className="font-semibold">{value} sessions</span>
+                    </div>
+                  )}
+                />
+              }
             />
-            <Bar dataKey="sessions" fill={colors.purple} radius={[0, 4, 4, 0]} />
+            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
+              <LabelList position="top" offset={12} className="fill-foreground" fontSize={12} />
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="text-muted-foreground leading-none">
+          {topCategory && (
+            <>
+              "{topCategory.category}" leads with {topCategory.sessions} sessions (
+              {((topCategory.sessions / totalSessions) * 100).toFixed(1)}%)
+            </>
+          )}
+        </div>
+      </CardFooter>
     </Card>
   );
 }

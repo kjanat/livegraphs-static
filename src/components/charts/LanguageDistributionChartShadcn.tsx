@@ -6,16 +6,23 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { getChartColors } from "@/lib/utils/chartColors";
 
 interface LanguageDistributionChartShadcnProps {
   data: {
@@ -25,8 +32,6 @@ interface LanguageDistributionChartShadcnProps {
 }
 
 export function LanguageDistributionChartShadcn({ data }: LanguageDistributionChartShadcnProps) {
-  const colors = getChartColors();
-
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("LanguageDistributionChart: labels and values arrays must have equal length");
@@ -41,56 +46,93 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
 
   const chartData = data.labels.map((label, index) => ({
     language: label,
-    sessions: data.values[index]
+    sessions: data.values[index] ?? 0
   }));
+
+  const totalSessions = data.values.reduce((sum, val) => sum + val, 0);
+  const topLanguage = chartData[0];
+  const languageCount = chartData.length;
 
   const chartConfig: ChartConfig = {
     sessions: {
       label: "Sessions",
-      color: colors.green
+      theme: {
+        light: "hsl(142.1 76.2% 36.3%)",
+        dark: "hsl(142.1 70.6% 45.3%)"
+      }
     }
   };
 
   return (
-    <Card
-      className="h-full flex flex-col"
-      role="img"
-      aria-labelledby="language-chart-title"
-      aria-describedby="language-chart-desc"
-    >
+    <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle id="language-chart-title">Language Distribution</CardTitle>
-        <CardDescription id="language-chart-desc" className="sr-only">
-          Bar chart showing the distribution of chatbot sessions across different languages
-        </CardDescription>
+        <CardTitle>Language Distribution</CardTitle>
+        <CardDescription>Sessions across different languages</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
           <BarChart
+            accessibilityLayer
             data={chartData}
-            layout="horizontal"
-            margin={{ top: 10, right: 30, left: 60, bottom: 50 }}
+            margin={{ top: 20, right: 30, left: 30, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+            <CartesianGrid vertical={false} />
             <XAxis
               dataKey="language"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
               angle={-45}
               textAnchor="end"
-              height={80}
-              tick={{ fontSize: 12 }}
-              interval={0}
+              height={60}
             />
-            <YAxis
-              tick={{ fontSize: 12 }}
-              label={{ value: "Sessions", angle: -90, position: "insideLeft" }}
-            />
+            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip
-              content={<ChartTooltipContent formatter={(value) => `${value} sessions`} />}
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value, _name, item) => (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Language:</span>
+                        <span className="font-semibold">{item.payload.language}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Sessions:</span>
+                        <span className="font-semibold">{value}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Percentage:</span>
+                        <span className="font-semibold">
+                          {((Number(value) / totalSessions) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                />
+              }
             />
-            <Bar dataKey="sessions" fill={colors.green} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
+              <LabelList position="top" offset={8} className="fill-foreground" fontSize={11} />
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="flex gap-2 leading-none font-medium">
+          <TrendingUp className="h-4 w-4" />
+          Supporting {languageCount} languages
+        </div>
+        <div className="text-muted-foreground leading-none">
+          {topLanguage && (
+            <>
+              Primary language: {topLanguage.language} (
+              {((topLanguage.sessions / totalSessions) * 100).toFixed(1)}%)
+            </>
+          )}
+        </div>
+      </CardFooter>
     </Card>
   );
 }

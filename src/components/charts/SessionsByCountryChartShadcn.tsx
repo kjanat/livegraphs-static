@@ -6,16 +6,23 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Globe } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { getChartColors } from "@/lib/utils/chartColors";
 
 /**
  * Props for SessionsByCountryChartShadcn component
@@ -34,8 +41,6 @@ interface SessionsByCountryChartShadcnProps {
 }
 
 export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartShadcnProps) {
-  const colors = getChartColors();
-
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("SessionsByCountryChart: labels and values arrays must have equal length");
@@ -55,62 +60,83 @@ export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartSha
     sessions: data.values[index] ?? 0
   }));
 
+  const totalSessions = data.values.reduce((sum, val) => sum + val, 0);
+  const topCountry = chartData[0];
+  const countryCount = chartData.length;
+
   const chartConfig: ChartConfig = {
     sessions: {
       label: "Sessions",
-      color: colors.blue
+      theme: {
+        light: "hsl(221.2 83.2% 53.3%)",
+        dark: "hsl(217.2 91.2% 59.8%)"
+      }
     }
   };
 
   return (
-    <Card
-      className="h-full flex flex-col"
-      role="img"
-      aria-labelledby="country-chart-title"
-      aria-describedby="country-chart-desc"
-    >
+    <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle id="country-chart-title">Sessions by Country</CardTitle>
-        <CardDescription id="country-chart-desc" className="sr-only">
-          Horizontal bar chart showing the number of chatbot sessions by country
-        </CardDescription>
+        <CardTitle>Sessions by Country</CardTitle>
+        <CardDescription>Geographic distribution of user sessions</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
           <BarChart
+            accessibilityLayer
             data={chartData}
-            layout="vertical"
-            margin={{ top: 10, right: 30, bottom: 50, left: 60 }}
+            layout="horizontal"
+            margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} />
-            <XAxis
-              type="number"
-              tick={{ fontSize: 12 }}
-              label={{ value: "Sessions", position: "insideBottom", offset: -5 }}
-            />
-            <YAxis dataKey="country" type="category" tick={{ fontSize: 12 }} width={50} />
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="country" tickLine={false} axisLine={false} tickMargin={10} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip
+              cursor={false}
               content={
                 <ChartTooltipContent
+                  hideLabel
                   formatter={(value, _name, item) => (
-                    <>
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-8">
                         <span className="text-muted-foreground">Country:</span>
                         <span className="font-semibold">{item.payload.country}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-8">
                         <span className="text-muted-foreground">Sessions:</span>
                         <span className="font-semibold">{value}</span>
                       </div>
-                    </>
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground">Percentage:</span>
+                        <span className="font-semibold">
+                          {((Number(value) / totalSessions) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
                   )}
                 />
               }
             />
-            <Bar dataKey="sessions" fill={colors.blue} radius={[0, 4, 4, 0]} />
+            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
+              <LabelList position="right" offset={8} className="fill-foreground" fontSize={12} />
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="flex gap-2 leading-none font-medium">
+          <Globe className="h-4 w-4" />
+          Active in {countryCount} countries
+        </div>
+        <div className="text-muted-foreground leading-none">
+          {topCountry && (
+            <>
+              Top location: {topCountry.country} (
+              {((topCountry.sessions / totalSessions) * 100).toFixed(1)}% of traffic)
+            </>
+          )}
+        </div>
+      </CardFooter>
     </Card>
   );
 }

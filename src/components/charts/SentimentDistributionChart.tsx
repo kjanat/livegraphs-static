@@ -6,7 +6,9 @@
 
 "use client";
 
-import { Pie, PieChart } from "recharts";
+import { useState } from "react";
+import { Cell, Label, Pie, PieChart, Sector } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import {
   Card,
   CardContent,
@@ -18,6 +20,8 @@ import {
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
@@ -27,6 +31,8 @@ interface SentimentDistributionChartProps {
     labels: string[];
     values: number[];
   };
+  showLegend?: boolean;
+  enableAnimation?: boolean;
 }
 
 const chartConfig = {
@@ -35,19 +41,53 @@ const chartConfig = {
   },
   positive: {
     label: "Positive",
-    color: "var(--chart-3)" // green
+    theme: {
+      light: "hsl(142.1 76.2% 36.3%)",
+      dark: "hsl(142.1 70.6% 45.3%)"
+    }
   },
   negative: {
     label: "Negative",
-    color: "var(--chart-1)" // red
+    theme: {
+      light: "hsl(346.8 77.2% 49.8%)",
+      dark: "hsl(346.8 77.2% 49.8%)"
+    }
   },
   neutral: {
     label: "Neutral",
-    color: "var(--chart-2)" // yellow
+    theme: {
+      light: "hsl(37.7 92.1% 50.2%)",
+      dark: "hsl(45.4 93.4% 47.9%)"
+    }
   }
 } satisfies ChartConfig;
 
-export function SentimentDistributionChart({ data }: SentimentDistributionChartProps) {
+// Custom active shape renderer for enhanced hover effect
+const renderActiveShape = (props: PieSectorDataItem) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius ? outerRadius + 6 : 0}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+export function SentimentDistributionChart({
+  data,
+  showLegend = false,
+  enableAnimation = true
+}: SentimentDistributionChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
+
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("SentimentDistributionChart: labels and values arrays must have equal length");
@@ -59,9 +99,6 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
       </Card>
     );
   }
-
-  // Calculate total for percentage calculation
-  const _total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
 
   const chartData = data.labels
     .map((label, index) => ({
@@ -77,18 +114,13 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
     <Card className="h-full flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>Sentiment Distribution</CardTitle>
-        <CardDescription className="sr-only">
-          Pie chart showing the distribution of positive, negative, and neutral sentiment in chatbot
-          sessions
-        </CardDescription>
+        <CardDescription>Distribution of customer sentiment across all sessions</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0 overflow-visible">
-        <ChartContainer
-          config={chartConfig}
-          className="[&_.recharts-pie-label-text]:fill-foreground [&_svg]:overflow-visible mx-auto aspect-square overflow-visible"
-        >
-          <PieChart margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+          <PieChart accessibilityLayer>
             <ChartTooltip
+              cursor={false}
               content={
                 <ChartTooltipContent
                   hideLabel
@@ -109,10 +141,55 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
             />
             <Pie
               data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
               dataKey="sessions"
-              label={(entry) => entry.sentiment.charAt(0).toUpperCase() + entry.sentiment.slice(1)}
               nameKey="sentiment"
-            />
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+              animationBegin={0}
+              animationDuration={enableAnimation ? 500 : 0}
+            >
+              {chartData.map((entry) => (
+                <Cell key={`cell-${entry.sentiment}`} fill={entry.fill} />
+              ))}
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
+                          {totalSessions.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          Sessions
+                        </tspan>
+                      </text>
+                    );
+                  }
+                }}
+              />
+            </Pie>
+            {showLegend && (
+              <ChartLegend content={<ChartLegendContent />} className="flex-wrap gap-2" />
+            )}
           </PieChart>
         </ChartContainer>
       </CardContent>
@@ -123,7 +200,7 @@ export function SentimentDistributionChart({ data }: SentimentDistributionChartP
             const totalCount = chartData.reduce((sum, item) => sum + item.sessions, 0);
             const positiveRate =
               totalCount > 0 ? ((positiveCount / totalCount) * 100).toFixed(1) : "0";
-            return `${positiveRate}% positive sentiment across ${totalSessions.toLocaleString()} sessions`;
+            return `${positiveRate}% positive sentiment`;
           })()}
         </div>
       </CardFooter>
