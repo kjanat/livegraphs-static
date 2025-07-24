@@ -9,6 +9,17 @@ const nextConfig: NextConfig = {
 
   allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev", "propc", "192.168.1.2"],
 
+  // Transpile recharts to fix EventEmitter3 issues
+  transpilePackages: [
+    "recharts",
+    "recharts-scale",
+    "d3-scale",
+    "d3-array",
+    "d3-shape",
+    "d3-time",
+    "d3-format"
+  ],
+
   // // Base path for GitHub Pages deployment
   // basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
   // assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
@@ -38,7 +49,9 @@ const nextConfig: NextConfig = {
       config.resolve = {
         ...config.resolve,
         alias: {
-          ...config.resolve.alias
+          ...config.resolve.alias,
+          // Fix for recharts EventEmitter3 issue
+          eventemitter3: require.resolve("eventemitter3")
         },
         fallback: {
           ...config.resolve.fallback,
@@ -70,10 +83,10 @@ const nextConfig: NextConfig = {
         })
       );
 
-      // Define module as undefined to prevent sql.js from trying to use it
+      // Use NormalModuleReplacementPlugin to force sql.js to use browser build
       config.plugins.push(
-        new webpack.DefinePlugin({
-          "typeof module": JSON.stringify("undefined")
+        new webpack.NormalModuleReplacementPlugin(/sql\.js$/, (resource: { request: string }) => {
+          resource.request = resource.request.replace(/sql\.js$/, "sql.js/dist/sql-wasm.js");
         })
       );
 

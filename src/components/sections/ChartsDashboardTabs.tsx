@@ -60,10 +60,10 @@ const LanguageDistributionChart = dynamic(
 
 const PerformanceTrendsChart = dynamic(
   () =>
-    import("@/components/charts/PerformanceTrendsChart").then((mod) => ({
-      default: mod.PerformanceTrendsChart
+    import("@/components/charts/PerformanceTrendsShadcn").then((mod) => ({
+      default: mod.PerformanceTrendsShadcn
     })),
-  { loading: () => <ChartSkeleton height={320} />, ssr: false }
+  { loading: () => <ChartSkeleton height={400} />, ssr: false }
 );
 
 const ResolutionStatusChart = dynamic(
@@ -219,13 +219,7 @@ export function ChartsDashboardTabs({ metrics, chartData }: ChartsDashboardTabsP
         {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-6 min-h-[600px]">
           <h3 className="text-xl font-bold mb-4">Performance Trends</h3>
-          <PerformanceTrendsChart
-            data={{
-              dates_labels: chartData.dates_labels,
-              dates_values: chartData.dates_values,
-              response_time_values: chartData.response_time_values
-            }}
-          />
+          <PerformanceTrendsChart data={chartData.sentiment_time_series} />
           <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
         </TabsContent>
 

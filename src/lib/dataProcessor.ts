@@ -227,6 +227,31 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     row.daily_messages !== null && row.daily_messages !== undefined ? Number(row.daily_messages) : 0
   );
 
+  // Sentiment time series data
+  const sentimentTimeData = execQuery<{
+    date: string;
+    positive: number;
+    neutral: number;
+    negative: number;
+  }>(`
+    SELECT 
+      DATE(start_time) as date,
+      SUM(CASE WHEN sentiment = 'positive' THEN 1 ELSE 0 END) as positive,
+      SUM(CASE WHEN sentiment = 'neutral' THEN 1 ELSE 0 END) as neutral,
+      SUM(CASE WHEN sentiment = 'negative' THEN 1 ELSE 0 END) as negative
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY date
+    ORDER BY date
+  `);
+
+  const sentiment_time_series = sentimentTimeData.map((row) => ({
+    date: row.date as string,
+    positive: safeNumber(row.positive),
+    neutral: safeNumber(row.neutral),
+    negative: safeNumber(row.negative)
+  }));
+
   // Geographic distribution
   const countryData = execQuery<{ country: string; count: number }>(`
     SELECT country, COUNT(*) as count
@@ -383,7 +408,8 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     messages_per_conversation,
     rating_distribution,
     avg_rating,
-    category_costs
+    category_costs,
+    sentiment_time_series
   };
 }
 
