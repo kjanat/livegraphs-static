@@ -6,11 +6,9 @@
 
 "use client";
 
-import { InfoIcon, XIcon } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { InfoIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
 interface MetricTooltipProps {
@@ -63,8 +61,6 @@ export function MetricTooltip({
   calculation,
   className = ""
 }: MetricTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   const metricInfo = metricExplanations[metric as keyof typeof metricExplanations];
   const displayExplanation = explanation || metricInfo?.explanation || "No explanation available";
   const displayCalculation = calculation || metricInfo?.calculation;
@@ -75,38 +71,15 @@ export function MetricTooltip({
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             {metric}
-            <Popover open={isOpen} onOpenChange={setIsOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 opacity-60 hover:opacity-100 focus:opacity-100"
-                  aria-label={`Help for ${metric}`}
-                >
-                  <InfoIcon className="h-3.5 w-3.5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-80 max-w-sm p-0 select-text"
-                side="top"
-                align="start"
-                style={{ userSelect: "text" }}
-              >
-                <div className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
-                      <p className="text-sm text-muted-foreground">{displayExplanation}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 ml-2"
-                      onClick={() => setIsOpen(false)}
-                      aria-label="Close tooltip"
-                    >
-                      <XIcon className="h-4 w-4" />
-                    </Button>
+            <HoverCard openDelay={200} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-3.5 w-3.5 opacity-60 hover:opacity-100 transition-opacity cursor-help" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80 max-w-sm select-text" side="top" align="start">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
+                    <p className="text-sm text-muted-foreground">{displayExplanation}</p>
                   </div>
 
                   {displayCalculation && (
@@ -125,8 +98,8 @@ export function MetricTooltip({
                     </p>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
+              </HoverCardContent>
+            </HoverCard>
           </div>
         </div>
         <div className="text-xl font-semibold">

@@ -41,7 +41,8 @@ test.describe("Date Picker", () => {
     await expect(calendarPopover).toBeVisible();
 
     // Should show two months on desktop
-    const months = calendarPopover.locator(".rdp-month");
+    // In react-day-picker v9, each month has a table with role="grid"
+    const months = calendarPopover.locator('table[role="grid"]');
     await expect(months).toHaveCount(2);
   });
 

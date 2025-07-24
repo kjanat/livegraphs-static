@@ -12,15 +12,23 @@ import { DataQualityIndicator } from "@/components/DataQualityIndicator";
 import { InsightsSummary } from "@/components/InsightsSummary";
 import { MobileDashboard } from "@/components/mobile/MobileDashboard";
 import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
-import { MobileDateRangePicker } from "@/components/mobile/MobileDateRangePicker";
 import { MobileUploadSection } from "@/components/mobile/MobileUploadSection";
 import { ChartsDashboard } from "@/components/sections/ChartsDashboard";
 import { ChartsDashboardTabs } from "@/components/sections/ChartsDashboardTabs";
 import { DatabaseStatsSection } from "@/components/sections/DatabaseStatsSection";
 import { UploadSection } from "@/components/sections/UploadSection";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EnhancedLoadingState } from "@/components/ui/EnhancedLoadingState";
 import { EnhancedMetricsDisplay } from "@/components/ui/MetricTooltip";
@@ -49,6 +57,8 @@ export function ClientDashboard() {
     metrics,
     chartData,
     isLoadingData,
+    showNoDataAlert,
+    setShowNoDataAlert,
     loadDataForDateRange,
     clearAllData,
     loadSampleData,
@@ -100,6 +110,23 @@ export function ClientDashboard() {
           <AlertDescription>{dbError.message}</AlertDescription>
         </Alert>
       )}
+
+      {/* No Data Alert Dialog */}
+      <AlertDialog open={showNoDataAlert} onOpenChange={setShowNoDataAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>No data for current week</AlertDialogTitle>
+            <AlertDialogDescription>
+              The current working week (Monday to today) has no data. We've loaded the most recent
+              week with available data instead. You can use the date picker to select any date range
+              you'd like to analyze.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowNoDataAlert(false)}>Got it</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Main Content */}
       {isInitialized && (
@@ -153,21 +180,62 @@ export function ClientDashboard() {
             ))}
 
           {/* Date Range Picker */}
-          {dbStats &&
-            hasData &&
-            (isMobile ? (
-              <MobileDateRangePicker
-                minDate={dbStats.dateRange.min}
-                maxDate={dbStats.dateRange.max}
-                onDateRangeChange={loadDataForDateRange}
-              />
-            ) : (
-              <DateRangePicker
-                minDate={dbStats.dateRange.min}
-                maxDate={dbStats.dateRange.max}
-                onDateRangeChange={loadDataForDateRange}
-              />
-            ))}
+          {dbStats && hasData && (
+            <DateRangePicker
+              value={dateRange ? { from: dateRange.start, to: dateRange.end } : undefined}
+              onChange={(range) => {
+                if (range?.from && range?.to) {
+                  loadDataForDateRange(range.from, range.to);
+                }
+              }}
+              minDate={new Date(dbStats.dateRange.min)}
+              maxDate={new Date(dbStats.dateRange.max)}
+              presets={[
+                {
+                  label: "All Data",
+                  shortLabel: "All",
+                  value: () => {
+                    const min = new Date(dbStats.dateRange.min);
+                    const max = new Date(dbStats.dateRange.max);
+                    return { from: min, to: max };
+                  }
+                },
+                {
+                  label: "Last 7 Days",
+                  shortLabel: "7D",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(start.getDate() - 6);
+                    return { from: start, to: end };
+                  }
+                },
+                {
+                  label: "Last 30 Days",
+                  shortLabel: "30D",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(start.getDate() - 29);
+                    return { from: start, to: end };
+                  }
+                },
+                {
+                  label: "Last 3 Months",
+                  shortLabel: "3M",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setMonth(start.getMonth() - 3);
+                    return { from: start, to: end };
+                  }
+                }
+              ]}
+              monthsMobile={1}
+              monthsDesktop={2}
+              showPresetCombobox={true}
+            />
+          )}
 
           {/* Loading State */}
           {isLoadingData && dateRange && (

@@ -13,6 +13,7 @@ import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProce
 import type { Database } from "@/lib/db/sql-wrapper";
 import { generateSampleData } from "@/lib/sampleData";
 import type { ChartData, ChatSession, DateRange, Metrics } from "@/lib/types/session";
+import { findRecentWorkingWeekWithData, getWorkingWeekRange } from "@/lib/utils/dateUtils";
 
 interface DatabaseStats {
   totalSessions: number;
@@ -35,6 +36,8 @@ interface UseDatabaseOperationsReturn {
   metrics: Metrics | null;
   chartData: ChartData | null;
   isLoadingData: boolean;
+  showNoDataAlert: boolean;
+  setShowNoDataAlert: (show: boolean) => void;
 
   // Actions
   loadDataForDateRange: (startDate: Date, endDate: Date) => Promise<void>;
@@ -67,9 +70,42 @@ export function useDatabaseOperations(
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [showNoDataAlert, setShowNoDataAlert] = useState(false);
 
   // State to track if we should auto-load data after stats update
   const [shouldAutoLoad, setShouldAutoLoad] = useState(false);
+
+  // Helper function to check if a date range has data
+  const checkDateRangeHasData = useCallback(
+    async (start: Date, end: Date): Promise<boolean> => {
+      if (!db) return false;
+
+      const query = `
+        SELECT COUNT(*) as count 
+        FROM sessions 
+        WHERE start_time >= ? AND start_time <= ?
+      `;
+
+      console.log("checkDateRangeHasData: Checking range", {
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+
+      const stmt = db.prepare(query);
+      stmt.bind([start.toISOString(), end.toISOString()]);
+      const result = [];
+      while (stmt.step()) {
+        result.push(stmt.getAsObject());
+      }
+      stmt.free();
+
+      const hasData = result.length > 0 && (result[0].count as number) > 0;
+      console.log("checkDateRangeHasData: Result", { count: result[0]?.count, hasData });
+
+      return hasData;
+    },
+    [db]
+  );
 
   const loadDataForDateRange = useCallback(
     async (startDate: Date, endDate: Date) => {
@@ -202,20 +238,45 @@ export function useDatabaseOperations(
         dbStats.dateRange.min &&
         dbStats.dateRange.max
       ) {
-        const startDate = new Date(dbStats.dateRange.min);
-        const endDate = new Date(dbStats.dateRange.max);
-        endDate.setHours(23, 59, 59, 999);
-
         // Clear the flag first to prevent multiple loads
         setShouldAutoLoad(false);
 
-        // Load the data
-        await loadDataForDateRange(startDate, endDate);
+        const dataMin = new Date(dbStats.dateRange.min);
+        const dataMax = new Date(dbStats.dateRange.max);
+
+        console.log("Auto-load: Data range", {
+          min: dataMin.toISOString(),
+          max: dataMax.toISOString(),
+          today: new Date().toISOString()
+        });
+
+        // Try to load working week data
+        const workingWeekData = await findRecentWorkingWeekWithData(
+          dataMin,
+          dataMax,
+          checkDateRangeHasData
+        );
+
+        console.log("Auto-load: Working week data", workingWeekData);
+
+        if (workingWeekData) {
+          // Show alert if current week has no data
+          setShowNoDataAlert(!workingWeekData.hasCurrentWeekData);
+
+          // Load the data
+          await loadDataForDateRange(workingWeekData.start, workingWeekData.end);
+        } else {
+          // Fall back to loading all data if no working week has data
+          console.log("Auto-load: No working week found, loading all data");
+          const endDate = new Date(dataMax);
+          endDate.setHours(23, 59, 59, 999);
+          await loadDataForDateRange(dataMin, endDate);
+        }
       }
     };
 
     loadData();
-  }, [shouldAutoLoad, dbStats, loadDataForDateRange]);
+  }, [shouldAutoLoad, dbStats, loadDataForDateRange, checkDateRangeHasData]);
 
   return {
     dbStats,
@@ -223,6 +284,8 @@ export function useDatabaseOperations(
     metrics,
     chartData,
     isLoadingData,
+    showNoDataAlert,
+    setShowNoDataAlert,
     loadDataForDateRange,
     clearAllData,
     loadSampleData,

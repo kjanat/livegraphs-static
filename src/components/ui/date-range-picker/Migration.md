@@ -288,10 +288,12 @@ export interface Preset {
    - preset application
    - locale-driven formatting (snapshots? better: explicit strings)
    - disabled days cannot be selected
+
 2. **Component tests (RTL)**
 
    - Mobile vs desktop layouts
    - Error messages show/hide correctly
+
 3. **E2E (Playwright/Cypress)**
 
    - Real user flows: pick range, switch preset, invalid range feedback.
