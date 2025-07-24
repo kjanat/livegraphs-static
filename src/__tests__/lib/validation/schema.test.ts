@@ -101,6 +101,54 @@ describe("ChatSessionSchema", () => {
         expect(result.transcript[0].role).toBe(role);
       });
     });
+
+    it("should validate timestamps with fractional seconds", () => {
+      const timestampsWithFractionalSeconds = [
+        "2024-01-01T10:00:00.1Z", // 1 decimal place
+        "2024-01-01T10:00:00.12Z", // 2 decimal places
+        "2024-01-01T10:00:00.123Z", // 3 decimal places (milliseconds)
+        "2024-01-01T10:00:00.1234Z", // 4 decimal places
+        "2024-01-01T10:00:00.12345Z", // 5 decimal places
+        "2024-01-01T10:00:00.123456Z", // 6 decimal places (microseconds)
+        "2024-01-01T10:00:00.1234567Z", // 7 decimal places
+        "2024-01-01T10:00:00.12345678Z", // 8 decimal places
+        "2024-01-01T10:00:00.123456789Z" // 9 decimal places (nanoseconds)
+      ];
+
+      timestampsWithFractionalSeconds.forEach((timestamp) => {
+        const session = {
+          ...validSession,
+          start_time: timestamp,
+          end_time: timestamp,
+          transcript: [{ timestamp, role: "User", content: "Test" }]
+        };
+        const result = ChatSessionSchema.parse(session);
+        expect(result.start_time).toBe(timestamp);
+        expect(result.end_time).toBe(timestamp);
+        expect(result.transcript[0].timestamp).toBe(timestamp);
+      });
+    });
+
+    it("should validate timestamps with timezone offsets", () => {
+      const timestampsWithOffsets = [
+        "2024-01-01T10:00:00+00:00",
+        "2024-01-01T10:00:00-05:00",
+        "2024-01-01T10:00:00+09:30",
+        "2024-01-01T10:00:00.123+01:00",
+        "2024-01-01T10:00:00.123456-08:00"
+      ];
+
+      timestampsWithOffsets.forEach((timestamp) => {
+        const session = {
+          ...validSession,
+          start_time: timestamp,
+          end_time: timestamp
+        };
+        const result = ChatSessionSchema.parse(session);
+        expect(result.start_time).toBe(timestamp);
+        expect(result.end_time).toBe(timestamp);
+      });
+    });
   });
 
   describe("Invalid session validation", () => {
@@ -112,6 +160,35 @@ describe("ChatSessionSchema", () => {
     it("should reject invalid datetime format", () => {
       const invalidSession = { ...validSession, start_time: "2024-01-01" };
       expect(() => ChatSessionSchema.parse(invalidSession)).toThrow();
+    });
+
+    it("should reject timestamps with too many fractional second digits", () => {
+      const invalidTimestamps = [
+        "2024-01-01T10:00:00.1234567890Z", // 10 digits
+        "2024-01-01T10:00:00.12345678901Z", // 11 digits
+        "2024-01-01T10:00:00.123456789012345Z" // 15 digits
+      ];
+
+      invalidTimestamps.forEach((timestamp) => {
+        const invalidSession = { ...validSession, start_time: timestamp };
+        expect(() => ChatSessionSchema.parse(invalidSession)).toThrow();
+      });
+    });
+
+    it("should reject malformed ISO timestamps", () => {
+      const malformedTimestamps = [
+        "2024-01-01T10:00:00.", // Decimal point without digits
+        "2024-01-01T10:00:00.Z", // Decimal point without digits before Z
+        "2024-01-01T10:00:00.123", // Missing timezone
+        "2024-01-01T10:00:00.123UTC", // Invalid timezone format
+        "2024-01-01 10:00:00.123Z", // Space instead of T
+        "2024-01-01T10:00:00,123Z" // Comma instead of decimal point
+      ];
+
+      malformedTimestamps.forEach((timestamp) => {
+        const invalidSession = { ...validSession, start_time: timestamp };
+        expect(() => ChatSessionSchema.parse(invalidSession)).toThrow();
+      });
     });
 
     it("should reject invalid sentiment value", () => {

@@ -10,10 +10,8 @@
  */
 
 // Cache instances to avoid recreating them
-// biome-ignore lint/style/useConst: We mutate the object properties
-let regionCache: Record<string, Intl.DisplayNames> = {};
-// biome-ignore lint/style/useConst: We mutate the object properties
-let langCache: Record<string, Intl.DisplayNames> = {};
+const regionCache: Record<string, Intl.DisplayNames> = {};
+const langCache: Record<string, Intl.DisplayNames> = {};
 
 /**
  * Convert an ISO country code to a localized country name

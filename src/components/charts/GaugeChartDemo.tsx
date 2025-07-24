@@ -34,7 +34,7 @@ export function GaugeChartDemo() {
             <div className="space-y-3">
               <h4 className="text-base font-semibold">Gauge Chart Design Comparison</h4>
               <p className="text-sm text-muted-foreground">
-                Choose the gauge design that best fits your dashboard's visual style and data
+                Choose the gauge design that best fits your dashboard&apos;s visual style and data
                 presentation needs.
               </p>
               <div className="space-y-2">
@@ -60,7 +60,7 @@ export function GaugeChartDemo() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground italic">
-                Hover over each chart's description to learn more about its specific features.
+                Hover over each chart&apos;s description to learn more about its specific features.
               </p>
             </div>
           </HoverCardContent>

@@ -16,13 +16,9 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent
-} from "@/components/ui/chart";
+import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { BubbleTooltip } from "./BubbleTooltip";
 
 interface CostAnalysisChartShadcnProps {
   data: {
@@ -31,6 +27,15 @@ interface CostAnalysisChartShadcnProps {
     avg_cost: number;
     count: number;
   }[];
+}
+
+interface BubbleData {
+  x: number; // avg_cost
+  y: number; // total_cost
+  r: number; // session count (for tooltip)
+  name: string; // category
+  color: string; // theme color
+  radius: number; // pixel radius for rendering
 }
 
 const COLORS = [
@@ -74,17 +79,21 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
   const minCount = Math.min(...data.map((d) => d.count));
   const countRange = maxCount - minCount;
 
-  // Transform data for scatter chart
-  const chartData = data.map((item, index) => ({
-    x: item.avg_cost,
-    y: item.total_cost,
-    z: item.count,
-    // Scale bubble size between 100 and 2000 based on count
-    // If all counts are the same, use a fixed size
-    size: countRange === 0 ? 1000 : ((item.count - minCount) / countRange) * 1900 + 100,
-    category: item.category,
-    color: COLORS[index % COLORS.length]
-  }));
+  // Transform data for bubble chart with simple radius scaling
+  const chartData: BubbleData[] = data.map((item, index) => {
+    // Scale radius between 8 and 40 pixels based on session count
+    const normalizedSize = countRange === 0 ? 20 : ((item.count - minCount) / countRange) * 32 + 8;
+
+    return {
+      x: item.avg_cost,
+      y: item.total_cost,
+      r: item.count, // Store original count for tooltip
+      name: item.category,
+      color: COLORS[index % COLORS.length],
+      // Add radius for Recharts
+      radius: normalizedSize
+    };
+  });
 
   // Calculate totals for footer
   const totalCost = data.reduce((sum, item) => sum + item.total_cost, 0);
@@ -101,26 +110,6 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
     return 4;
   };
   const yAxisDecimals = getYAxisDecimals(maxTotalCost);
-
-  // Custom dot component to render sized bubbles
-  const CustomDot = (props: { cx: number; cy: number; payload: ChartDataPoint }) => {
-    const { cx, cy, payload } = props;
-    const radius = Math.sqrt(payload.size / Math.PI);
-    // Ensure radius is a valid number
-    const safeRadius = Number.isNaN(radius) || !Number.isFinite(radius) ? 10 : radius;
-
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={safeRadius}
-        fill={payload.color}
-        fillOpacity={0.6}
-        stroke={payload.color}
-        strokeWidth={2}
-      />
-    );
-  };
 
   return (
     <Card>
@@ -186,35 +175,29 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
               axisLine={false}
               tickFormatter={(value) => `€${Number(value).toFixed(yAxisDecimals)}`}
             />
-            <ChartTooltip
-              cursor={{ strokeDasharray: "3 3" }}
-              content={
-                <ChartTooltipContent
-                  hideLabel
-                  formatter={(_value, _name, item) => (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Category:</span>
-                        <span className="font-semibold">{item.payload.category}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Avg Cost:</span>
-                        <span className="font-semibold">€{item.payload.x.toFixed(4)}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Total Cost:</span>
-                        <span className="font-semibold">€{item.payload.y.toFixed(2)}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Sessions:</span>
-                        <span className="font-semibold">{item.payload.z.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )}
-                />
-              }
+            <ChartTooltip cursor={{ strokeDasharray: "3 3" }} content={<BubbleTooltip />} />
+            <Scatter
+              name="Categories"
+              data={chartData}
+              shape={(props: unknown) => {
+                const { cx, cy, payload } = props as {
+                  cx: number;
+                  cy: number;
+                  payload: BubbleData;
+                };
+                return (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={payload.radius}
+                    fill={payload.color}
+                    fillOpacity={0.6}
+                    stroke={payload.color}
+                    strokeWidth={2}
+                  />
+                );
+              }}
             />
-            <Scatter name="Categories" data={chartData} shape={<CustomDot />} />
           </ScatterChart>
         </ChartContainer>
 
@@ -239,8 +222,8 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
                   Calculated as: Total cost of category ÷ Number of sessions
                 </p>
                 <p className="text-xs text-muted-foreground italic">
-                  Example: If "HR Questions" had 100 sessions costing €10 total, the average would
-                  be €0.10 per session
+                  Example: If &quot;HR Questions&quot; had 100 sessions costing €10 total, the
+                  average would be €0.10 per session
                 </p>
               </div>
             </HoverCardContent>
@@ -267,8 +250,8 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
                   This is the sum of all costs for that specific category.
                 </p>
                 <p className="text-xs text-muted-foreground italic">
-                  Example: "HR Questions" might have a total cost of €10 for all its sessions
-                  combined
+                  Example: &quot;HR Questions&quot; might have a total cost of €10 for all its
+                  sessions combined
                 </p>
               </div>
             </HoverCardContent>

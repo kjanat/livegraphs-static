@@ -33,6 +33,7 @@
     "test:e2e:codegen": "playwright codegen",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:ui": "playwright test --ui",
+    "test:storybook": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --config vitest.storybook.config.ts",
     "test:ui": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest --ui",
     "test:unit": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run",
     "test:watch": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest",

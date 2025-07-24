@@ -28,6 +28,7 @@ export function PresetCombobox({ presets, onSelect, className }: PresetComboboxP
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/* biome-ignore lint/a11y/useSemanticElements: Button with combobox role is the correct pattern for this component */}
         <Button
           variant="outline"
           role="combobox"

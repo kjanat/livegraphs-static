@@ -118,9 +118,10 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Leading category: "{topCategory?.category || "N/A"}" <TrendingUp className="h-4 w-4" />
+      <CardFooter className="flex-col items-center gap-2 text-sm text-center">
+        <div className="flex gap-2 leading-none font-medium items-center">
+          Leading category: &quot;{topCategory?.category || "N/A"}&quot;{" "}
+          <TrendingUp className="h-4 w-4" />
         </div>
         <div className="text-muted-foreground leading-none">
           {topCategory

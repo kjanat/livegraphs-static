@@ -58,9 +58,6 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
   const totalSessions = data.values.reduce((sum, val) => sum + val, 0);
   const topLanguage = chartData[0];
   const languageCount = data.labels.length;
-  const _topPercentage = topLanguage
-    ? ((topLanguage.sessions / totalSessions) * 100).toFixed(1)
-    : 0;
 
   const chartConfig = {
     sessions: {
@@ -136,8 +133,8 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
+      <CardFooter className="flex-col items-center gap-2 text-sm text-center">
+        <div className="flex gap-2 leading-none font-medium items-center">
           <TrendingUp className="h-4 w-4" />
           Supporting {languageCount} languages
         </div>

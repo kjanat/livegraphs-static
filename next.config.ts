@@ -33,9 +33,16 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // Optimize imports for better tree shaking
-  // experimental: {
-  //   optimizePackageImports: ["chart.js", "react-chartjs-2", "@nivo/core", "@nivo/geo", "date-fns"]
-  // },
+  /* experimental: {
+    optimizePackageImports: [
+      "chart.js",
+      "react-chartjs-2",
+      "@nivo/core",
+      "@nivo/geo",
+      "date-fns",
+      "@/components/ui"
+    ]
+  }, */
 
   // Note: Security headers need to be configured at the hosting level
   // for static exports (e.g., in nginx, Vercel, Netlify configs)

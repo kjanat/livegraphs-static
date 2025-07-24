@@ -10,7 +10,7 @@ import {
 import { CalendarIcon, Loader2 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DateRange } from "react-day-picker";
+import type { DateRange, Matcher } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -114,7 +114,6 @@ export function DateRangePicker({
   availableDates,
   monthsMobile = 1,
   monthsDesktop = 2,
-  mobileBreakpoint,
   isLoading = false,
   className,
   onError,
@@ -130,14 +129,14 @@ export function DateRangePicker({
 
   // Create disabled day matcher combining all constraints
   const disabledDayMatcher = useMemo(() => {
-    const matchers: any[] = [];
+    const matchers: Array<Matcher | ((date: Date) => boolean)> = [];
 
     // Add min/max date constraints
-    if (minDate || maxDate) {
-      matchers.push({
-        ...(minDate && { before: minDate }),
-        ...(maxDate && { after: maxDate })
-      });
+    if (minDate) {
+      matchers.push({ before: minDate });
+    }
+    if (maxDate) {
+      matchers.push({ after: maxDate });
     }
 
     // Add custom disabled day function

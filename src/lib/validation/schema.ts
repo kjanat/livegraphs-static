@@ -2,8 +2,17 @@ import { z } from "zod";
 
 // Zod schemas for validating imported JSON data
 
+// Custom ISO 8601 datetime validator that supports fractional seconds
+const isoDateTimeWithFractionalSeconds = z
+  .string()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/,
+    "Invalid ISO 8601 datetime format"
+  )
+  .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime string");
+
 const TranscriptMessageSchema = z.object({
-  timestamp: z.string().datetime(),
+  timestamp: isoDateTimeWithFractionalSeconds,
   role: z.enum(["User", "Assistant"]),
   content: z.string()
 });
@@ -34,8 +43,8 @@ const UserInfoSchema = z.object({
 
 export const ChatSessionSchema = z.object({
   session_id: z.string().uuid(),
-  start_time: z.string().datetime(),
-  end_time: z.string().datetime(),
+  start_time: isoDateTimeWithFractionalSeconds,
+  end_time: isoDateTimeWithFractionalSeconds,
   transcript: z.array(TranscriptMessageSchema),
   messages: MessageMetricsSchema,
   user: UserInfoSchema,
