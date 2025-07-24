@@ -9,15 +9,65 @@
 import { GaugeChartCircular } from "./GaugeChartCircular";
 import { GaugeChartShadcn } from "./GaugeChartShadcn";
 import { GaugeChartShadcnAlt } from "./GaugeChartShadcnAlt";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from "@/components/ui/hover-card";
+import { InfoIcon } from "lucide-react";
 
 export function GaugeChartDemo() {
   const demoValue = 4.2;
   const maxValue = 5;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {/* Radial Bar Design */}
-      <GaugeChartShadcn
+    <div className="space-y-4">
+      {/* Info header */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button className="flex items-center gap-1 underline-offset-4 hover:underline cursor-help">
+              <InfoIcon className="h-4 w-4" />
+              Compare different gauge chart designs
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-96">
+            <div className="space-y-3">
+              <h4 className="text-base font-semibold">Gauge Chart Design Comparison</h4>
+              <p className="text-sm text-muted-foreground">
+                Choose the gauge design that best fits your dashboard's visual style and data presentation needs.
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <h5 className="text-sm font-medium">1. Radial Bar Design</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Semi-circular progress bar with threshold-based colors. Best for completion rates and progress metrics.
+                  </p>
+                </div>
+                <div>
+                  <h5 className="text-sm font-medium">2. Semi-Circular Arc Design</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Minimalist arc with clean stroke. Ideal for multiple metrics in compact spaces.
+                  </p>
+                </div>
+                <div>
+                  <h5 className="text-sm font-medium">3. Modern Circular Design</h5>
+                  <p className="text-xs text-muted-foreground">
+                    270° arc with segment visualization. Perfect for ratings and scores with clear categories.
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground italic">
+                Hover over each chart's description to learn more about its specific features.
+              </p>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Radial Bar Design */}
+        <GaugeChartShadcn
         value={demoValue}
         max={maxValue}
         title="Average Rating"
@@ -60,6 +110,7 @@ export function GaugeChartDemo() {
       <GaugeChartShadcnAlt value={85} title="Efficiency" size="lg" className="col-span-1" />
 
       <GaugeChartCircular value={92} title="Success Rate" subtitle="Last 30 days" thickness={0.2} />
+      </div>
     </div>
   );
 }

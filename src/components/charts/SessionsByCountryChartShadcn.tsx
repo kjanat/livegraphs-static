@@ -53,84 +53,88 @@ export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartSha
     );
   }
 
-  // Create chartData with safe mapping to prevent undefined values
-  const maxLength = Math.min(data.labels.length, data.values.length);
-  const chartData = data.labels.slice(0, maxLength).map((label, index) => ({
+  // Limit to top 8 countries like Top Categories
+  const limit = 8;
+  const maxLength = Math.min(data.labels.length, data.values.length, limit);
+  const slicedLabels = data.labels.slice(0, maxLength);
+  const slicedValues = data.values.slice(0, maxLength);
+
+  const chartData = slicedLabels.map((label, index) => ({
     country: label,
-    sessions: data.values[index] ?? 0
+    sessions: slicedValues[index] ?? 0
   }));
 
   const totalSessions = data.values.reduce((sum, val) => sum + val, 0);
   const topCountry = chartData[0];
-  const countryCount = chartData.length;
+  const countryCount = data.labels.length;
+  const topPercentage = topCountry ? ((topCountry.sessions / totalSessions) * 100).toFixed(1) : 0;
 
-  const chartConfig: ChartConfig = {
+  const chartConfig = {
     sessions: {
       label: "Sessions",
-      theme: {
-        light: "hsl(221.2 83.2% 53.3%)",
-        dark: "hsl(217.2 91.2% 59.8%)"
-      }
+      color: "var(--chart-2)"
+    },
+    label: {
+      color: "var(--background)"
     }
-  };
+  } satisfies ChartConfig;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card>
       <CardHeader>
         <CardTitle>Sessions by Country</CardTitle>
         <CardDescription>Geographic distribution of user sessions</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+      <CardContent>
+        <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] lg:h-[400px] w-full sm:max-w-[500px] lg:max-w-[600px] mx-auto">
           <BarChart
             accessibilityLayer
             data={chartData}
-            margin={{ top: 20, right: 30, left: 0, bottom: 40 }}
+            layout="vertical"
+            margin={{
+              right: 16
+            }}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
+            <CartesianGrid horizontal={false} />
+            <YAxis
               dataKey="country"
+              type="category"
               tickLine={false}
-              axisLine={false}
               tickMargin={10}
-              angle={-45}
-              textAnchor="end"
-              height={60}
+              axisLine={false}
+              hide
             />
-            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  hideLabel
-                  formatter={(value, _name, item) => (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Country:</span>
-                        <span className="font-semibold">{item.payload.country}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Sessions:</span>
-                        <span className="font-semibold">{value}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Percentage:</span>
-                        <span className="font-semibold">
-                          {((Number(value) / totalSessions) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                />
-              }
-            />
-            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
-              <LabelList position="top" offset={8} className="fill-foreground" fontSize={11} />
+            <XAxis dataKey="sessions" type="number" hide />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <Bar dataKey="sessions" layout="vertical" fill="var(--color-sessions)" radius={4} minPointSize={5}>
+              <LabelList
+                dataKey="country"
+                position="insideLeft"
+                offset={8}
+                className="fill-white"
+                fontSize={12}
+                formatter={(value: string, entry: any) => {
+                  // If the bar is too small, truncate the country name
+                  const sessions = entry?.sessions || 0;
+                  const percentage = (sessions / totalSessions) * 100;
+                  if (percentage < 5 && value.length > 10) {
+                    return value.substring(0, 10) + "...";
+                  }
+                  return value;
+                }}
+              />
+              <LabelList
+                dataKey="sessions"
+                position="right"
+                offset={8}
+                className="fill-foreground"
+                fontSize={12}
+              />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
           <Globe className="h-4 w-4" />
           Active in {countryCount} countries

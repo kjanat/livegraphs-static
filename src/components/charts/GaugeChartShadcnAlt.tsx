@@ -8,6 +8,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from "@/components/ui/hover-card";
 
 interface GaugeChartShadcnAltProps {
   value: number;
@@ -61,7 +66,37 @@ export function GaugeChartShadcnAlt({
       {(title || description) && (
         <CardHeader className="text-center pb-2">
           {title && <CardTitle>{title}</CardTitle>}
-          {description && <CardDescription>{description}</CardDescription>}
+          {description && (
+            <CardDescription>
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <span className="underline-offset-4 hover:underline cursor-help">
+                    {description}
+                  </span>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Semi-Circular Arc Gauge Design</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This gauge displays values as a semi-circular arc that fills from left to right.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      The stroke color indicates performance:
+                    </p>
+                    <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
+                      <li><span className="text-red-500">Red</span>: Below 40%</li>
+                      <li><span className="text-orange-500">Orange</span>: 40% - 60%</li>
+                      <li><span className="text-yellow-500">Yellow</span>: 60% - 80%</li>
+                      <li><span className="text-green-500">Green</span>: Above 80%</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground italic">
+                      Clean, minimalist design ideal for dashboards with multiple metrics.
+                    </p>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            </CardDescription>
+          )}
         </CardHeader>
       )}
       <CardContent className="flex flex-col items-center">

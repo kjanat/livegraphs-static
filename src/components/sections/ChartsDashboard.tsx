@@ -14,14 +14,6 @@ import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
 
 // Dynamic imports for all chart components
-const GaugeChartDemo = dynamic(
-  () =>
-    import("@/components/charts/GaugeChartDemo").then((mod) => ({
-      default: mod.GaugeChartDemo
-    })),
-  { loading: () => <ChartSkeleton />, ssr: false }
-);
-
 const CostAnalysisChart = dynamic(
   () =>
     import("@/components/charts/CostAnalysisChartShadcn").then((mod) => ({
@@ -150,16 +142,6 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* TEMPORARY: Gauge Chart Comparison - Remove after selection */}
-      <ExpandableSection
-        title="Gauge Chart Design Options"
-        subtitle="Compare different gauge chart implementations"
-        defaultExpanded={true}
-        priority="high"
-      >
-        <GaugeChartDemo />
-      </ExpandableSection>
-
       {/* Essential Overview - Always visible */}
       <ExpandableSection
         title="Essential Overview"
