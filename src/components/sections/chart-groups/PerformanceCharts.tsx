@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+"use memo"; // React Compiler directive for automatic optimization
+
 import dynamic from "next/dynamic";
+import { memo } from "react";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import type { ChartData } from "@/lib/types/session";
 
@@ -28,7 +31,7 @@ interface PerformanceChartsProps {
   chartData: ChartData;
 }
 
-export default function PerformanceCharts({ chartData }: PerformanceChartsProps) {
+function PerformanceCharts({ chartData }: PerformanceChartsProps) {
   return (
     <div className="space-y-6">
       <PerformanceTrendsChart data={chartData.sentiment_time_series} />
@@ -36,3 +39,5 @@ export default function PerformanceCharts({ chartData }: PerformanceChartsProps)
     </div>
   );
 }
+
+export default memo(PerformanceCharts);

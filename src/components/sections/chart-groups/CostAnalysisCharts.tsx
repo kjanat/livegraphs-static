@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+"use memo"; // React Compiler directive for automatic optimization
+
 import dynamic from "next/dynamic";
+import { memo } from "react";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import type { ChartData } from "@/lib/types/session";
 
@@ -36,7 +39,7 @@ interface CostAnalysisChartsProps {
   chartData: ChartData;
 }
 
-export default function CostAnalysisCharts({ chartData }: CostAnalysisChartsProps) {
+function CostAnalysisCharts({ chartData }: CostAnalysisChartsProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -58,3 +61,5 @@ export default function CostAnalysisCharts({ chartData }: CostAnalysisChartsProp
     </div>
   );
 }
+
+export default memo(CostAnalysisCharts);

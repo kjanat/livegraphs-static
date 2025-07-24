@@ -5,12 +5,15 @@
  */
 
 "use client";
+"use memo"; // React Compiler directive for automatic optimization
 
-import { useMemo, useRef } from "react";
+import { memo, startTransition, useCallback, useMemo, useRef } from "react";
 import { ExpandableSection } from "@/components/ui/ExpandableSection";
+import { LazyChart } from "@/components/ui/LazyChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import type { ChartData, Metrics } from "@/lib/types/session";
-import { CHART_GROUPS, calculateChartVisibility } from "./chartConfig";
+import { calculateChartVisibility, getVisibleGroups, isGroupExpanded } from "./chartConfig";
 
 interface ChartsDashboardUnifiedProps {
   metrics: Metrics;
@@ -18,11 +21,14 @@ interface ChartsDashboardUnifiedProps {
   viewMode?: "tabs" | "expandable";
 }
 
-export function ChartsDashboardUnified({
+function ChartsDashboardUnifiedBase({
   metrics,
   chartData,
   viewMode = "tabs"
 }: ChartsDashboardUnifiedProps) {
+  // Performance monitoring in development
+  usePerformanceMonitor("ChartsDashboardUnified");
+
   const totalSessions = metrics["Total Conversations"] || 0;
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -32,43 +38,47 @@ export function ChartsDashboardUnified({
     [chartData, totalSessions]
   );
 
-  // Filter visible chart groups
-  const visibleGroups = useMemo(
-    () => CHART_GROUPS.filter((group) => !group.isVisible || group.isVisible(visibility)),
-    [visibility]
+  // Filter visible chart groups using helper function
+  const visibleGroups = useMemo(() => getVisibleGroups(visibility), [visibility]);
+
+  // Handle tab change with smooth scrolling - memoized to prevent recreation
+  const handleTabChange = useCallback(
+    (_value: string) => {
+      // Use startTransition for non-urgent UI updates
+      startTransition(() => {
+        if (viewMode === "tabs" && tabsRef.current) {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const element = tabsRef.current;
+              if (element) {
+                const yOffset = -100; // Offset for fixed header
+                const y = element.offsetTop + yOffset;
+                window.scrollTo({
+                  top: y,
+                  behavior: "smooth"
+                });
+              }
+            });
+          });
+        }
+      });
+    },
+    [viewMode]
   );
 
-  // Handle tab change with smooth scrolling
-  const handleTabChange = () => {
-    if (viewMode === "tabs" && tabsRef.current) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const element = tabsRef.current;
-          if (element) {
-            const yOffset = -100; // Offset for fixed header
-            const y = element.offsetTop + yOffset;
-            window.scrollTo({
-              top: y,
-              behavior: "smooth"
-            });
-          }
-        });
-      });
-    }
-  };
-
-  // Props for chart content rendering
-  const contentProps = { chartData, metrics, visibility };
+  // Memoize content props to prevent unnecessary re-renders
+  const contentProps = useMemo(
+    () => ({ chartData, metrics, visibility }),
+    [chartData, metrics, visibility]
+  );
 
   // Render expandable view
   if (viewMode === "expandable") {
     return (
       <div className="space-y-6">
         {visibleGroups.map((group) => {
-          const defaultExpanded =
-            typeof group.defaultExpanded === "function"
-              ? group.defaultExpanded(visibility)
-              : (group.defaultExpanded ?? false);
+          const defaultExpanded = isGroupExpanded(group, visibility);
+          const Component = group.Component;
 
           return (
             <ExpandableSection
@@ -78,7 +88,9 @@ export function ChartsDashboardUnified({
               defaultExpanded={defaultExpanded}
               priority={group.priority}
             >
-              {group.renderContent(contentProps)}
+              <LazyChart chartName={group.title} minHeight={400}>
+                <Component {...contentProps} />
+              </LazyChart>
             </ExpandableSection>
           );
         })}
@@ -114,13 +126,22 @@ export function ChartsDashboardUnified({
           <div className="absolute right-0 top-0 h-10 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none lg:hidden" />
         </div>
 
-        {visibleGroups.map((group) => (
-          <TabsContent key={group.id} value={group.id} className="space-y-6 min-h-[400px]">
-            <h3 className="text-xl font-bold mb-4">{group.title}</h3>
-            {group.renderContent(contentProps)}
-          </TabsContent>
-        ))}
+        {visibleGroups.map((group) => {
+          const Component = group.Component;
+
+          return (
+            <TabsContent key={group.id} value={group.id} className="space-y-6 min-h-[400px]">
+              <h3 className="text-xl font-bold mb-4">{group.title}</h3>
+              <LazyChart chartName={group.title} minHeight={400}>
+                <Component {...contentProps} />
+              </LazyChart>
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const ChartsDashboardUnified = memo(ChartsDashboardUnifiedBase);

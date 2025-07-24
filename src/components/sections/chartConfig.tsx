@@ -4,9 +4,16 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import React, { type ReactElement } from "react";
+import { type ComponentType, lazy, type ReactElement } from "react";
 import { CHART_VISIBILITY } from "@/lib/constants/ui";
 import type { ChartData, Metrics } from "@/lib/types/session";
+
+// Lazy load chart group components
+const OverviewCharts = lazy(() => import("./chart-groups/OverviewCharts"));
+const PerformanceCharts = lazy(() => import("./chart-groups/PerformanceCharts"));
+const GeographicCharts = lazy(() => import("./chart-groups/GeographicCharts"));
+const CostAnalysisCharts = lazy(() => import("./chart-groups/CostAnalysisCharts"));
+const DetailedStatsCharts = lazy(() => import("./chart-groups/DetailedStatsCharts"));
 
 export interface ChartGroupConfig {
   id: string;
@@ -16,8 +23,8 @@ export interface ChartGroupConfig {
   priority: "high" | "medium" | "low";
   // Function to determine if this group should be shown
   isVisible?: (visibility: ChartVisibility) => boolean;
-  // Function to render the group's content
-  renderContent: (props: ChartContentProps) => ReactElement;
+  // Component to render for this group
+  Component: ComponentType<ChartContentProps>;
 }
 
 export interface ChartVisibility {
@@ -25,6 +32,8 @@ export interface ChartVisibility {
   hasCountryData: boolean;
   hasLanguageData: boolean;
   hasSufficientData: boolean;
+  // Cached group visibility to avoid repeated calculations
+  groupVisibility?: Map<string, boolean>;
 }
 
 export interface ChartContentProps {
@@ -35,21 +44,39 @@ export interface ChartContentProps {
 
 /**
  * Calculate visibility flags based on chart data
+ * Optimized with early returns and cached group visibility
  */
 export function calculateChartVisibility(
   chartData: ChartData,
   totalSessions: number
 ): ChartVisibility {
-  return {
-    hasRatings: chartData.avg_rating != null && chartData.avg_rating > 0,
-    hasCountryData:
-      chartData.country_labels &&
-      chartData.country_labels.length > CHART_VISIBILITY.minCountriesForMap,
-    hasLanguageData:
-      chartData.language_labels &&
-      chartData.language_labels.length > CHART_VISIBILITY.minLanguagesForChart,
-    hasSufficientData: totalSessions >= CHART_VISIBILITY.minSessionsForAnalytics
+  // Early return for insufficient data
+  const hasSufficientData = totalSessions >= CHART_VISIBILITY.minSessionsForAnalytics;
+
+  // Compute basic visibility flags
+  const hasRatings = chartData.avg_rating != null && chartData.avg_rating > 0;
+  const hasCountryData =
+    Array.isArray(chartData.country_labels) &&
+    chartData.country_labels.length > CHART_VISIBILITY.minCountriesForMap;
+  const hasLanguageData =
+    Array.isArray(chartData.language_labels) &&
+    chartData.language_labels.length > CHART_VISIBILITY.minLanguagesForChart;
+
+  const visibility: ChartVisibility = {
+    hasRatings,
+    hasCountryData,
+    hasLanguageData,
+    hasSufficientData
   };
+
+  // Pre-calculate group visibility for all groups
+  const groupVisibility = new Map<string, boolean>();
+  for (const group of CHART_GROUPS) {
+    groupVisibility.set(group.id, !group.isVisible || group.isVisible(visibility));
+  }
+  visibility.groupVisibility = groupVisibility;
+
+  return visibility;
 }
 
 /**
@@ -62,10 +89,7 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
     subtitle: "Key performance indicators and user satisfaction",
     defaultExpanded: true,
     priority: "high",
-    renderContent: ({ chartData, visibility }) => {
-      const { default: OverviewCharts } = require("./chart-groups/OverviewCharts");
-      return <OverviewCharts chartData={chartData} visibility={visibility} />;
-    }
+    Component: OverviewCharts
   },
   {
     id: "performance",
@@ -73,10 +97,7 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
     subtitle: "Activity patterns over time",
     defaultExpanded: (visibility) => visibility.hasSufficientData,
     priority: "high",
-    renderContent: ({ chartData }) => {
-      const { default: PerformanceCharts } = require("./chart-groups/PerformanceCharts");
-      return <PerformanceCharts chartData={chartData} />;
-    }
+    Component: PerformanceCharts
   },
   {
     id: "geographic",
@@ -85,10 +106,7 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
     defaultExpanded: false,
     priority: "medium",
     isVisible: (visibility) => visibility.hasCountryData || visibility.hasLanguageData,
-    renderContent: ({ chartData, visibility }) => {
-      const { default: GeographicCharts } = require("./chart-groups/GeographicCharts");
-      return <GeographicCharts chartData={chartData} visibility={visibility} />;
-    }
+    Component: GeographicCharts
   },
   {
     id: "cost",
@@ -96,10 +114,7 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
     subtitle: "Conversation topics and operational costs",
     defaultExpanded: false,
     priority: "medium",
-    renderContent: ({ chartData }) => {
-      const { default: CostAnalysisCharts } = require("./chart-groups/CostAnalysisCharts");
-      return <CostAnalysisCharts chartData={chartData} />;
-    }
+    Component: CostAnalysisCharts
   },
   {
     id: "detailed",
@@ -107,9 +122,30 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
     subtitle: "Distribution analysis and conversation patterns",
     defaultExpanded: false,
     priority: "low",
-    renderContent: ({ chartData }) => {
-      const { default: DetailedStatsCharts } = require("./chart-groups/DetailedStatsCharts");
-      return <DetailedStatsCharts chartData={chartData} />;
-    }
+    Component: DetailedStatsCharts
   }
 ];
+
+/**
+ * Helper to get visible chart groups based on visibility flags
+ * Optimized to use pre-calculated group visibility when available
+ */
+export function getVisibleGroups(visibility: ChartVisibility): ChartGroupConfig[] {
+  // Use cached visibility if available for better performance
+  if (visibility.groupVisibility) {
+    return CHART_GROUPS.filter((group) => visibility.groupVisibility?.get(group.id) ?? true);
+  }
+
+  // Fallback to direct calculation
+  return CHART_GROUPS.filter((group) => !group.isVisible || group.isVisible(visibility));
+}
+
+/**
+ * Helper to check if a group should be expanded by default
+ */
+export function isGroupExpanded(group: ChartGroupConfig, visibility: ChartVisibility): boolean {
+  if (typeof group.defaultExpanded === "function") {
+    return group.defaultExpanded(visibility);
+  }
+  return group.defaultExpanded ?? false;
+}
