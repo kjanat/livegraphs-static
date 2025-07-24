@@ -87,14 +87,17 @@ export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartSha
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="h-[300px] sm:h-[350px] lg:h-[400px] w-full sm:max-w-[500px] lg:max-w-[600px] mx-auto"
+          className="aspect-auto h-[300px] sm:h-[350px] lg:h-[400px] w-full"
         >
           <BarChart
             accessibilityLayer
             data={chartData}
             layout="vertical"
             margin={{
-              right: 16
+              top: 5,
+              right: 20,
+              bottom: 5,
+              left: 10
             }}
           >
             <CartesianGrid horizontal={false} />
