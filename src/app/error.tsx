@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import { UI_DIMENSIONS } from "@/lib/constants/ui";
 
@@ -199,23 +200,25 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
         {process.env.NODE_ENV === "development" && (
           <details className="mt-8 p-4 bg-muted rounded-lg text-left">
             <summary className="cursor-pointer text-sm font-medium mb-2">Error Details</summary>
-            <div className="space-y-2">
-              {error.digest && (
-                <p className="text-xs font-mono text-muted-foreground">
-                  <strong>Error ID:</strong> {error.digest}
+            <ScrollArea className="h-[300px] w-full rounded-md">
+              <div className="space-y-2 pr-4">
+                {error.digest && (
+                  <p className="text-xs font-mono text-muted-foreground">
+                    <strong>Error ID:</strong> {error.digest}
+                  </p>
+                )}
+                <p className="text-xs font-mono text-muted-foreground break-all">
+                  <strong>Message:</strong> {error.message}
                 </p>
-              )}
-              <p className="text-xs font-mono text-muted-foreground break-all">
-                <strong>Message:</strong> {error.message}
-              </p>
-              {error.stack && (
-                <pre className="text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap">
-                  <strong>Stack:</strong>
-                  {"\n"}
-                  {error.stack}
-                </pre>
-              )}
-            </div>
+                {error.stack && (
+                  <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap">
+                    <strong>Stack:</strong>
+                    {"\n"}
+                    {error.stack}
+                  </pre>
+                )}
+              </div>
+            </ScrollArea>
           </details>
         )}
       </div>

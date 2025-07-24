@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { CommandPalette } from "@/components/CommandPalette";
 import { DataQualityIndicator } from "@/components/DataQualityIndicator";
+import { ClearDatabaseDialog } from "@/components/dialogs/ClearDatabaseDialog";
 import { InsightsSummary } from "@/components/InsightsSummary";
 import { MobileDashboard } from "@/components/mobile/MobileDashboard";
 import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
@@ -47,6 +48,7 @@ export function ClientDashboard() {
 
   const isMobile = useIsMobile();
   const [useTabView, setUseTabView] = useState(true);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const databaseHook = useDatabase();
   const { isInitialized, error: dbError, loadSessionsFromJSON } = databaseHook;
 
@@ -87,11 +89,28 @@ export function ClientDashboard() {
   const hasData = (dbStats?.totalSessions ?? 0) > 0;
   const hasDateRange = !!dateRange;
 
+  // Wrapper function to show dialog instead of directly clearing
+  const handleClearDatabase = () => {
+    setShowClearDialog(true);
+  };
+
+  const confirmClearDatabase = () => {
+    clearAllData();
+    setShowClearDialog(false);
+  };
+
   return (
     <>
+      {/* Clear Database Dialog */}
+      <ClearDatabaseDialog
+        open={showClearDialog}
+        onOpenChange={setShowClearDialog}
+        onConfirm={confirmClearDatabase}
+      />
+
       {/* Command Palette */}
       <CommandPalette
-        onClearDatabase={clearAllData}
+        onClearDatabase={handleClearDatabase}
         onExportCSV={exportCurrentData}
         onLoadSampleData={loadSampleData}
         hasData={hasData}
@@ -139,7 +158,7 @@ export function ClientDashboard() {
               hasData={hasData}
               hasDateRange={hasDateRange}
               onFileUpload={handleFileUpload}
-              onClearDatabase={clearAllData}
+              onClearDatabase={handleClearDatabase}
               onExportCSV={exportCurrentData}
               isDragging={isDragging}
               onDragEnter={handleDragEnter}
@@ -155,7 +174,7 @@ export function ClientDashboard() {
               hasData={hasData}
               hasDateRange={hasDateRange}
               onFileUpload={handleFileUpload}
-              onClearDatabase={clearAllData}
+              onClearDatabase={handleClearDatabase}
               onExportCSV={exportCurrentData}
               onDragEnter={handleDragEnter}
               onDragOver={handleDragOver}

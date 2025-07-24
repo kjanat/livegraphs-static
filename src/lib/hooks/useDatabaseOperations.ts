@@ -7,13 +7,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { showConfirmClearDatabaseToast } from "@/components/toasts/ConfirmClearDatabaseToast";
 import { useDatabase } from "@/hooks/useDatabase";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
 import type { Database } from "@/lib/db/sql-wrapper";
 import { generateSampleData } from "@/lib/sampleData";
 import type { ChartData, ChatSession, DateRange, Metrics } from "@/lib/types/session";
-import { findRecentWorkingWeekWithData, getWorkingWeekRange } from "@/lib/utils/dateUtils";
+import { findRecentWorkingWeekWithData } from "@/lib/utils/dateUtils";
+
+const STORAGE_KEY_DATE_RANGE = "livegraphs_date_range";
 
 interface DatabaseStats {
   totalSessions: number;
@@ -48,6 +49,45 @@ interface UseDatabaseOperationsReturn {
   resetDateRange: () => void;
   loadNewDataset: () => Promise<void>;
 }
+
+// Helper functions for localStorage persistence
+const saveDateRangeToStorage = (range: DateRange) => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_DATE_RANGE,
+      JSON.stringify({
+        start: range.start.toISOString(),
+        end: range.end.toISOString()
+      })
+    );
+  } catch (err) {
+    console.warn("Failed to save date range to localStorage:", err);
+  }
+};
+
+const loadDateRangeFromStorage = (): DateRange | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_DATE_RANGE);
+    if (!saved) return null;
+
+    const parsed = JSON.parse(saved);
+    return {
+      start: new Date(parsed.start),
+      end: new Date(parsed.end)
+    };
+  } catch (err) {
+    console.warn("Failed to load date range from localStorage:", err);
+    return null;
+  }
+};
+
+const clearDateRangeFromStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_DATE_RANGE);
+  } catch (err) {
+    console.warn("Failed to clear date range from localStorage:", err);
+  }
+};
 
 /**
  * Custom hook for database operations and data management
@@ -116,6 +156,9 @@ export function useDatabaseOperations(
         const range: DateRange = { start: startDate, end: endDate };
         setDateRange(range);
 
+        // Save the selected range to localStorage
+        saveDateRangeToStorage(range);
+
         // Calculate metrics and prepare chart data
         const [newMetrics, newChartData] = await Promise.all([
           calculateMetrics(db, range),
@@ -141,13 +184,14 @@ export function useDatabaseOperations(
   }, []);
 
   const clearAllData = useCallback(() => {
-    showConfirmClearDatabaseToast(() => {
-      clearDatabase();
-      setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
-      setMetrics(null);
-      setChartData(null);
-      setDateRange(null);
-    });
+    clearDatabase();
+    setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
+    setMetrics(null);
+    setChartData(null);
+    setDateRange(null);
+    // Clear saved date range from localStorage
+    clearDateRangeFromStorage();
+    toast.success("Database cleared successfully");
   }, [clearDatabase]);
 
   const loadNewDataset = useCallback(async () => {
@@ -277,6 +321,53 @@ export function useDatabaseOperations(
 
     loadData();
   }, [shouldAutoLoad, dbStats, loadDataForDateRange, checkDateRangeHasData]);
+
+  // Auto-load saved date range on initial mount
+  useEffect(() => {
+    // Only run on mount when:
+    // 1. Database is initialized and has data
+    // 2. No data is currently loaded
+    // 3. Not already planning to auto-load (to avoid conflicts)
+    if (
+      dbStats &&
+      dbStats.totalSessions > 0 &&
+      !dateRange &&
+      !isLoadingData &&
+      !shouldAutoLoad &&
+      dbStats.dateRange.min &&
+      dbStats.dateRange.max
+    ) {
+      // Try to load saved date range
+      const savedRange = loadDateRangeFromStorage();
+
+      if (savedRange) {
+        const dataMin = new Date(dbStats.dateRange.min);
+        const dataMax = new Date(dbStats.dateRange.max);
+
+        // Validate saved range is within current data bounds
+        const validStart = new Date(Math.max(savedRange.start.getTime(), dataMin.getTime()));
+        const validEnd = new Date(Math.min(savedRange.end.getTime(), dataMax.getTime()));
+
+        // Only load if the validated range is meaningful
+        if (validStart < validEnd) {
+          console.log("Loading saved date range", {
+            original: savedRange,
+            validated: { start: validStart, end: validEnd }
+          });
+          loadDataForDateRange(validStart, validEnd);
+        } else {
+          // Saved range is invalid, fall back to working week
+          console.log("Saved date range invalid, falling back to working week");
+          clearDateRangeFromStorage();
+          setShouldAutoLoad(true);
+        }
+      } else {
+        // No saved range, use working week logic
+        console.log("No saved date range, loading working week");
+        setShouldAutoLoad(true);
+      }
+    }
+  }, [dbStats, dateRange, isLoadingData, shouldAutoLoad, loadDataForDateRange]);
 
   return {
     dbStats,

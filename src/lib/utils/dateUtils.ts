@@ -43,14 +43,14 @@ export async function findRecentWorkingWeekWithData(
   // Adjust end date to not exceed dataMax
   const adjustedCurrentWeekEnd = currentWeekRange.end > dataMax ? dataMax : currentWeekRange.end;
   const hasCurrentWeekData = await checkDataFn(currentWeekRange.start, adjustedCurrentWeekEnd);
-  
+
   console.log("findRecentWorkingWeekWithData: Current week has data?", hasCurrentWeekData);
-  
+
   if (hasCurrentWeekData) {
-    return { 
-      start: currentWeekRange.start, 
-      end: adjustedCurrentWeekEnd, 
-      hasCurrentWeekData: true 
+    return {
+      start: currentWeekRange.start,
+      end: adjustedCurrentWeekEnd,
+      hasCurrentWeekData: true
     };
   }
 
@@ -67,10 +67,10 @@ export async function findRecentWorkingWeekWithData(
       const adjustedEnd = weekRange.end > dataMax ? dataMax : weekRange.end;
       const hasData = await checkDataFn(weekRange.start, adjustedEnd);
       if (hasData) {
-        return { 
-          start: weekRange.start, 
-          end: adjustedEnd, 
-          hasCurrentWeekData: false 
+        return {
+          start: weekRange.start,
+          end: adjustedEnd,
+          hasCurrentWeekData: false
         };
       }
     }
