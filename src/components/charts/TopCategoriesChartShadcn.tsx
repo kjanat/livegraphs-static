@@ -76,7 +76,10 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
         <CardDescription>Most common conversation topics</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer
+          config={chartConfig}
+          className="h-[300px] sm:h-[350px] lg:h-[400px] w-full sm:max-w-[500px] lg:max-w-[600px] mx-auto"
+        >
           <BarChart
             accessibilityLayer
             data={chartData}
