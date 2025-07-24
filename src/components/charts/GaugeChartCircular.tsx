@@ -6,7 +6,14 @@
 
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface GaugeChartCircularProps {
@@ -115,72 +122,86 @@ export function GaugeChartCircular({
 
   const valuePath = createPath(startAngle, valueAngle, radius, innerRadius);
 
+  // Get current segment for legend
+  const getCurrentSegment = () => {
+    const pct = (value / max) * 100;
+    return (
+      [...segments].reverse().find((segment) => pct <= segment.threshold) ||
+      segments[segments.length - 1]
+    );
+  };
+
+  const currentSegment = getCurrentSegment();
+
   return (
-    <Card className="w-full">
+    <Card className="h-full flex flex-col">
       {title && (
-        <CardHeader className="text-center pb-2">
+        <CardHeader className="pb-0">
           <CardTitle>{title}</CardTitle>
           {subtitle && <CardDescription>{subtitle}</CardDescription>}
         </CardHeader>
       )}
-      <CardContent className="flex flex-col items-center">
-        <div className="relative" style={{ width: diameter, height: diameter }}>
-          <svg
-            width={diameter}
-            height={diameter}
-            role="img"
-            aria-label={`Gauge chart showing ${formatValue(value)}`}
-          >
-            <title>{`Gauge chart: ${formatValue(value)}`}</title>
-            {/* Background segments */}
-            {segmentPaths.map((segment) => (
+      <CardContent className="flex-1 pb-0">
+        <div className="flex items-center justify-center h-full">
+          <div className="relative" style={{ width: diameter, height: diameter }}>
+            <svg
+              width={diameter}
+              height={diameter}
+              role="img"
+              aria-label={`Gauge chart showing ${formatValue(value)}`}
+            >
+              <title>{`Gauge chart: ${formatValue(value)}`}</title>
+              {/* Background segments */}
+              {segmentPaths.map((segment) => (
+                <path
+                  key={`bg-${segment.label}`}
+                  d={segment.path}
+                  fill={segment.color}
+                  opacity={0.2}
+                />
+              ))}
+
+              {/* Value arc */}
               <path
-                key={`bg-${segment.label}`}
-                d={segment.path}
-                fill={segment.color}
-                opacity={0.2}
+                d={valuePath}
+                fill={currentColor}
+                className="transition-all duration-700 ease-out"
               />
-            ))}
 
-            {/* Value arc */}
-            <path
-              d={valuePath}
-              fill={currentColor}
-              className="transition-all duration-700 ease-out"
-            />
+              {/* Center circle */}
+              <circle cx={center} cy={center} r={innerRadius - 4} className="fill-background" />
+            </svg>
 
-            {/* Center circle */}
-            <circle cx={center} cy={center} r={innerRadius - 4} className="fill-background" />
-          </svg>
-
-          {/* Center content */}
-          {showValue && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div
-                className={cn(
-                  "font-bold tabular-nums",
-                  size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
-                )}
-              >
-                {formatValue(value)}
+            {/* Center content */}
+            {showValue && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div
+                  className={cn(
+                    "font-bold tabular-nums",
+                    size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
+                  )}
+                >
+                  {formatValue(value)}
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {value.toFixed(1)} / {max}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                {value.toFixed(1)} / {max}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-wrap justify-center gap-3 mt-4">
-          {segments.map((segment) => (
-            <div key={`legend-${segment.label}`} className="flex items-center gap-1.5 text-xs">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
-              <span className="text-muted-foreground">{segment.label}</span>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
       </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="text-muted-foreground leading-none text-center">
+          <div className="flex items-center gap-1.5">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: currentSegment.color }}
+            />
+            <span>{currentSegment.label} rating</span>
+          </div>
+        </div>
+      </CardFooter>
     </Card>
   );
 }

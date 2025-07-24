@@ -72,8 +72,8 @@ const LanguageDistributionChart = dynamic(
 
 const PerformanceTrendsChart = dynamic(
   () =>
-    import("@/components/charts/PerformanceTrendsChart").then((mod) => ({
-      default: mod.PerformanceTrendsChart
+    import("@/components/charts/PerformanceTrendsShadcn").then((mod) => ({
+      default: mod.PerformanceTrendsShadcn
     })),
   { loading: () => <ChartSkeleton height={400} />, ssr: false }
 );
@@ -197,23 +197,20 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
             />
           )}
         </div>
+        {/* Sentiment Trends Over Time */}
+        <div className="mt-6">
+          <PerformanceTrendsChart data={chartData.sentiment_time_series} />
+        </div>
       </ExpandableSection>
 
       {/* Performance Trends - Expanded by default if sufficient data */}
       <ExpandableSection
         title="Performance Trends"
-        subtitle="Response times and activity patterns over time"
+        subtitle="Activity patterns over time"
         defaultExpanded={visibility.hasSufficientData}
         priority="high"
       >
         <div className="space-y-6">
-          <PerformanceTrendsChart
-            data={{
-              dates_labels: chartData.dates_labels,
-              dates_values: chartData.dates_values,
-              response_time_values: chartData.response_time_values
-            }}
-          />
           <InteractiveHeatmap data={chartData.hourly_data} title="Weekly Usage Heatmap" />
         </div>
       </ExpandableSection>
