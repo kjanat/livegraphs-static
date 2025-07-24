@@ -85,11 +85,18 @@ export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartSha
           <BarChart
             accessibilityLayer
             data={chartData}
-            layout="horizontal"
-            margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
+            margin={{ top: 20, right: 30, left: 0, bottom: 40 }}
           >
             <CartesianGrid vertical={false} />
-            <XAxis dataKey="country" tickLine={false} axisLine={false} tickMargin={10} />
+            <XAxis
+              dataKey="country"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
             <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip
               cursor={false}
@@ -118,7 +125,7 @@ export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartSha
               }
             />
             <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[8, 8, 0, 0]}>
-              <LabelList position="right" offset={8} className="fill-foreground" fontSize={12} />
+              <LabelList position="top" offset={8} className="fill-foreground" fontSize={11} />
             </Bar>
           </BarChart>
         </ChartContainer>

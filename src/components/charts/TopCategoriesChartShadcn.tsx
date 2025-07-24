@@ -6,6 +6,7 @@
 
 "use client";
 
+import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 
 import {
@@ -36,7 +37,7 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("TopCategoriesChart: labels and values arrays must have equal length");
     return (
-      <Card className="h-full">
+      <Card>
         <CardContent className="flex items-center justify-center h-full">
           <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
         </CardContent>
@@ -56,81 +57,72 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
 
   const totalSessions = slicedValues.reduce((sum, val) => sum + val, 0);
   const topCategory = chartData[0];
+  const topPercentage = topCategory ? ((topCategory.sessions / totalSessions) * 100).toFixed(1) : 0;
 
-  const chartConfig: ChartConfig = {
+  const chartConfig = {
     sessions: {
       label: "Sessions",
-      theme: {
-        light: "hsl(262.1 83.3% 57.8%)",
-        dark: "hsl(263.4 70% 50.4%)"
-      }
+      color: "var(--chart-2)"
+    },
+    label: {
+      color: "var(--background)"
     }
-  };
+  } satisfies ChartConfig;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card>
       <CardHeader>
         <CardTitle>Top Categories</CardTitle>
         <CardDescription>Most common conversation topics</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+      <CardContent>
+        <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
             data={chartData}
-            layout="horizontal"
-            margin={{ top: 20, right: 60, bottom: 20, left: 120 }}
+            layout="vertical"
+            margin={{
+              right: 16
+            }}
           >
             <CartesianGrid horizontal={false} />
-            <XAxis type="number" tickLine={false} axisLine={false} />
             <YAxis
               dataKey="category"
               type="category"
               tickLine={false}
-              axisLine={false}
               tickMargin={10}
-              width={110}
+              axisLine={false}
+              hide
             />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  hideLabel
-                  formatter={(value, _name, item) => (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Category:</span>
-                        <span className="font-semibold">{item.payload.category}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Sessions:</span>
-                        <span className="font-semibold">{value}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-8">
-                        <span className="text-muted-foreground">Percentage:</span>
-                        <span className="font-semibold">
-                          {((Number(value) / totalSessions) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                />
-              }
-            />
-            <Bar dataKey="sessions" fill="var(--color-sessions)" radius={[0, 8, 8, 0]}>
-              <LabelList position="right" offset={8} className="fill-foreground" fontSize={12} />
+            <XAxis dataKey="sessions" type="number" hide />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <Bar dataKey="sessions" layout="vertical" fill="var(--color-sessions)" radius={4}>
+              <LabelList
+                dataKey="category"
+                position="insideLeft"
+                offset={8}
+                className="fill-white"
+                fontSize={12}
+              />
+              <LabelList
+                dataKey="sessions"
+                position="right"
+                offset={8}
+                className="fill-foreground"
+                fontSize={12}
+              />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 leading-none font-medium">
+          Leading category: "{topCategory?.category || "N/A"}" <TrendingUp className="h-4 w-4" />
+        </div>
         <div className="text-muted-foreground leading-none">
-          {topCategory && (
-            <>
-              "{topCategory.category}" leads with {topCategory.sessions} sessions (
-              {((topCategory.sessions / totalSessions) * 100).toFixed(1)}%)
-            </>
-          )}
+          {topCategory
+            ? `${topCategory.sessions} sessions (${topPercentage}% of total)`
+            : "No data available"}
         </div>
       </CardFooter>
     </Card>

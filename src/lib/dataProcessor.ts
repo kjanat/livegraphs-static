@@ -137,10 +137,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   // Category data
   const categoryData = execQuery<{ category: string; count: number }>(`
-    SELECT category, COUNT(*) as count
+    SELECT 
+      COALESCE(category, 'Unknown') as category, 
+      COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-      AND category IS NOT NULL
     GROUP BY category
     ORDER BY count DESC
   `);
@@ -370,13 +371,12 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     count: number;
   }>(`
     SELECT 
-      category,
+      COALESCE(category, 'Unknown') as category,
       SUM(cost_eur_cents) / 100.0 as total_cost,
       AVG(cost_eur_cents) / 100.0 as avg_cost,
       COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-      AND category IS NOT NULL
     GROUP BY category
     ORDER BY total_cost DESC
     LIMIT 10

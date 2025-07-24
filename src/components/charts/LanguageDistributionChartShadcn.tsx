@@ -74,7 +74,7 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
           <BarChart
             accessibilityLayer
             data={chartData}
-            margin={{ top: 20, right: 30, left: 30, bottom: 60 }}
+            margin={{ top: 20, right: 30, left: 0, bottom: 40 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
