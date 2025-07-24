@@ -1,4 +1,4 @@
-import { endOfDay, format, startOfDay } from "date-fns";
+import { endOfDay, startOfDay } from "date-fns";
 import { describe, expect, it } from "vitest";
 import {
   applyTimeToRange,

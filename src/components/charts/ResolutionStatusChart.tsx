@@ -6,10 +6,21 @@
 
 "use client";
 
-import { ResponsivePie } from "@nivo/pie";
-import { useDarkMode } from "@/lib/hooks/useDarkMode";
-import { useMobile } from "@/lib/hooks/useMobile";
-import { getNivoTheme, getNivoTooltipStyles } from "@/lib/utils/nivoTheme";
+import { Pie, PieChart } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart";
 
 interface ResolutionStatusChartProps {
   data: {
@@ -18,123 +29,108 @@ interface ResolutionStatusChartProps {
   };
 }
 
-export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
-  const isDarkMode = useDarkMode();
-  const isMobile = useMobile();
+const chartConfig = {
+  sessions: {
+    label: "Sessions"
+  },
+  resolved: {
+    label: "Resolved",
+    color: "var(--chart-3)" // green
+  },
+  escalated: {
+    label: "Escalated",
+    color: "var(--chart-1)" // red
+  },
+  unresolved: {
+    label: "Unresolved",
+    color: "var(--chart-2)" // blue/yellow
+  }
+} satisfies ChartConfig;
 
+export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("ResolutionStatusChart: labels and values arrays must have equal length");
     return (
-      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
-        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
-      </div>
+      <Card className="h-full flex flex-col items-center justify-center">
+        <CardContent>
+          <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+        </CardContent>
+      </Card>
     );
   }
 
   // Calculate total for percentage calculation
-  const total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
+  const _total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
 
-  // Create pieData with safe mapping to prevent undefined values
+  // Create chart data with safe mapping to prevent undefined values
   const maxLength = Math.min(data.labels.length, data.values.length);
-  const pieData = data.labels
+  const chartData = data.labels
     .slice(0, maxLength)
     .map((label, index) => ({
-      id: label,
-      label: label,
-      value: total > 0 ? (data.values[index] ?? 0) / total : 0, // Convert to percentage as decimal
-      rawValue: data.values[index] ?? 0, // Keep raw value for tooltip
-      color: getColorForResolution(label)
+      status: label.toLowerCase(),
+      sessions: data.values[index] ?? 0,
+      fill: `var(--color-${label.toLowerCase()})`
     }))
-    .filter((item) => item.rawValue > 0); // Filter out items with zero values
+    .filter((item) => item.sessions > 0); // Filter out items with zero values
 
-  function getColorForResolution(resolution: string): string {
-    if (resolution === "Resolved") return "#22C55E";
-    if (resolution === "Escalated") return "#EF4444";
-    return "#3B82F6";
-  }
+  const totalSessions = chartData.reduce((sum, item) => sum + item.sessions, 0);
 
   return (
-    <div
-      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
-      role="img"
-      aria-labelledby="resolution-chart-title"
-      aria-describedby="resolution-chart-desc"
-    >
-      <h3 id="resolution-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
-        Resolution Status
-      </h3>
-      <div id="resolution-chart-desc" className="sr-only">
-        Donut chart showing the resolution status of chatbot sessions, including resolved and
-        escalated cases
-      </div>
-      <div className="flex-1" style={{ minHeight: "300px" }}>
-        <ResponsivePie
-          data={pieData}
-          margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-          innerRadius={0.5}
-          padAngle={0.7}
-          cornerRadius={3}
-          activeOuterRadiusOffset={8}
-          borderWidth={1}
-          borderColor={{
-            from: "color",
-            modifiers: [["darker", 0.2]]
-          }}
-          colors={{ datum: "data.color" }}
-          arcLinkLabelsSkipAngle={10}
-          arcLinkLabelsTextColor={isDarkMode ? "#e5e7eb" : "#333333"}
-          arcLinkLabelsThickness={2}
-          arcLinkLabelsColor={{ from: "color" }}
-          arcLabelsSkipAngle={10}
-          arcLabelsTextColor={{
-            from: "color",
-            modifiers: [["darker", 2]]
-          }}
-          arcLabel="formattedValue"
-          valueFormat=">-.1%"
-          theme={getNivoTheme(isDarkMode)}
-          tooltip={({ datum }) => (
-            <div style={getNivoTooltipStyles(isDarkMode)}>
-              <div style={{ marginBottom: "4px" }}>
-                <strong>{datum.id}</strong>
-              </div>
-              <div style={{ fontSize: "14px" }}>
-                {datum.data.rawValue} sessions ({(datum.value * 100).toFixed(1)}%)
-              </div>
-            </div>
-          )}
-          legends={
-            isMobile
-              ? []
-              : [
-                  {
-                    anchor: "bottom",
-                    direction: "row",
-                    justify: false,
-                    translateX: 0,
-                    translateY: 56,
-                    itemsSpacing: 0,
-                    itemWidth: 100,
-                    itemHeight: 18,
-                    itemTextColor: isDarkMode ? "#9ca3af" : "#6b7280",
-                    itemDirection: "left-to-right",
-                    itemOpacity: 1,
-                    symbolSize: 18,
-                    symbolShape: "circle",
-                    effects: [
-                      {
-                        on: "hover",
-                        style: {
-                          itemTextColor: isDarkMode ? "#e5e7eb" : "#1f2937"
-                        }
-                      }
-                    ]
-                  }
-                ]
-          }
-        />
-      </div>
-    </div>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Resolution Status</CardTitle>
+        <CardDescription className="sr-only">
+          Pie chart showing the resolution status of chatbot sessions, including resolved and
+          escalated cases
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 pb-0 overflow-visible">
+        <ChartContainer
+          config={chartConfig}
+          className="[&_.recharts-pie-label-text]:fill-foreground [&_svg]:overflow-visible mx-auto aspect-square overflow-visible"
+        >
+          <PieChart margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value, name) => {
+                    const numValue = typeof value === "number" ? value : Number(value);
+                    const percentage = ((numValue / totalSessions) * 100).toFixed(1);
+                    return (
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground capitalize">{name}</span>
+                        <span className="font-mono font-medium">
+                          {value} sessions ({percentage}%)
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+              }
+            />
+            <Pie
+              data={chartData}
+              dataKey="sessions"
+              label={(entry) => entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+              nameKey="status"
+            />
+          </PieChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="text-muted-foreground leading-none text-center">
+          {(() => {
+            const resolvedCount = chartData.find((d) => d.status === "resolved")?.sessions || 0;
+            const escalatedCount = chartData.find((d) => d.status === "escalated")?.sessions || 0;
+            const totalCount = chartData.reduce((sum, item) => sum + item.sessions, 0);
+            const resolutionRate =
+              totalCount > 0 ? ((resolvedCount / totalCount) * 100).toFixed(1) : "0";
+            return `${resolutionRate}% resolved • ${escalatedCount.toLocaleString()} escalated`;
+          })()}
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  addDays,
   endOfDay,
   endOfMonth,
   endOfWeek,
@@ -8,20 +7,12 @@ import {
   startOfWeek,
   subDays
 } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useIsDesktop } from "./hooks/useBreakpoint";
@@ -271,7 +262,7 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={
               internalValue?.from ||
-              (maxDate ? new Date(Math.min(new Date().getTime(), maxDate.getTime())) : new Date())
+              (maxDate ? new Date(Math.min(Date.now(), maxDate.getTime())) : new Date())
             }
             selected={internalValue}
             onSelect={handleSelect}

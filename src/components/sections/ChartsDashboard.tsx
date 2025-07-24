@@ -15,6 +15,14 @@ import type { ChartData, Metrics } from "@/lib/types/session";
 import { getChartColors } from "@/lib/utils/chartColors";
 
 // Dynamic imports for all chart components
+const GaugeChartDemo = dynamic(
+  () =>
+    import("@/components/charts/GaugeChartDemo").then((mod) => ({
+      default: mod.GaugeChartDemo
+    })),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+
 const CostAnalysisChart = dynamic(
   () =>
     import("@/components/charts/CostAnalysisChart").then((mod) => ({
@@ -25,20 +33,25 @@ const CostAnalysisChart = dynamic(
 
 const DailyCostTrendChart = dynamic(
   () =>
-    import("@/components/charts/DailyCostTrendChart").then((mod) => ({
-      default: mod.DailyCostTrendChart
+    import("@/components/charts/DailyCostTrendChartShadcn").then((mod) => ({
+      default: mod.DailyCostTrendChartShadcn
     })),
   { loading: () => <ChartSkeleton height={400} />, ssr: false }
 );
 
 const GaugeChart = dynamic(
-  () => import("@/components/charts/GaugeChart").then((mod) => ({ default: mod.GaugeChart })),
+  () =>
+    import("@/components/charts/GaugeChartCircular").then((mod) => ({
+      default: mod.GaugeChartCircular
+    })),
   { loading: () => <ChartSkeleton height={250} />, ssr: false }
 );
 
 const HistogramChart = dynamic(
   () =>
-    import("@/components/charts/HistogramChart").then((mod) => ({ default: mod.HistogramChart })),
+    import("@/components/charts/HistogramChartShadcn").then((mod) => ({
+      default: mod.HistogramChartShadcn
+    })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
 
@@ -52,8 +65,8 @@ const InteractiveHeatmap = dynamic(
 
 const LanguageDistributionChart = dynamic(
   () =>
-    import("@/components/charts/LanguageDistributionChart").then((mod) => ({
-      default: mod.LanguageDistributionChart
+    import("@/components/charts/LanguageDistributionChartShadcn").then((mod) => ({
+      default: mod.LanguageDistributionChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -84,16 +97,16 @@ const SentimentDistributionChart = dynamic(
 
 const SessionsByCountryChart = dynamic(
   () =>
-    import("@/components/charts/SessionsByCountryChart").then((mod) => ({
-      default: mod.SessionsByCountryChart
+    import("@/components/charts/SessionsByCountryChartShadcn").then((mod) => ({
+      default: mod.SessionsByCountryChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
 
 const TopCategoriesChart = dynamic(
   () =>
-    import("@/components/charts/TopCategoriesChart").then((mod) => ({
-      default: mod.TopCategoriesChart
+    import("@/components/charts/TopCategoriesChartShadcn").then((mod) => ({
+      default: mod.TopCategoriesChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -139,6 +152,16 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
 
   return (
     <div className="space-y-6">
+      {/* TEMPORARY: Gauge Chart Comparison - Remove after selection */}
+      <ExpandableSection
+        title="Gauge Chart Design Options"
+        subtitle="Compare different gauge chart implementations"
+        defaultExpanded={true}
+        priority="high"
+      >
+        <GaugeChartDemo />
+      </ExpandableSection>
+
       {/* Essential Overview - Always visible */}
       <ExpandableSection
         title="Essential Overview"
@@ -159,8 +182,21 @@ export function ChartsDashboard({ metrics, chartData }: ChartsDashboardProps) {
               values: chartData.resolution_values
             }}
           />
-          {visibility.hasRatings && (
-            <GaugeChart value={chartData.avg_rating} title="Average User Rating" />
+          {visibility.hasRatings && chartData.avg_rating !== null && (
+            <GaugeChart
+              value={chartData.avg_rating}
+              max={5}
+              title="Average User Rating"
+              subtitle="Customer satisfaction score"
+              formatValue={(val) => val.toFixed(1)}
+              segments={[
+                { threshold: 20, color: "rgb(239, 68, 68)", label: "Poor" },
+                { threshold: 40, color: "rgb(251, 146, 60)", label: "Fair" },
+                { threshold: 60, color: "rgb(250, 204, 21)", label: "Good" },
+                { threshold: 80, color: "rgb(34, 197, 94)", label: "Very Good" },
+                { threshold: 100, color: "rgb(16, 185, 129)", label: "Excellent" }
+              ]}
+            />
           )}
         </div>
       </ExpandableSection>
