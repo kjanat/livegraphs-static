@@ -7,8 +7,17 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
 import { ANALYTICS_THRESHOLDS } from "@/lib/config/analytics-thresholds";
 import type { ChartData, Metrics } from "@/lib/types/session";
+import { cn } from "@/lib/utils";
 
 interface InsightsSummaryProps {
   metrics: Metrics;
@@ -25,6 +34,8 @@ interface Insight {
 }
 
 export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSummaryProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const insightsPerPage = 2;
   const insights: Insight[] = [];
 
   // Calculate session volume insight
@@ -194,19 +205,38 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
     return null;
   }
 
+  // Calculate pagination
+  const totalPages = Math.ceil(insights.length / insightsPerPage);
+  const startIndex = (currentPage - 1) * insightsPerPage;
+  const endIndex = startIndex + insightsPerPage;
+  const currentInsights = insights.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
   return (
     <section className="bg-card rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
         <CheckCircle className="h-6 w-6 text-primary" />
         Key Insights
+        {totalPages > 1 && (
+          <span className="text-sm font-normal text-muted-foreground ml-auto">
+            Page {currentPage} of {totalPages}
+          </span>
+        )}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {insights.slice(0, 4).map((insight, index) => {
+        {currentInsights.map((insight, index) => {
           const Icon = insight.icon;
           return (
             <div
-              key={`${insight.type}-${insight.title}-${index}`}
+              key={`${insight.type}-${insight.title}-${startIndex + index}`}
               className={`border rounded-lg p-4 transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
             >
               <div className="flex items-start gap-3">
@@ -228,15 +258,31 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
         })}
       </div>
 
-      {insights.length > 4 && (
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            View {insights.length - 4} more insights →
-          </button>
-        </div>
+      {totalPages > 1 && (
+        <Pagination className="mt-6">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={handlePreviousPage}
+                className={cn(
+                  "cursor-pointer",
+                  currentPage === 1 && "pointer-events-none opacity-50"
+                )}
+                aria-disabled={currentPage === 1}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                onClick={handleNextPage}
+                className={cn(
+                  "cursor-pointer",
+                  currentPage === totalPages && "pointer-events-none opacity-50"
+                )}
+                aria-disabled={currentPage === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </section>
   );
