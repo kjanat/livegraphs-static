@@ -5,19 +5,18 @@ import { DateRangePicker } from "./DateRangePicker";
 
 // Helper function to get day buttons from the calendar
 const getDayButtons = (includeDisabled = false) => {
-  // In react-day-picker v9, day buttons have data-day attribute
+  // Day buttons have name="day" attribute
   try {
     const allButtons = screen.getAllByRole("button");
     return allButtons.filter((btn) => {
-      const text = btn.textContent || "";
-      const hasDataDay = btn.hasAttribute("data-day");
+      const hasNameDay = btn.getAttribute("name") === "day";
       const isDisabled =
         btn.hasAttribute("disabled") || btn.getAttribute("aria-disabled") === "true";
-      // Check if it's a day button (1-31) with data-day attribute
+      // Check if it's a day button with name="day" attribute
       if (includeDisabled) {
-        return /^\d{1,2}$/.test(text) && hasDataDay;
+        return hasNameDay;
       }
-      return /^\d{1,2}$/.test(text) && hasDataDay && !isDisabled;
+      return hasNameDay && !isDisabled;
     });
   } catch {
     // Fallback if no buttons found

@@ -183,7 +183,7 @@ export function ResolutionStatusChart({
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
+                          className="fill-foreground text-sm"
                         >
                           Resolved
                         </tspan>
