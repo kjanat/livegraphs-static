@@ -23,6 +23,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
+import { DynamicBarLabel } from "@/components/ui/DynamicBarLabel";
 
 interface LanguageDistributionChartShadcnProps {
   data: {
@@ -109,22 +110,7 @@ export function LanguageDistributionChartShadcn({ data }: LanguageDistributionCh
               radius={4}
               minPointSize={5}
             >
-              <LabelList
-                dataKey="language"
-                position="insideLeft"
-                offset={8}
-                className="fill-white"
-                fontSize={12}
-                formatter={(value: string, entry: { sessions?: number } | undefined) => {
-                  // If the bar is too small, truncate the language name
-                  const sessions = entry?.sessions || 0;
-                  const percentage = (sessions / totalSessions) * 100;
-                  if (percentage < 5 && value.length > 10) {
-                    return `${value.substring(0, 10)}...`;
-                  }
-                  return value;
-                }}
-              />
+              <LabelList dataKey="language" content={DynamicBarLabel} position="insideLeft" />
               <LabelList
                 dataKey="sessions"
                 position="right"

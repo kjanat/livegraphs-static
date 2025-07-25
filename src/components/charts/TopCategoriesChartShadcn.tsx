@@ -23,6 +23,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
+import { DynamicBarLabel } from "@/components/ui/DynamicBarLabel";
 
 interface TopCategoriesChartShadcnProps {
   data: {
@@ -103,13 +104,7 @@ export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChart
             <XAxis dataKey="sessions" type="number" hide />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
             <Bar dataKey="sessions" layout="vertical" fill="var(--color-sessions)" radius={4}>
-              <LabelList
-                dataKey="category"
-                position="insideLeft"
-                offset={8}
-                className="fill-white"
-                fontSize={12}
-              />
+              <LabelList dataKey="category" content={DynamicBarLabel} position="insideLeft" />
               <LabelList
                 dataKey="sessions"
                 position="right"
