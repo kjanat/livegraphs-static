@@ -5,13 +5,20 @@ const nextConfig: NextConfig = {
   output: "export",
 
   // Disable build-activity overlay and auto-prerender in dev mode
-  devIndicators: false,
+  // devIndicators: false,
 
   allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev", "propc", "192.168.1.2"],
 
-  // // Base path for GitHub Pages deployment
-  // basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
-  // assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // Transpile recharts to fix EventEmitter3 issues
+  transpilePackages: [
+    "recharts",
+    "recharts-scale",
+    "d3-scale",
+    "d3-array",
+    "d3-shape",
+    "d3-time",
+    "d3-format"
+  ],
 
   // Disable image optimization for static export
   images: {
@@ -21,10 +28,24 @@ const nextConfig: NextConfig = {
   // Enable strict mode
   reactStrictMode: true,
 
+  // TypeScript configuration
+  typescript: {
+    // Ignore TypeScript errors in test files during build
+    ignoreBuildErrors: false,
+    tsconfigPath: "./tsconfig.json"
+  },
+
   // Optimize imports for better tree shaking
-  // experimental: {
-  //   optimizePackageImports: ["chart.js", "react-chartjs-2", "@nivo/core", "@nivo/geo", "date-fns"]
-  // },
+  /* experimental: {
+    optimizePackageImports: [
+      "chart.js",
+      "react-chartjs-2",
+      "@nivo/core",
+      "@nivo/geo",
+      "date-fns",
+      "@/components/ui"
+    ]
+  }, */
 
   // Note: Security headers need to be configured at the hosting level
   // for static exports (e.g., in nginx, Vercel, Netlify configs)
@@ -38,7 +59,9 @@ const nextConfig: NextConfig = {
       config.resolve = {
         ...config.resolve,
         alias: {
-          ...config.resolve.alias
+          ...config.resolve.alias,
+          // Fix for recharts EventEmitter3 issue
+          eventemitter3: require.resolve("eventemitter3")
         },
         fallback: {
           ...config.resolve.fallback,
@@ -70,10 +93,10 @@ const nextConfig: NextConfig = {
         })
       );
 
-      // Define module as undefined to prevent sql.js from trying to use it
+      // Use NormalModuleReplacementPlugin to force sql.js to use browser build
       config.plugins.push(
-        new webpack.DefinePlugin({
-          "typeof module": JSON.stringify("undefined")
+        new webpack.NormalModuleReplacementPlugin(/sql\.js$/, (resource: { request: string }) => {
+          resource.request = resource.request.replace(/sql\.js$/, "sql.js/dist/sql-wasm.js");
         })
       );
 

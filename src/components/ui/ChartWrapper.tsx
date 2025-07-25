@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Expand } from "lucide-react";
 import type { ReactNode } from "react";
-import { ExpandIcon } from "@/components/icons";
 
 interface ChartWrapperProps {
   children: ReactNode;
@@ -16,6 +16,16 @@ interface ChartWrapperProps {
   className?: string;
 }
 
+/**
+ * Renders a styled, accessible container for chart content with optional title and expand functionality.
+ *
+ * Displays a header with the provided title and, if an expand callback is supplied, an accessible expand button. The chart content is rendered within a responsive, visually distinct card layout.
+ *
+ * @param children - The chart content to display within the wrapper.
+ * @param title - Optional title displayed above the chart.
+ * @param onExpand - Optional callback invoked when the expand button is clicked.
+ * @param className - Optional additional CSS classes for the container.
+ */
 export function ChartWrapper({ children, title, onExpand, className = "" }: ChartWrapperProps) {
   // Generate a unique ID for the heading to use with aria-labelledby
   const headingId = title ? `chart-title-${title.toLowerCase().replace(/\s+/g, "-")}` : undefined;
@@ -37,7 +47,7 @@ export function ChartWrapper({ children, title, onExpand, className = "" }: Char
               aria-labelledby={headingId}
               aria-describedby={`${headingId}-expand-desc`}
             >
-              <ExpandIcon size={18} decorative />
+              <Expand className="h-[18px] w-[18px]" />
               <span id={`${headingId}-expand-desc`} className="sr-only">
                 Expand to fullscreen
               </span>

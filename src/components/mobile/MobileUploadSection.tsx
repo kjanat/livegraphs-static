@@ -6,8 +6,8 @@
 
 "use client";
 
+import { Download, Loader2, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
-import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons/index";
 
 interface MobileUploadSectionProps {
   isUploading: boolean;
@@ -24,6 +24,24 @@ interface MobileUploadSectionProps {
   onDrop: (event: React.DragEvent) => void;
 }
 
+/**
+ * Renders a mobile-friendly section for uploading, managing, and exporting data files.
+ *
+ * Provides controls for uploading JSON files, clearing loaded data, and exporting data as CSV (if a date range is present). Supports drag-and-drop file uploads and displays upload progress and error messages. The section can be expanded or collapsed by the user.
+ *
+ * @param isUploading - Whether a file upload is currently in progress
+ * @param uploadError - Error message to display if the upload fails
+ * @param hasData - Indicates if data has already been loaded
+ * @param hasDateRange - Indicates if the loaded data includes a date range (enables CSV export)
+ * @param onFileUpload - Callback invoked when a file is selected for upload
+ * @param onClearDatabase - Callback invoked to clear all loaded data
+ * @param onExportCSV - Callback invoked to export data as a CSV file
+ * @param isDragging - Whether a file is currently being dragged over the section
+ * @param onDragEnter - Handler for drag enter events
+ * @param onDragOver - Handler for drag over events
+ * @param onDragLeave - Handler for drag leave events
+ * @param onDrop - Handler for drop events
+ */
 export function MobileUploadSection({
   isUploading,
   uploadError,
@@ -58,7 +76,7 @@ export function MobileUploadSection({
         className="w-full p-3 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-lg"
       >
         <div className="flex items-center gap-2">
-          <UploadIcon size={18} className="text-muted-foreground" />
+          <Upload className="h-[18px] w-[18px] text-muted-foreground" />
           <h2 className="text-base font-semibold">{hasData ? "Manage Data" : "Upload Data"}</h2>
           {hasData && (
             <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
@@ -100,7 +118,7 @@ export function MobileUploadSection({
                   : "hover:bg-primary/90 cursor-pointer"
               }`}
             >
-              <UploadIcon size={16} />
+              <Upload className="h-4 w-4" />
               {hasData ? "Upload New JSON File" : "Upload JSON File"}
               <input
                 type="file"
@@ -115,7 +133,7 @@ export function MobileUploadSection({
             {isUploading && (
               <div className="text-center">
                 <span className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                  <SpinnerIcon size={16} />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Processing...
                 </span>
               </div>
@@ -129,7 +147,7 @@ export function MobileUploadSection({
                   className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium py-2.5 px-3 rounded-md transition-colors flex items-center justify-center gap-1.5 text-sm"
                   aria-label="Clear all data from database"
                 >
-                  <TrashIcon size={16} />
+                  <Trash2 className="h-4 w-4" />
                   Clear
                 </button>
                 {hasDateRange && (
@@ -139,7 +157,7 @@ export function MobileUploadSection({
                     className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-3 rounded-md transition-colors flex items-center justify-center gap-1.5 text-sm"
                     aria-label="Export data as CSV file"
                   >
-                    <DownloadIcon size={16} />
+                    <Download className="h-4 w-4" />
                     Export
                   </button>
                 )}

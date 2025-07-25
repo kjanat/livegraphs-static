@@ -6,19 +6,16 @@
 
 "use client";
 
-import { DataQualityIndicator } from "@/components/DataQualityIndicator";
-import { InsightsSummary } from "@/components/InsightsSummary";
-import { MobileDashboard } from "@/components/mobile/MobileDashboard";
+import { useState } from "react";
+import { CommandPalette } from "@/components/CommandPalette";
+import { AlertManager } from "@/components/dashboard/AlertManager";
+import { DatabaseStateManager } from "@/components/dashboard/DatabaseStateManager";
+import { DataVisualization } from "@/components/dashboard/DataVisualization";
+import { FileUploadManager } from "@/components/dashboard/FileUploadManager";
 import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
-import { MobileDateRangePicker } from "@/components/mobile/MobileDateRangePicker";
-import { MobileUploadSection } from "@/components/mobile/MobileUploadSection";
-import { ChartsDashboard } from "@/components/sections/ChartsDashboard";
 import { DatabaseStatsSection } from "@/components/sections/DatabaseStatsSection";
-import { UploadSection } from "@/components/sections/UploadSection";
-import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { EnhancedLoadingState } from "@/components/ui/EnhancedLoadingState";
-import { EnhancedMetricsDisplay } from "@/components/ui/MetricTooltip";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useDatabaseOperations } from "@/lib/hooks/useDatabaseOperations";
@@ -26,14 +23,17 @@ import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 /**
- * Client Dashboard - contains all interactive elements
- * This is a Client Component that handles state management and user interactions
+ * Renders the main client dashboard for chatbot conversation analytics, managing state, user interactions, and data visualization.
+ *
+ * This component orchestrates database state, file uploads, command palette actions, alert dialogs, date range selection, and responsive UI for both mobile and desktop. It conditionally renders sections for file upload, database statistics, date range picker, data visualization, and empty state based on the current database and user interaction state.
  */
 export function ClientDashboard() {
   useKeyboardNavigation();
 
   const isMobile = useIsMobile();
-  const { isInitialized, error: dbError, loadSessionsFromJSON } = useDatabase();
+  const [showClearDialog, setShowClearDialog] = useState(false);
+  const databaseHook = useDatabase();
+  const { isInitialized, error: dbError, loadSessionsFromJSON } = databaseHook;
 
   // Database operations
   const {
@@ -42,12 +42,14 @@ export function ClientDashboard() {
     metrics,
     chartData,
     isLoadingData,
+    showNoDataAlert,
+    setShowNoDataAlert,
     loadDataForDateRange,
     clearAllData,
     loadSampleData,
     exportCurrentData,
-    refreshStats
-  } = useDatabaseOperations();
+    loadNewDataset
+  } = useDatabaseOperations(databaseHook);
 
   // File upload handling
   const {
@@ -60,65 +62,56 @@ export function ClientDashboard() {
     handleDragOver,
     handleDrop
   } = useFileUpload(loadSessionsFromJSON, {
-    onSuccess: async () => {
-      await refreshStats();
-    }
+    onSuccess: loadNewDataset
   });
 
   // Computed values
   const hasData = (dbStats?.totalSessions ?? 0) > 0;
   const hasDateRange = !!dateRange;
 
+  // Handlers
+  const handleClearDatabase = () => setShowClearDialog(true);
+  const confirmClearDatabase = () => {
+    clearAllData();
+    setShowClearDialog(false);
+  };
+
   return (
     <>
-      {/* Database Status Messages */}
-      {!isInitialized && !dbError && (
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8">
-          <p className="text-primary">Initializing database...</p>
-        </div>
-      )}
+      {/* Alert Management */}
+      <AlertManager
+        showClearDialog={showClearDialog}
+        setShowClearDialog={setShowClearDialog}
+        showNoDataAlert={showNoDataAlert}
+        setShowNoDataAlert={setShowNoDataAlert}
+        onClearConfirm={confirmClearDatabase}
+      />
 
-      {dbError && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-8">
-          <p className="text-destructive">Database error: {dbError.message}</p>
-        </div>
-      )}
+      {/* Command Palette */}
+      <CommandPalette
+        onClearDatabase={handleClearDatabase}
+        onExportCSV={exportCurrentData}
+        onLoadSampleData={loadSampleData}
+        hasData={hasData}
+      />
+
+      {/* Database State */}
+      <DatabaseStateManager isInitialized={isInitialized} error={dbError} />
 
       {/* Main Content */}
       {isInitialized && (
         <>
-          {/* Upload Section */}
-          {isMobile ? (
-            <MobileUploadSection
-              isUploading={isUploading}
-              uploadError={uploadError}
-              hasData={hasData}
-              hasDateRange={hasDateRange}
-              onFileUpload={handleFileUpload}
-              onClearDatabase={clearAllData}
-              onExportCSV={exportCurrentData}
-              isDragging={isDragging}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            />
-          ) : (
-            <UploadSection
-              isUploading={isUploading}
-              uploadError={uploadError}
-              isDragging={isDragging}
-              hasData={hasData}
-              hasDateRange={hasDateRange}
-              onFileUpload={handleFileUpload}
-              onClearDatabase={clearAllData}
-              onExportCSV={exportCurrentData}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            />
-          )}
+          {/* File Upload Section */}
+          <FileUploadManager
+            hasData={hasData}
+            hasDateRange={hasDateRange}
+            isUploading={isUploading}
+            uploadError={uploadError}
+            onFileUpload={loadSessionsFromJSON}
+            onClearDatabase={handleClearDatabase}
+            onExportCSV={exportCurrentData}
+            onUploadSuccess={loadNewDataset}
+          />
 
           {/* Database Stats */}
           {dbStats &&
@@ -136,57 +129,71 @@ export function ClientDashboard() {
             ))}
 
           {/* Date Range Picker */}
-          {dbStats &&
-            hasData &&
-            (isMobile ? (
-              <MobileDateRangePicker
-                minDate={dbStats.dateRange.min}
-                maxDate={dbStats.dateRange.max}
-                onDateRangeChange={loadDataForDateRange}
-              />
-            ) : (
-              <DateRangePicker
-                minDate={dbStats.dateRange.min}
-                maxDate={dbStats.dateRange.max}
-                onDateRangeChange={loadDataForDateRange}
-              />
-            ))}
-
-          {/* Loading State */}
-          {isLoadingData && dateRange && (
-            <EnhancedLoadingState
-              stage={isMobile ? "charts" : "metrics"}
-              totalSessions={dbStats?.totalSessions}
-              className="mb-8"
+          {dbStats && hasData && (
+            <DateRangePicker
+              value={dateRange ? { from: dateRange.start, to: dateRange.end } : undefined}
+              onChange={(range) => {
+                if (range?.from && range?.to) {
+                  loadDataForDateRange(range.from, range.to);
+                }
+              }}
+              minDate={new Date(dbStats.dateRange.min)}
+              maxDate={new Date(dbStats.dateRange.max)}
+              presets={[
+                {
+                  label: "All Data",
+                  shortLabel: "All",
+                  value: () => {
+                    const min = new Date(dbStats.dateRange.min);
+                    const max = new Date(dbStats.dateRange.max);
+                    return { from: min, to: max };
+                  }
+                },
+                {
+                  label: "Last 7 Days",
+                  shortLabel: "7D",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(start.getDate() - 6);
+                    return { from: start, to: end };
+                  }
+                },
+                {
+                  label: "Last 30 Days",
+                  shortLabel: "30D",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(start.getDate() - 29);
+                    return { from: start, to: end };
+                  }
+                },
+                {
+                  label: "Last 3 Months",
+                  shortLabel: "3M",
+                  value: () => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setMonth(start.getMonth() - 3);
+                    return { from: start, to: end };
+                  }
+                }
+              ]}
+              monthsMobile={1}
+              monthsDesktop={2}
+              showPresetCombobox={true}
             />
           )}
 
-          {/* Metrics Display (Desktop only) */}
-          {!isMobile && metrics && !isLoadingData && (
-            <EnhancedMetricsDisplay
-              metrics={metrics as unknown as { [key: string]: string | number }}
-            />
-          )}
-
-          {/* Mobile Dashboard */}
-          {isMobile && metrics && chartData && !isLoadingData && (
-            <MobileDashboard metrics={metrics} chartData={chartData} />
-          )}
-
-          {/* Desktop Dashboard */}
-          {!isMobile && metrics && chartData && dateRange && !isLoadingData && (
-            <>
-              <DataQualityIndicator
-                metrics={metrics}
-                totalSessions={metrics["Total Conversations"]}
-                dateRange={dateRange}
-              />
-
-              <InsightsSummary metrics={metrics} chartData={chartData} dateRange={dateRange} />
-
-              <ChartsDashboard metrics={metrics} chartData={chartData} />
-            </>
-          )}
+          {/* Data Visualization */}
+          <DataVisualization
+            metrics={metrics}
+            chartData={chartData}
+            dateRange={dateRange}
+            isLoadingData={isLoadingData}
+            totalSessions={dbStats?.totalSessions}
+          />
 
           {/* Empty State */}
           {!hasData && (

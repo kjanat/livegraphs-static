@@ -6,8 +6,8 @@
 
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { ChevronDownIcon } from "@/components/icons/index";
 
 interface MobileCollapsibleSectionProps {
   title: string;
@@ -16,6 +16,16 @@ interface MobileCollapsibleSectionProps {
   badge?: string | number;
 }
 
+/**
+ * Renders a collapsible section for mobile interfaces with a title, optional badge, and expandable content area.
+ *
+ * The section can be expanded or collapsed by tapping the header. The initial expanded state can be set via `defaultExpanded`.
+ *
+ * @param title - The header text displayed for the section
+ * @param defaultExpanded - If true, the section starts expanded; otherwise, it is collapsed by default
+ * @param children - The content displayed inside the collapsible area
+ * @param badge - An optional label or count shown next to the title
+ */
 export function MobileCollapsibleSection({
   title,
   defaultExpanded = false,
@@ -37,9 +47,8 @@ export function MobileCollapsibleSection({
             <span className="px-2 py-0.5 text-xs font-medium bg-muted rounded-full">{badge}</span>
           )}
         </div>
-        <ChevronDownIcon
-          size={16}
-          className={`text-muted-foreground transition-transform duration-200 ${
+        <ChevronDown
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
             isExpanded ? "rotate-180" : ""
           }`}
         />

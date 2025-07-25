@@ -1,13 +1,15 @@
 /**
- * Notso AI - Metric Tooltip Component for Complex Metrics
+ * Notso AI - Metric Tooltip Component for Complex Metrics (enhanced with shadcn/ui)
  * Copyright (C) 2025  Kaj Kowalski
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { InfoIcon } from "@/components/icons";
+import { InfoIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 
 interface MetricTooltipProps {
   metric: string;
@@ -52,6 +54,17 @@ const metricExplanations = {
   }
 };
 
+/**
+ * Displays a metric with its value and provides a tooltip containing an explanation and calculation details.
+ *
+ * Shows the metric name and value in a styled container. On hover, an info icon reveals a tooltip with the metric's explanation, calculation method (if available), and current value. Custom explanations and calculations can be provided; otherwise, defaults are used.
+ *
+ * @param metric - The name of the metric to display.
+ * @param value - The value associated with the metric.
+ * @param explanation - Optional custom explanation text for the metric.
+ * @param calculation - Optional custom calculation description for the metric.
+ * @param className - Optional additional CSS classes for the container.
+ */
 export function MetricTooltip({
   metric,
   value,
@@ -59,173 +72,85 @@ export function MetricTooltip({
   calculation,
   className = ""
 }: MetricTooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isPersistent, setIsPersistent] = useState(false);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
   const metricInfo = metricExplanations[metric as keyof typeof metricExplanations];
   const displayExplanation = explanation || metricInfo?.explanation || "No explanation available";
   const displayCalculation = calculation || metricInfo?.calculation;
 
-  // Handle click outside to close tooltip
-  useEffect(() => {
-    if (isPersistent && isVisible) {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          tooltipRef.current &&
-          !tooltipRef.current.contains(event.target as Node) &&
-          buttonRef.current &&
-          !buttonRef.current.contains(event.target as Node)
-        ) {
-          setIsVisible(false);
-          setIsPersistent(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isPersistent, isVisible]);
-
   return (
-    <div className={`relative ${className}`}>
+    <div className={cn("relative", className)}>
       <div className="bg-secondary p-4 rounded transition-all hover:bg-secondary/80 hover:scale-105 group">
-        <div className="flex items-center justify-between mb-1">
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
-            {metric}
-            <button
-              ref={buttonRef}
-              type="button"
-              onClick={() => {
-                if (isPersistent) {
-                  // If already persistent, close it
-                  setIsVisible(false);
-                  setIsPersistent(false);
-                } else {
-                  // Make it persistent
-                  setIsVisible(true);
-                  setIsPersistent(true);
-                }
-              }}
-              onMouseEnter={() => {
-                if (!isPersistent) {
-                  setIsVisible(true);
-                }
-              }}
-              onMouseLeave={() => {
-                if (!isPersistent) {
-                  setIsVisible(false);
-                }
-              }}
-              onFocus={() => {
-                if (!isPersistent) {
-                  setIsVisible(true);
-                }
-              }}
-              onBlur={() => {
-                if (!isPersistent) {
-                  setIsVisible(false);
-                }
-              }}
-              className="opacity-60 hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 rounded focus:outline-none focus:ring-1 focus:ring-primary/50"
-              aria-label={`Help for ${metric}`}
-              aria-expanded={isVisible}
-              aria-haspopup="true"
-            >
-              <InfoIcon size={14} className="text-muted-foreground" />
-            </button>
+        <div className="flex items-center justify-between mb-1 min-w-0">
+          <div className="text-sm text-muted-foreground flex items-center gap-2 min-w-0">
+            <span className="truncate">{metric}</span>
+            <HoverCard openDelay={200} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-3.5 w-3.5 opacity-60 hover:opacity-100 transition-opacity cursor-help shrink-0 hidden sm:inline-block" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80 max-w-sm select-text" side="top" align="start">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
+                    <p className="text-sm text-muted-foreground">{displayExplanation}</p>
+                  </div>
+
+                  {displayCalculation && (
+                    <div className="border-t pt-3">
+                      <h5 className="font-medium text-xs text-foreground mb-1">Calculation</h5>
+                      <p className="text-xs text-muted-foreground font-mono bg-secondary/50 p-2 rounded">
+                        {displayCalculation}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="border-t pt-3">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Current value:</strong>{" "}
+                      {typeof value === "number" ? value.toLocaleString() : value}
+                    </p>
+                  </div>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           </div>
         </div>
         <div className="text-xl font-semibold">
           {typeof value === "number" ? value.toLocaleString() : value}
         </div>
-
-        {/* Tooltip */}
-        {isVisible && (
-          <div
-            ref={tooltipRef}
-            className="absolute z-50 bottom-full left-0 mb-2 w-80 max-w-sm bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in slide-in-from-bottom-2 duration-200 select-text"
-            style={{ userSelect: "text" }}
-          >
-            {/* Close button - only show in persistent mode */}
-            {isPersistent && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsVisible(false);
-                  setIsPersistent(false);
-                }}
-                className="absolute top-2 right-2 p-1 rounded hover:bg-secondary transition-colors"
-                aria-label="Close tooltip"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            )}
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-semibold text-sm text-foreground mb-1">{metric}</h4>
-                <p className="text-sm text-muted-foreground">{displayExplanation}</p>
-              </div>
-
-              {displayCalculation && (
-                <div className="border-t pt-2">
-                  <h5 className="font-medium text-xs text-foreground mb-1">Calculation</h5>
-                  <p className="text-xs text-muted-foreground font-mono bg-secondary/50 p-2 rounded">
-                    {displayCalculation}
-                  </p>
-                </div>
-              )}
-
-              <div className="border-t pt-2">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Current value:</strong>{" "}
-                  {typeof value === "number" ? value.toLocaleString() : value}
-                </p>
-              </div>
-            </div>
-
-            {/* Arrow */}
-            <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-border"></div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
+/**
+ * Displays a collection of key metrics in a styled card with tooltips for each metric.
+ *
+ * Renders each metric using the `MetricTooltip` component, providing interactive explanations and calculation details for each metric value.
+ *
+ * @param metrics - An object mapping metric names to their corresponding values to be displayed.
+ */
 export function EnhancedMetricsDisplay({
   metrics
 }: {
   metrics: { [key: string]: string | number };
 }) {
   return (
-    <div className="bg-card rounded-lg shadow-md p-6 mb-8 transition-all duration-200 hover:shadow-lg animate-in">
-      <h2 className="text-xl font-bold mb-4">Key Metrics</h2>
-      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        {Object.entries(metrics).map(([key, value]) => (
-          <MetricTooltip
-            key={key}
-            metric={key}
-            value={value}
-            explanation=""
-            className="animate-in fade-in duration-500"
-          />
-        ))}
-      </div>
-    </div>
+    <Card className="mb-8 transition-all duration-200 hover:shadow-lg animate-in">
+      <CardHeader>
+        <CardTitle className="text-xl">Key Metrics</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          {Object.entries(metrics).map(([key, value]) => (
+            <MetricTooltip
+              key={key}
+              metric={key}
+              value={value}
+              explanation=""
+              className="animate-in fade-in duration-500"
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

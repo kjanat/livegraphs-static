@@ -6,9 +6,15 @@
 
 "use client";
 
+import { Info } from "lucide-react";
 import { useState } from "react";
-import { InfoIcon } from "@/components/icons/index";
+import { FooterContent } from "@/components/FooterContent";
 
+/**
+ * Renders a floating info button and an overlay footer panel for mobile dashboards.
+ *
+ * Displays a fixed info button in the bottom-right corner. When tapped, an overlay appears with additional footer content and a close button. The overlay can be dismissed by tapping outside the panel or the close button.
+ */
 export function MobileFooter() {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -21,7 +27,7 @@ export function MobileFooter() {
         className="fixed bottom-4 right-4 p-2 bg-muted rounded-full shadow-md hover:shadow-lg transition-all z-10"
         aria-label="Show information"
       >
-        <InfoIcon size={16} className="text-muted-foreground" />
+        <Info className="h-4 w-4 text-muted-foreground" />
       </button>
 
       {/* Info overlay */}
@@ -34,38 +40,7 @@ export function MobileFooter() {
             aria-label="Close information panel"
           />
           <div className="fixed bottom-0 left-0 right-0 bg-card rounded-t-xl p-4 z-30 shadow-lg">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                © 2025 Kaj Kowalski - Licensed under{" "}
-                <a
-                  href="https://www.gnu.org/licenses/agpl-3.0.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  AGPLv3
-                </a>
-              </p>
-              <div className="flex gap-3 text-xs">
-                <a
-                  href="https://github.com/notsoai/livegraphs-static"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  View Source
-                </a>
-                <span className="text-muted-foreground">•</span>
-                <a
-                  href="https://github.com/notsoai/livegraphs-static/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Report Issues
-                </a>
-              </div>
-            </div>
+            <FooterContent className="space-y-2" compact />
             <button
               type="button"
               onClick={() => setShowInfo(false)}

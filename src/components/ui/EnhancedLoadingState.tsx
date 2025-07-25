@@ -6,8 +6,9 @@
 
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SpinnerIcon } from "@/components/icons";
+import { Progress } from "@/components/ui/progress";
 
 interface EnhancedLoadingStateProps {
   stage: "metrics" | "charts" | "processing";
@@ -45,6 +46,11 @@ const stageDescriptions = {
   processing: "Processing Data"
 };
 
+/**
+ * Displays an animated loading interface with contextual messages and a progress indicator based on the current processing stage.
+ *
+ * Shows a rotating set of status messages, a simulated progress bar, and contextual information such as estimated time and dataset insights. Intended for use during multi-stage client-side data processing.
+ */
 export function EnhancedLoadingState({
   stage,
   totalSessions,
@@ -103,7 +109,7 @@ export function EnhancedLoadingState({
             <div className="w-16 h-16 bg-primary/10 rounded-full animate-ping" />
           </div>
           <div className="relative flex items-center justify-center">
-            <SpinnerIcon size={48} className="text-primary" />
+            <Loader2 className="h-12 w-12 text-primary animate-spin" />
           </div>
         </div>
 
@@ -116,12 +122,7 @@ export function EnhancedLoadingState({
         </p>
 
         {/* Progress Bar */}
-        <div className="w-full bg-secondary rounded-full h-2 mb-4 overflow-hidden">
-          <div
-            className="bg-primary h-2 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <Progress value={progress} className="mb-4" />
 
         {/* Context Information */}
         <div className="space-y-2 text-sm text-muted-foreground">

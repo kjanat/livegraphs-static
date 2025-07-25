@@ -1,13 +1,17 @@
 /**
- * Notso AI - A web dashboard for visualizing chatbot conversation analytics
+ * Notso AI - A web dashboard for visualizing chatbot conversation analytics (enhanced with shadcn/ui)
  * Copyright (C) 2025  Kaj Kowalski
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 "use client";
 
-import { useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon } from "@/components/icons";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface ExpandableSectionProps {
   title: string;
@@ -18,6 +22,18 @@ interface ExpandableSectionProps {
   className?: string;
 }
 
+/**
+ * Renders a collapsible section with a header, optional subtitle, and priority-based styling and badge.
+ *
+ * Displays content that can be expanded or collapsed by the user. The section header includes a title, optional subtitle, and a badge indicating its priority ("Essential", "Detailed", or "Advanced"). When expanded, the section smoothly scrolls into view if it was not initially expanded and is outside the viewport. Styling and badge appearance are determined by the specified priority.
+ *
+ * @param title - The main heading for the section.
+ * @param subtitle - Optional subheading displayed below the title.
+ * @param defaultExpanded - If true, the section is expanded by default.
+ * @param priority - Determines the section's visual style and badge ("high", "medium", or "low").
+ * @param children - The content to display inside the expandable section.
+ * @param className - Additional CSS classes for the section container.
+ */
 export function ExpandableSection({
   title,
   subtitle,
@@ -27,6 +43,31 @@ export function ExpandableSection({
   className = ""
 }: ExpandableSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to section when expanded
+  useEffect(() => {
+    if (isExpanded && sectionRef.current && !defaultExpanded) {
+      // Small delay to let expansion animation start
+      setTimeout(() => {
+        const element = sectionRef.current;
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const yOffset = -100; // Offset for fixed header
+
+          // Only scroll if section header is above viewport or too far down
+          if (rect.top < 0 || rect.top > 200) {
+            const y = element.offsetTop + yOffset;
+
+            window.scrollTo({
+              top: y,
+              behavior: "smooth"
+            });
+          }
+        }
+      }, 100);
+    }
+  }, [isExpanded, defaultExpanded]);
 
   const getPriorityStyles = () => {
     switch (priority) {
@@ -45,21 +86,24 @@ export function ExpandableSection({
     switch (priority) {
       case "high":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-primary/10 text-primary rounded-full">
+          <Badge variant="default" className="bg-primary/10 text-primary hover:bg-primary/20">
             Essential
-          </span>
+          </Badge>
         );
       case "medium":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
+          >
             Detailed
-          </span>
+          </Badge>
         );
       case "low":
         return (
-          <span className="text-xs sm:text-sm px-3 py-1.5 bg-muted text-muted-foreground rounded-full">
+          <Badge variant="outline" className="text-muted-foreground">
             Advanced
-          </span>
+          </Badge>
         );
       default:
         return null;
@@ -67,11 +111,13 @@ export function ExpandableSection({
   };
 
   return (
-    <section
-      className={`border rounded-lg transition-all duration-300 ${getPriorityStyles()} ${className}`}
+    <Card
+      ref={sectionRef}
+      className={cn("transition-all duration-300 p-0 border", getPriorityStyles(), className)}
+      data-expandable-section
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -79,7 +125,7 @@ export function ExpandableSection({
             setIsExpanded(!isExpanded);
           }
         }}
-        className="w-full p-4 sm:p-6 text-left flex items-center justify-between hover:bg-background/50 focus:bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transition-all duration-200 rounded-t-lg min-h-[44px]"
+        className="w-full p-4 sm:p-6 text-left flex items-center justify-between h-auto hover:bg-background/50 focus:bg-background/50 rounded-t-lg min-h-[44px] font-normal"
         aria-expanded={isExpanded}
         aria-controls={`section-${title.replace(/\s+/g, "-").toLowerCase()}`}
         aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
@@ -93,12 +139,12 @@ export function ExpandableSection({
         </div>
         <div className="ml-4 flex-shrink-0 p-2 sm:p-2">
           {isExpanded ? (
-            <ChevronUpIcon size={24} className="text-muted-foreground" />
+            <ChevronUp size={24} className="text-muted-foreground" />
           ) : (
-            <ChevronDownIcon size={24} className="text-muted-foreground" />
+            <ChevronDown size={24} className="text-muted-foreground" />
           )}
         </div>
-      </button>
+      </Button>
 
       <div
         id={`section-${title.replace(/\s+/g, "-").toLowerCase()}`}
@@ -111,13 +157,13 @@ export function ExpandableSection({
         }}
       >
         <div
-          className={`pb-6 px-6 transition-all duration-300 ${
+          className={`pb-4 px-6 transition-all duration-300 ${
             isExpanded ? "animate-in fade-in slide-in-from-top-2" : ""
           }`}
         >
           {children}
         </div>
       </div>
-    </section>
+    </Card>
   );
 }

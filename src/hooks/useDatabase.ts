@@ -5,6 +5,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import { schema } from "@/lib/db/schema";
 import type { Database } from "@/lib/db/sql-wrapper";
 import {
@@ -33,14 +35,23 @@ interface DatabaseHook {
   loadSessionsFromJSON: (jsonData: ChatSession[]) => Promise<number>;
   getDatabaseStats: () => DatabaseStats;
   clearDatabase: () => void;
+  dbVersion: number;
 }
 
-const STORAGE_KEY = "livegraphs_db";
+const STORAGE_KEY = DATA_PROCESSING_THRESHOLDS.database.localStorageKey;
 
+/**
+ * React hook for managing a client-side SQL database of chatbot conversation analytics, including initialization, persistence, data loading, statistics retrieval, and clearing functionality.
+ *
+ * The hook handles database lifecycle, schema setup, and localStorage persistence using sql.js. It provides methods to load sessions from JSON, retrieve summary statistics, clear all stored data, and access the current database version for change tracking.
+ *
+ * @returns An object containing the database instance, initialization and error states, methods for loading sessions, retrieving statistics, clearing the database, and the current database version.
+ */
 export function useDatabase(): DatabaseHook {
   const [db, setDb] = useState<Database | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [dbVersion, setDbVersion] = useState(0);
 
   // Initialize database
   useEffect(() => {
@@ -102,9 +113,27 @@ export function useDatabase(): DatabaseHook {
         binary += String.fromCharCode(bytes[i]);
       }
       const base64 = btoa(binary);
+
+      // Check size before saving
+      const sizeInMB =
+        (base64.length * DATA_PROCESSING_THRESHOLDS.database.sizeCalculationFactor) /
+        DATA_PROCESSING_THRESHOLDS.database.mbConversionFactor;
+      if (sizeInMB > DATA_PROCESSING_THRESHOLDS.database.maxSizeMB) {
+        console.warn(`Database size (${sizeInMB.toFixed(2)}MB) may exceed localStorage limits`);
+      }
+
       localStorage.setItem(STORAGE_KEY, base64);
     } catch (err) {
-      console.error("Failed to save database:", err);
+      if (err instanceof DOMException && err.name === "QuotaExceededError") {
+        console.error("localStorage quota exceeded");
+        toast.error(
+          "Database too large to save. Try reducing the amount of data or clearing old data first."
+        );
+        // Clear the storage key to prevent issues
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        console.error("Failed to save database:", err);
+      }
     }
   }, [db]);
 
@@ -198,6 +227,9 @@ export function useDatabase(): DatabaseHook {
       // Save to localStorage after successful load
       saveDatabase();
 
+      // Bump version to trigger re-renders
+      setDbVersion((v) => v + 1);
+
       return successCount;
     },
     [db, insertSessionSync, saveDatabase]
@@ -205,6 +237,9 @@ export function useDatabase(): DatabaseHook {
 
   // Get database statistics
   const getDatabaseStats = useCallback((): DatabaseStats => {
+    // Access dbVersion to ensure this callback is recreated when database changes
+    void dbVersion;
+
     if (!db) {
       return {
         totalSessions: 0,
@@ -221,8 +256,8 @@ export function useDatabase(): DatabaseHook {
         db,
         `SELECT 
           COUNT(*) as total_sessions,
-          MIN(DATE(start_time)) as min_date,
-          MAX(DATE(start_time)) as max_date
+          MIN(start_time) as min_date,
+          MAX(start_time) as max_date
         FROM sessions`
       );
 
@@ -240,7 +275,7 @@ export function useDatabase(): DatabaseHook {
         dateRange: { min: "", max: "" }
       };
     }
-  }, [db]);
+  }, [db, dbVersion]);
 
   // Clear database
   const clearDatabase = useCallback(() => {
@@ -251,6 +286,7 @@ export function useDatabase(): DatabaseHook {
       db.run("DELETE FROM questions");
       db.run("DELETE FROM sessions");
       localStorage.removeItem(STORAGE_KEY);
+      setDbVersion((v) => v + 1);
     } catch (err) {
       console.error("Error clearing database:", err);
     }
@@ -262,6 +298,7 @@ export function useDatabase(): DatabaseHook {
     error,
     loadSessionsFromJSON,
     getDatabaseStats,
-    clearDatabase
+    clearDatabase,
+    dbVersion
   };
 }

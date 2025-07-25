@@ -9,6 +9,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import { UI_DIMENSIONS } from "@/lib/constants/ui";
 
 interface ErrorBoundaryProps {
@@ -60,6 +62,15 @@ function getErrorStrategy(error: Error) {
   return ERROR_STRATEGIES.DEFAULT;
 }
 
+/**
+ * React error boundary component for displaying user-friendly error messages and recovery options.
+ *
+ * Presents contextual error information, suggested actions, and developer diagnostics when an error occurs in the application. Offers options such as retrying, clearing browser data, reloading the page, or returning home, depending on the error type. Includes a reporting mechanism and detailed error output in development mode.
+ *
+ * @param error - The error object to display and analyze
+ * @param reset - Callback to attempt recovery from the error
+ * @returns The rendered error boundary UI
+ */
 export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [isReporting, setIsReporting] = useState(false);
@@ -126,13 +137,16 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        <Logo size={UI_DIMENSIONS.logoSize * 1.5} className="text-primary mx-auto mb-6" />
+        <Logo
+          size={UI_DIMENSIONS.logoSize * DATA_PROCESSING_THRESHOLDS.ui.logoSizeMultiplier}
+          className="text-primary mx-auto mb-6"
+        />
 
         <h1 className="text-3xl font-bold mb-4">{strategy.title}</h1>
 
         <p className="text-muted-foreground mb-8">{strategy.message}</p>
 
-        {retryCount > 2 && (
+        {retryCount > DATA_PROCESSING_THRESHOLDS.errorRecovery.maxRetryCount && (
           <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               Multiple retry attempts detected. The issue might require clearing your browser data
@@ -195,23 +209,25 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
         {process.env.NODE_ENV === "development" && (
           <details className="mt-8 p-4 bg-muted rounded-lg text-left">
             <summary className="cursor-pointer text-sm font-medium mb-2">Error Details</summary>
-            <div className="space-y-2">
-              {error.digest && (
-                <p className="text-xs font-mono text-muted-foreground">
-                  <strong>Error ID:</strong> {error.digest}
+            <ScrollArea className="h-[300px] w-full rounded-md">
+              <div className="space-y-2 pr-4">
+                {error.digest && (
+                  <p className="text-xs font-mono text-muted-foreground">
+                    <strong>Error ID:</strong> {error.digest}
+                  </p>
+                )}
+                <p className="text-xs font-mono text-muted-foreground break-all">
+                  <strong>Message:</strong> {error.message}
                 </p>
-              )}
-              <p className="text-xs font-mono text-muted-foreground break-all">
-                <strong>Message:</strong> {error.message}
-              </p>
-              {error.stack && (
-                <pre className="text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap">
-                  <strong>Stack:</strong>
-                  {"\n"}
-                  {error.stack}
-                </pre>
-              )}
-            </div>
+                {error.stack && (
+                  <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap">
+                    <strong>Stack:</strong>
+                    {"\n"}
+                    {error.stack}
+                  </pre>
+                )}
+              </div>
+            </ScrollArea>
           </details>
         )}
       </div>

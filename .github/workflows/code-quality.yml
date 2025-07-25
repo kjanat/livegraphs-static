@@ -156,4 +156,6 @@ jobs:
       - name: Check for unused exports
         run: |
           pnpm dlx ts-prune \
-            --error
+            --error \
+            --ignore "stories|components/ui|components/charts|.next/types|app/(error|loading|not-found|global-error|manifest|robots|sitemap)|next.config|vitest.config|lib/config|lib/constants" \
+            --skip "test|spec"

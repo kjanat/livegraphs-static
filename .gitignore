@@ -73,3 +73,25 @@ public/sql-js/
 /playwright/.cache/
 results.xml
 mobile-before-clear.png
+
+# json
+data.json
+output.json
+test_compressed_new.json.gz
+test_compressed.json.gz
+test_defaults.json
+test_json_pretty.json
+test_jsonl_compressed.jsonl.gz
+test_jsonl_pretty.jsonl
+test_jsonl.jsonl
+test_output.json
+test_pretty_compressed.json.gz
+test_pretty.json
+
+src/components/calendar-components.md
+
+*storybook.log
+storybook-static
+
+# AI
+.gemini/

@@ -6,7 +6,7 @@
 
 "use client";
 
-import { ChartIcon, FileIcon } from "@/components/icons";
+import { BarChart3, File, LineChart, Lock, Target, Zap } from "lucide-react";
 
 interface EmptyStateProps {
   onSampleData?: () => void;
@@ -14,6 +14,15 @@ interface EmptyStateProps {
   onFileUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * Renders an empty state UI for chatbot analytics, guiding users to upload or try sample data and showcasing key features and data requirements.
+ *
+ * Displays a hero section with illustration, upload options, and sample data button; highlights value propositions; lists analytics features; and provides a data format guide with schema reference and example.
+ *
+ * @param onSampleData - Optional callback triggered when the "Try Sample Data" button is clicked.
+ * @param onUploadClick - Optional callback triggered when the upload button is clicked (if file input is not provided).
+ * @param onFileUpload - Optional event handler for file input changes, accepting a JSON file upload.
+ */
 export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyStateProps) {
   return (
     <div className="space-y-8">
@@ -26,11 +35,11 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
               <div className="w-32 h-32 bg-primary/10 rounded-full animate-pulse" />
             </div>
             <div className="relative flex items-center justify-center">
-              <FileIcon
+              <File
                 size={48}
                 className="text-primary/50 animate-in slide-in duration-700 delay-200"
               />
-              <ChartIcon
+              <BarChart3
                 size={48}
                 className="text-primary ml-4 animate-in slide-in duration-700 delay-400"
               />
@@ -85,7 +94,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
       {/* Value Proposition */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-green-500 mb-2">📊</div>
+          <div className="mb-3 flex justify-center">
+            <LineChart className="h-10 w-10 text-green-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Smart Insights</h3>
           <p className="text-sm text-muted-foreground">
             AI-generated findings highlight critical patterns and recommendations
@@ -93,7 +104,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-blue-500 mb-2">🎯</div>
+          <div className="mb-3 flex justify-center">
+            <Target className="h-10 w-10 text-blue-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Progressive Disclosure</h3>
           <p className="text-sm text-muted-foreground">
             Essential metrics first, detailed analytics when you need them
@@ -101,7 +114,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-purple-500 mb-2">🔒</div>
+          <div className="mb-3 flex justify-center">
+            <Lock className="h-10 w-10 text-purple-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Privacy First</h3>
           <p className="text-sm text-muted-foreground">
             All processing happens in your browser - no data leaves your device
@@ -109,7 +124,9 @@ export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyS
         </div>
 
         <div className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-orange-500 mb-2">⚡</div>
+          <div className="mb-3 flex justify-center">
+            <Zap className="h-10 w-10 text-orange-500" strokeWidth={2} />
+          </div>
           <h3 className="font-semibold mb-2">Instant Results</h3>
           <p className="text-sm text-muted-foreground">
             Real-time analytics with interactive charts and export capabilities

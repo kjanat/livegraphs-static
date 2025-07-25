@@ -106,6 +106,14 @@ export interface ChartData {
     avg_cost: number;
     count: number;
   }[];
+
+  // Sentiment time series
+  sentiment_time_series: {
+    date: string;
+    positive: number;
+    neutral: number;
+    negative: number;
+  }[];
 }
 
 export interface Metrics {

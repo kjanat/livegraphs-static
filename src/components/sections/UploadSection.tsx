@@ -6,7 +6,8 @@
 
 "use client";
 
-import { DownloadIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons/index";
+import { Download, Loader2, Trash2, Upload } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UI_DIMENSIONS } from "@/lib/constants/ui";
 
 interface UploadSectionProps {
@@ -27,6 +28,11 @@ interface UploadSectionProps {
   onDrop: (event: React.DragEvent) => Promise<void>;
 }
 
+/**
+ * Renders a section for uploading, managing, and exporting chatbot conversation data files.
+ *
+ * Provides drag-and-drop and file input support for uploading JSON files, displays upload progress and errors, and offers actions to clear or export existing data when available.
+ */
 export function UploadSection({
   isUploading,
   uploadError,
@@ -71,9 +77,10 @@ export function UploadSection({
               : "hover:bg-primary/90 cursor-pointer"
           }`}
         >
-          <UploadIcon size={18} />
+          <Upload size={18} />
           {hasData ? "Upload New JSON File" : "Upload JSON File"}
           <input
+            id="file-upload-input"
             type="file"
             accept=".json"
             onChange={onFileUpload}
@@ -85,7 +92,7 @@ export function UploadSection({
 
         {isUploading && (
           <span className="text-muted-foreground flex items-center gap-2">
-            <SpinnerIcon size={16} />
+            <Loader2 size={16} className="animate-spin" />
             Processing...
           </span>
         )}
@@ -98,7 +105,7 @@ export function UploadSection({
               className={`bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium py-3 px-4 sm:py-2 rounded transition-colors flex items-center gap-2 min-h-[${UI_DIMENSIONS.minButtonHeight}px]`}
               aria-label="Clear all data from database"
             >
-              <TrashIcon size={18} />
+              <Trash2 size={18} />
               Clear Database
             </button>
 
@@ -109,7 +116,7 @@ export function UploadSection({
                 className={`bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 sm:py-2 rounded transition-colors flex items-center gap-2 min-h-[${UI_DIMENSIONS.minButtonHeight}px]`}
                 aria-label="Export data as CSV file"
               >
-                <DownloadIcon size={18} />
+                <Download size={18} />
                 Export CSV
               </button>
             )}
@@ -118,9 +125,9 @@ export function UploadSection({
       </div>
 
       {uploadError && (
-        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
-          {uploadError}
-        </div>
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{uploadError}</AlertDescription>
+        </Alert>
       )}
     </section>
   );

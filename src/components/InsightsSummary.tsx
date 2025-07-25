@@ -6,13 +6,18 @@
 
 "use client";
 
+import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
 import {
-  AlertTriangleIcon,
-  CheckCircleIcon,
-  TrendingDownIcon,
-  TrendingUpIcon
-} from "@/components/icons";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
+import { ANALYTICS_THRESHOLDS } from "@/lib/config/analytics-thresholds";
 import type { ChartData, Metrics } from "@/lib/types/session";
+import { cn } from "@/lib/utils";
 
 interface InsightsSummaryProps {
   metrics: Metrics;
@@ -28,7 +33,16 @@ interface Insight {
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
+/**
+ * Displays paginated, data-driven insights summarizing chatbot conversation performance for a given date range.
+ *
+ * Generates and presents key insights based on provided metrics and analytics, including activity volume, user satisfaction, resolution rate, response time, sentiment, and data quality. Insights are categorized by type (positive, negative, warning) and visually styled with icons and colors. Supports pagination when multiple insights are available.
+ *
+ * Returns `null` if no insights are generated from the input data.
+ */
 export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSummaryProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const insightsPerPage = 2;
   const insights: Insight[] = [];
 
   // Calculate session volume insight
@@ -38,41 +52,41 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
   );
   const avgSessionsPerDay = totalSessions / Math.max(daysDiff, 1);
 
-  if (avgSessionsPerDay > 50) {
+  if (avgSessionsPerDay > ANALYTICS_THRESHOLDS.activity.highPerDay) {
     insights.push({
       type: "positive",
       title: "High Activity Volume",
       description: `Strong engagement with ${avgSessionsPerDay.toFixed(0)} sessions per day on average`,
       value: `${totalSessions} total sessions`,
-      icon: TrendingUpIcon
+      icon: TrendingUp
     });
-  } else if (avgSessionsPerDay < 10) {
+  } else if (avgSessionsPerDay < ANALYTICS_THRESHOLDS.activity.lowPerDayInsight) {
     insights.push({
       type: "warning",
       title: "Low Activity Volume",
       description: `Consider promoting your chatbot - only ${avgSessionsPerDay.toFixed(0)} sessions per day`,
       value: `${totalSessions} total sessions`,
-      icon: TrendingDownIcon
+      icon: TrendingDown
     });
   }
 
   // User satisfaction insight
   if (chartData.avg_rating) {
-    if (chartData.avg_rating >= 4.0) {
+    if (chartData.avg_rating >= ANALYTICS_THRESHOLDS.rating.excellent) {
       insights.push({
         type: "positive",
         title: "Excellent User Satisfaction",
         description: "Users are highly satisfied with the chatbot experience",
         value: `${chartData.avg_rating.toFixed(1)}/5.0 stars`,
-        icon: CheckCircleIcon
+        icon: CheckCircle
       });
-    } else if (chartData.avg_rating < 3.0) {
+    } else if (chartData.avg_rating < ANALYTICS_THRESHOLDS.rating.needsAttention) {
       insights.push({
         type: "negative",
         title: "User Satisfaction Needs Attention",
         description: "Consider reviewing negative feedback and improving responses",
         value: `${chartData.avg_rating.toFixed(1)}/5.0 stars`,
-        icon: AlertTriangleIcon
+        icon: AlertTriangle
       });
     }
   }
@@ -81,41 +95,41 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
   const resolvedPercentage = metrics["Resolved Chats (%)"];
   const escalationRate = 100 - resolvedPercentage;
 
-  if (escalationRate > 20) {
+  if (escalationRate > ANALYTICS_THRESHOLDS.escalation.high) {
     insights.push({
       type: "warning",
       title: "High Escalation Rate",
       description: "Many conversations require human intervention",
       value: `${escalationRate.toFixed(1)}% escalated`,
-      icon: AlertTriangleIcon
+      icon: AlertTriangle
     });
-  } else if (escalationRate < 10) {
+  } else if (escalationRate < ANALYTICS_THRESHOLDS.escalation.low) {
     insights.push({
       type: "positive",
       title: "Effective Self-Service",
       description: "Most conversations are resolved without escalation",
       value: `${escalationRate.toFixed(1)}% escalated`,
-      icon: CheckCircleIcon
+      icon: CheckCircle
     });
   }
 
   // Response time insight
   const avgResponseTime = metrics["Avg. Response Time (sec)"];
-  if (avgResponseTime > 5) {
+  if (avgResponseTime > ANALYTICS_THRESHOLDS.responseTime.slowInsight) {
     insights.push({
       type: "warning",
       title: "Slow Response Times",
       description: "Users may experience delays - consider optimization",
       value: `${avgResponseTime.toFixed(1)}s average`,
-      icon: TrendingDownIcon
+      icon: TrendingDown
     });
-  } else if (avgResponseTime < 2) {
+  } else if (avgResponseTime < ANALYTICS_THRESHOLDS.responseTime.fast) {
     insights.push({
       type: "positive",
       title: "Fast Response Times",
       description: "Users receive quick responses for better experience",
       value: `${avgResponseTime.toFixed(1)}s average`,
-      icon: TrendingUpIcon
+      icon: TrendingUp
     });
   }
 
@@ -130,50 +144,28 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
       const negativePercentage =
         (chartData.sentiment_values[negativeIndex] / totalSentimentSessions) * 100;
 
-      if (negativePercentage > 30) {
+      if (negativePercentage > ANALYTICS_THRESHOLDS.sentiment.highNegative) {
         insights.push({
           type: "negative",
           title: "High Negative Sentiment",
           description: "Significant portion of conversations have negative sentiment",
           value: `${negativePercentage.toFixed(1)}% negative`,
-          icon: TrendingDownIcon
+          icon: TrendingDown
         });
       }
     }
   }
 
-  // Category quality insight - check for high percentage of unrecognized/other
-  if (chartData.category_labels && chartData.category_values) {
-    const totalCategorySessions = chartData.category_values.reduce((sum, val) => sum + val, 0);
-    const unrecognizedIndex = chartData.category_labels.findIndex(
-      (label) => label === "Unrecognized / Other"
-    );
-
-    if (unrecognizedIndex !== -1 && totalCategorySessions > 0) {
-      const unrecognizedPercentage =
-        (chartData.category_values[unrecognizedIndex] / totalCategorySessions) * 100;
-
-      if (unrecognizedPercentage > 25) {
-        insights.push({
-          type: "warning",
-          title: "High Unrecognized Categories",
-          description:
-            "Many conversations lack proper categorization - consider reviewing classification rules",
-          value: `${unrecognizedPercentage.toFixed(1)}% unrecognized`,
-          icon: AlertTriangleIcon
-        });
-      }
-    }
-  }
+  // Removed category quality insight - this belongs in Data Quality Assessment
 
   // Data quality insight
-  if (totalSessions < 20) {
+  if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.minForInsights) {
     insights.push({
       type: "warning",
       title: "Limited Data Sample",
       description: "Insights may be less reliable with small data sets",
       value: `${totalSessions} sessions`,
-      icon: AlertTriangleIcon
+      icon: AlertTriangle
     });
   }
 
@@ -220,23 +212,42 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
     return null;
   }
 
+  // Calculate pagination
+  const totalPages = Math.ceil(insights.length / insightsPerPage);
+  const startIndex = (currentPage - 1) * insightsPerPage;
+  const endIndex = startIndex + insightsPerPage;
+  const currentInsights = insights.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
   return (
     <section className="bg-card rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <CheckCircleIcon size={24} className="text-primary" />
+        <CheckCircle className="h-6 w-6 text-primary" />
         Key Insights
+        {totalPages > 1 && (
+          <span className="text-sm font-normal text-muted-foreground ml-auto">
+            Page {currentPage} of {totalPages}
+          </span>
+        )}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {insights.slice(0, 4).map((insight, index) => {
+        {currentInsights.map((insight, index) => {
           const Icon = insight.icon;
           return (
             <div
-              key={`${insight.type}-${insight.title}-${index}`}
+              key={`${insight.type}-${insight.title}-${startIndex + index}`}
               className={`border rounded-lg p-4 transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
             >
               <div className="flex items-start gap-3">
-                <Icon size={20} className={`mt-0.5 flex-shrink-0 ${getIconColor(insight.type)}`} />
+                <Icon className={`mt-0.5 flex-shrink-0 h-5 w-5 ${getIconColor(insight.type)}`} />
                 <div className="flex-1">
                   <h3 className={`font-semibold mb-1 ${getTextColor(insight.type)}`}>
                     {insight.title}
@@ -254,15 +265,31 @@ export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSumma
         })}
       </div>
 
-      {insights.length > 4 && (
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            View {insights.length - 4} more insights →
-          </button>
-        </div>
+      {totalPages > 1 && (
+        <Pagination className="mt-6">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={handlePreviousPage}
+                className={cn(
+                  "cursor-pointer",
+                  currentPage === 1 && "pointer-events-none opacity-50"
+                )}
+                aria-disabled={currentPage === 1}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                onClick={handleNextPage}
+                className={cn(
+                  "cursor-pointer",
+                  currentPage === totalPages && "pointer-events-none opacity-50"
+                )}
+                aria-disabled={currentPage === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </section>
   );

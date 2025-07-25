@@ -6,7 +6,7 @@
 
 "use client";
 
-import { TrendingDownIcon, TrendingUpIcon } from "@/components/icons/index";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface MobileMetricCardProps {
   title: string;
@@ -20,6 +20,19 @@ interface MobileMetricCardProps {
   color?: "primary" | "green" | "red" | "purple" | "blue" | "orange";
 }
 
+/**
+ * Displays a styled metric card optimized for mobile dashboards, showing a title, value, optional subtitle, trend indicator, and icon.
+ *
+ * Renders the main metric value with contextual color and icon, and conditionally displays a trend percentage with directional icon and color coding based on positivity or negativity.
+ *
+ * @param title - The card's title text.
+ * @param value - The main metric value to display.
+ * @param subtitle - Optional descriptive text shown below the value.
+ * @param trend - Optional trend information, including percentage value and direction.
+ * @param icon - Optional icon element displayed on the card.
+ * @param color - Optional color theme for the icon background and text. Defaults to "primary".
+ * @returns A React element representing the mobile metric card.
+ */
 export function MobileMetricCard({
   title,
   value,
@@ -58,7 +71,11 @@ export function MobileMetricCard({
                 trend.isPositive ? "text-green-600" : "text-red-600"
               }`}
             >
-              {trend.isPositive ? <TrendingUpIcon size={14} /> : <TrendingDownIcon size={14} />}
+              {trend.isPositive ? (
+                <TrendingUp className="h-[14px] w-[14px]" />
+              ) : (
+                <TrendingDown className="h-[14px] w-[14px]" />
+              )}
               <span>{Math.abs(trend.value)}%</span>
             </div>
           )}

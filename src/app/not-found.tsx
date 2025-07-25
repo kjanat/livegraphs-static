@@ -6,13 +6,22 @@
 
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { DATA_PROCESSING_THRESHOLDS } from "@/lib/config/data-processing-thresholds";
 import { UI_DIMENSIONS } from "@/lib/constants/ui";
 
+/**
+ * Renders a 404 error page with branding and a link to return to the home page.
+ *
+ * Displays the application logo, a "404" heading, a message indicating the page was not found, and a button to navigate back to the root URL.
+ */
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        <Logo size={UI_DIMENSIONS.logoSize * 1.5} className="text-primary mx-auto mb-6" />
+        <Logo
+          size={UI_DIMENSIONS.logoSize * DATA_PROCESSING_THRESHOLDS.ui.logoSizeMultiplier}
+          className="text-primary mx-auto mb-6"
+        />
 
         <h1 className="text-6xl font-bold mb-4">404</h1>
 

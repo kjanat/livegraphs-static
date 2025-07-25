@@ -6,133 +6,214 @@
 
 "use client";
 
-import { ResponsivePie } from "@nivo/pie";
-import { useDarkMode } from "@/lib/hooks/useDarkMode";
-import { useMobile } from "@/lib/hooks/useMobile";
-import { getNivoTheme, getNivoTooltipStyles } from "@/lib/utils/nivoTheme";
+import { useState } from "react";
+import { Cell, Label, Pie, PieChart, Sector } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart";
 
 interface SentimentDistributionChartProps {
   data: {
     labels: string[];
     values: number[];
   };
+  showLegend?: boolean;
+  enableAnimation?: boolean;
 }
 
-export function SentimentDistributionChart({ data }: SentimentDistributionChartProps) {
-  const isDarkMode = useDarkMode();
-  const isMobile = useMobile();
+const chartConfig = {
+  sessions: {
+    label: "Sessions"
+  },
+  positive: {
+    label: "Positive",
+    theme: {
+      light: "hsl(142.1 76.2% 36.3%)",
+      dark: "hsl(142.1 70.6% 45.3%)"
+    }
+  },
+  negative: {
+    label: "Negative",
+    theme: {
+      light: "hsl(346.8 77.2% 49.8%)",
+      dark: "hsl(346.8 77.2% 49.8%)"
+    }
+  },
+  neutral: {
+    label: "Neutral",
+    theme: {
+      light: "hsl(37.7 92.1% 50.2%)",
+      dark: "hsl(45.4 93.4% 47.9%)"
+    }
+  }
+} satisfies ChartConfig;
+
+// Custom active shape renderer for enhanced hover effect
+const renderActiveShape = (props: PieSectorDataItem) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius ? outerRadius + 6 : 0}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+/**
+ * Renders a pie chart visualizing the distribution of customer sentiment across chatbot sessions.
+ *
+ * Displays sentiment categories as colored sectors, with interactive highlighting, tooltips showing session counts and percentages, and an optional legend. The chart is wrapped in a card layout with a header, content, and a footer summarizing the positive sentiment rate. If input data is invalid, an error message is shown instead.
+ *
+ * @param data - Object containing `labels` (sentiment categories) and `values` (session counts) arrays of equal length
+ * @param showLegend - Whether to display the chart legend (default: false)
+ * @param enableAnimation - Whether to animate the chart transitions (default: true)
+ * @returns A card component containing the sentiment distribution pie chart or an error message if data is invalid
+ */
+export function SentimentDistributionChart({
+  data,
+  showLegend = false,
+  enableAnimation = true
+}: SentimentDistributionChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("SentimentDistributionChart: labels and values arrays must have equal length");
     return (
-      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
-        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
-      </div>
+      <Card className="h-full flex flex-col items-center justify-center">
+        <CardContent>
+          <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Calculate total for percentage calculation
-  const total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
-
-  const pieData = data.labels
+  const chartData = data.labels
     .map((label, index) => ({
-      id: label,
-      label: label,
-      value: total > 0 ? (data.values[index] ?? 0) / total : 0, // Convert to percentage as decimal
-      rawValue: data.values[index] ?? 0, // Keep raw value for tooltip
-      color: getColorForSentiment(label)
+      sentiment: label.toLowerCase(),
+      sessions: data.values[index] ?? 0,
+      fill: `var(--color-${label.toLowerCase()})`
     }))
-    .filter((item) => item.rawValue > 0); // Filter out items with zero or invalid values
+    .filter((item) => item.sessions > 0); // Filter out items with zero values
 
-  function getColorForSentiment(sentiment: string): string {
-    if (sentiment === "Positive") return "#22C55E";
-    if (sentiment === "Negative") return "#EF4444";
-    if (sentiment === "Neutral") return "#EAB308";
-    return "#3B82F6";
-  }
+  const totalSessions = chartData.reduce((sum, item) => sum + item.sessions, 0);
 
   return (
-    <div
-      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
-      role="img"
-      aria-labelledby="sentiment-chart-title"
-      aria-describedby="sentiment-chart-desc"
-    >
-      <h3 id="sentiment-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
-        Sentiment Distribution
-      </h3>
-      <div id="sentiment-chart-desc" className="sr-only">
-        Donut chart showing the distribution of positive, negative, and neutral sentiment in chatbot
-        sessions
-      </div>
-      <div className="flex-1" style={{ minHeight: "300px" }}>
-        <ResponsivePie
-          data={pieData}
-          margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-          innerRadius={0.5}
-          padAngle={0.7}
-          cornerRadius={3}
-          activeOuterRadiusOffset={8}
-          borderWidth={1}
-          borderColor={{
-            from: "color",
-            modifiers: [["darker", 0.2]]
-          }}
-          colors={{ datum: "data.color" }}
-          arcLinkLabelsSkipAngle={10}
-          arcLinkLabelsTextColor={isDarkMode ? "#e5e7eb" : "#333333"}
-          arcLinkLabelsThickness={2}
-          arcLinkLabelsColor={{ from: "color" }}
-          arcLabelsSkipAngle={10}
-          arcLabelsTextColor={{
-            from: "color",
-            modifiers: [["darker", 2]]
-          }}
-          arcLabel="formattedValue"
-          valueFormat=">-.1%"
-          theme={getNivoTheme(isDarkMode)}
-          tooltip={({ datum }) => (
-            <div style={getNivoTooltipStyles(isDarkMode)}>
-              <div style={{ marginBottom: "4px" }}>
-                <strong>{datum.id}</strong>
-              </div>
-              <div style={{ fontSize: "14px" }}>
-                {datum.data.rawValue} sessions ({(datum.value * 100).toFixed(1)}%)
-              </div>
-            </div>
-          )}
-          legends={
-            isMobile
-              ? []
-              : [
-                  {
-                    anchor: "bottom",
-                    direction: "row",
-                    justify: false,
-                    translateX: 0,
-                    translateY: 56,
-                    itemsSpacing: 0,
-                    itemWidth: 100,
-                    itemHeight: 18,
-                    itemTextColor: isDarkMode ? "#9ca3af" : "#6b7280",
-                    itemDirection: "left-to-right",
-                    itemOpacity: 1,
-                    symbolSize: 18,
-                    symbolShape: "circle",
-                    effects: [
-                      {
-                        on: "hover",
-                        style: {
-                          itemTextColor: isDarkMode ? "#e5e7eb" : "#1f2937"
-                        }
-                      }
-                    ]
+    <Card className="h-full flex flex-col">
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Sentiment Distribution</CardTitle>
+        <CardDescription>Distribution of customer sentiment across all sessions</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+          <PieChart accessibilityLayer>
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value, name) => {
+                    const numValue = typeof value === "number" ? value : Number(value);
+                    const percentage = ((numValue / totalSessions) * 100).toFixed(1);
+                    return (
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground capitalize">{name}</span>
+                        <span className="font-mono font-medium">
+                          {value} sessions ({percentage}%)
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+              }
+            />
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              dataKey="sessions"
+              nameKey="sentiment"
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+              animationBegin={0}
+              animationDuration={enableAnimation ? 500 : 0}
+            >
+              {chartData.map((entry) => (
+                <Cell key={`cell-${entry.sentiment}`} fill={entry.fill} />
+              ))}
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
+                          {totalSessions.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-foreground text-sm"
+                        >
+                          Sessions
+                        </tspan>
+                      </text>
+                    );
                   }
-                ]
-          }
-        />
-      </div>
-    </div>
+                }}
+              />
+            </Pie>
+            {showLegend && (
+              <ChartLegend content={<ChartLegendContent />} className="flex-wrap gap-2" />
+            )}
+          </PieChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="text-muted-foreground leading-none text-center">
+          {(() => {
+            const positiveCount = chartData.find((d) => d.sentiment === "positive")?.sessions || 0;
+            const totalCount = chartData.reduce((sum, item) => sum + item.sessions, 0);
+            const positiveRate =
+              totalCount > 0 ? ((positiveCount / totalCount) * 100).toFixed(1) : "0";
+            return `${positiveRate}% positive sentiment`;
+          })()}
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

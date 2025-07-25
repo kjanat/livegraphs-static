@@ -6,135 +6,218 @@
 
 "use client";
 
-import { ResponsivePie } from "@nivo/pie";
-import { useDarkMode } from "@/lib/hooks/useDarkMode";
-import { useMobile } from "@/lib/hooks/useMobile";
-import { getNivoTheme, getNivoTooltipStyles } from "@/lib/utils/nivoTheme";
+import { useState } from "react";
+import { Cell, Label, Pie, PieChart, Sector } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart";
 
 interface ResolutionStatusChartProps {
   data: {
     labels: string[];
     values: number[];
   };
+  showLegend?: boolean;
+  enableAnimation?: boolean;
 }
 
-export function ResolutionStatusChart({ data }: ResolutionStatusChartProps) {
-  const isDarkMode = useDarkMode();
-  const isMobile = useMobile();
+const chartConfig = {
+  sessions: {
+    label: "Sessions"
+  },
+  resolved: {
+    label: "Resolved",
+    theme: {
+      light: "hsl(142.1 76.2% 36.3%)",
+      dark: "hsl(142.1 70.6% 45.3%)"
+    }
+  },
+  escalated: {
+    label: "Escalated",
+    theme: {
+      light: "hsl(346.8 77.2% 49.8%)",
+      dark: "hsl(346.8 77.2% 49.8%)"
+    }
+  },
+  unresolved: {
+    label: "Unresolved",
+    theme: {
+      light: "hsl(220.9 39.3% 11%)",
+      dark: "hsl(215 20.2% 65.1%)"
+    }
+  }
+} satisfies ChartConfig;
 
+// Custom active shape renderer for enhanced hover effect
+const renderActiveShape = (props: PieSectorDataItem) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius ? outerRadius + 6 : 0}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+/**
+ * Displays a pie chart summarizing chatbot session resolution statuses, including resolved, escalated, and unresolved sessions.
+ *
+ * Validates input data, computes totals, and renders an interactive chart with tooltips, optional legend, and a central resolution rate label. Shows an error message if data is invalid.
+ *
+ * @param data - Object containing `labels` (status names) and `values` (session counts) arrays of equal length.
+ * @param showLegend - If true, displays a legend for the chart (default: false).
+ * @param enableAnimation - If true, enables chart animation (default: true).
+ * @returns A card component containing the resolution status pie chart or an error message if data is invalid.
+ */
+export function ResolutionStatusChart({
+  data,
+  showLegend = false,
+  enableAnimation = true
+}: ResolutionStatusChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
     console.error("ResolutionStatusChart: labels and values arrays must have equal length");
     return (
-      <div className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col items-center justify-center">
-        <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
-      </div>
+      <Card className="h-full flex flex-col items-center justify-center">
+        <CardContent>
+          <p className="text-muted-foreground">Unable to display chart: Invalid data format</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Calculate total for percentage calculation
-  const total = data.values.reduce((sum, val) => sum + (val ?? 0), 0);
-
-  // Create pieData with safe mapping to prevent undefined values
+  // Create chart data with safe mapping to prevent undefined values
   const maxLength = Math.min(data.labels.length, data.values.length);
-  const pieData = data.labels
+  const chartData = data.labels
     .slice(0, maxLength)
     .map((label, index) => ({
-      id: label,
-      label: label,
-      value: total > 0 ? (data.values[index] ?? 0) / total : 0, // Convert to percentage as decimal
-      rawValue: data.values[index] ?? 0, // Keep raw value for tooltip
-      color: getColorForResolution(label)
+      status: label.toLowerCase(),
+      sessions: data.values[index] ?? 0,
+      fill: `var(--color-${label.toLowerCase()})`
     }))
-    .filter((item) => item.rawValue > 0); // Filter out items with zero values
+    .filter((item) => item.sessions > 0); // Filter out items with zero values
 
-  function getColorForResolution(resolution: string): string {
-    if (resolution === "Resolved") return "#22C55E";
-    if (resolution === "Escalated") return "#EF4444";
-    return "#3B82F6";
-  }
+  const totalSessions = chartData.reduce((sum, item) => sum + item.sessions, 0);
 
   return (
-    <div
-      className="bg-card rounded-lg shadow-md p-6 h-full flex flex-col"
-      role="img"
-      aria-labelledby="resolution-chart-title"
-      aria-describedby="resolution-chart-desc"
-    >
-      <h3 id="resolution-chart-title" className="text-xl font-bold mb-4 text-card-foreground">
-        Resolution Status
-      </h3>
-      <div id="resolution-chart-desc" className="sr-only">
-        Donut chart showing the resolution status of chatbot sessions, including resolved and
-        escalated cases
-      </div>
-      <div className="flex-1" style={{ minHeight: "300px" }}>
-        <ResponsivePie
-          data={pieData}
-          margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-          innerRadius={0.5}
-          padAngle={0.7}
-          cornerRadius={3}
-          activeOuterRadiusOffset={8}
-          borderWidth={1}
-          borderColor={{
-            from: "color",
-            modifiers: [["darker", 0.2]]
-          }}
-          colors={{ datum: "data.color" }}
-          arcLinkLabelsSkipAngle={10}
-          arcLinkLabelsTextColor={isDarkMode ? "#e5e7eb" : "#333333"}
-          arcLinkLabelsThickness={2}
-          arcLinkLabelsColor={{ from: "color" }}
-          arcLabelsSkipAngle={10}
-          arcLabelsTextColor={{
-            from: "color",
-            modifiers: [["darker", 2]]
-          }}
-          arcLabel="formattedValue"
-          valueFormat=">-.1%"
-          theme={getNivoTheme(isDarkMode)}
-          tooltip={({ datum }) => (
-            <div style={getNivoTooltipStyles(isDarkMode)}>
-              <div style={{ marginBottom: "4px" }}>
-                <strong>{datum.id}</strong>
-              </div>
-              <div style={{ fontSize: "14px" }}>
-                {datum.data.rawValue} sessions ({(datum.value * 100).toFixed(1)}%)
-              </div>
-            </div>
-          )}
-          legends={
-            isMobile
-              ? []
-              : [
-                  {
-                    anchor: "bottom",
-                    direction: "row",
-                    justify: false,
-                    translateX: 0,
-                    translateY: 56,
-                    itemsSpacing: 0,
-                    itemWidth: 100,
-                    itemHeight: 18,
-                    itemTextColor: isDarkMode ? "#9ca3af" : "#6b7280",
-                    itemDirection: "left-to-right",
-                    itemOpacity: 1,
-                    symbolSize: 18,
-                    symbolShape: "circle",
-                    effects: [
-                      {
-                        on: "hover",
-                        style: {
-                          itemTextColor: isDarkMode ? "#e5e7eb" : "#1f2937"
-                        }
-                      }
-                    ]
+    <Card className="h-full flex flex-col">
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Resolution Status</CardTitle>
+        <CardDescription>Session outcomes and escalation tracking</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+          <PieChart accessibilityLayer>
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value, name) => {
+                    const numValue = typeof value === "number" ? value : Number(value);
+                    const percentage = ((numValue / totalSessions) * 100).toFixed(1);
+                    return (
+                      <div className="flex items-center justify-between gap-8">
+                        <span className="text-muted-foreground capitalize">{name}</span>
+                        <span className="font-mono font-medium">
+                          {value} sessions ({percentage}%)
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+              }
+            />
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              dataKey="sessions"
+              nameKey="status"
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+              animationBegin={0}
+              animationDuration={enableAnimation ? 500 : 0}
+            >
+              {chartData.map((entry) => (
+                <Cell key={`cell-${entry.status}`} fill={entry.fill} />
+              ))}
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    const resolvedCount =
+                      chartData.find((d) => d.status === "resolved")?.sessions || 0;
+                    const resolutionRate =
+                      totalSessions > 0 ? ((resolvedCount / totalSessions) * 100).toFixed(0) : "0";
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
+                          {resolutionRate}%
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-foreground text-sm"
+                        >
+                          Resolved
+                        </tspan>
+                      </text>
+                    );
                   }
-                ]
-          }
-        />
-      </div>
-    </div>
+                }}
+              />
+            </Pie>
+            {showLegend && (
+              <ChartLegend content={<ChartLegendContent />} className="flex-wrap gap-2" />
+            )}
+          </PieChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="text-muted-foreground leading-none text-center">
+          {(() => {
+            const escalatedCount = chartData.find((d) => d.status === "escalated")?.sessions || 0;
+            const unresolvedCount = chartData.find((d) => d.status === "unresolved")?.sessions || 0;
+            return `${escalatedCount.toLocaleString()} escalated • ${unresolvedCount.toLocaleString()} pending`;
+          })()}
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

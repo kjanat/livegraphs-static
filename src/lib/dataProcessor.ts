@@ -7,8 +7,13 @@
 import type { Database } from "./db/sql-wrapper";
 import { executeQuery, queryOne } from "./db/sql-wrapper";
 import type { ChartData, DateRange, Metrics } from "./types/session";
+import { countryName, getUserLocale, languageName } from "./utils/i18n";
 
-// Type guards for safer type assertions
+/**
+ * Determines whether the provided value is a string.
+ *
+ * @returns True if the value is a string; otherwise, false.
+ */
 function isString(value: unknown): value is string {
   return typeof value === "string";
 }
@@ -94,9 +99,20 @@ export async function calculateMetrics(db: Database, dateRange: DateRange): Prom
   };
 }
 
+/**
+ * Aggregates and prepares chatbot session analytics data for dashboard charting within a specified date range.
+ *
+ * Executes multiple SQL queries to collect and process metrics including sentiment distribution, resolution status, categories, top questions, time series of sessions, response times, costs, message counts, sentiment trends, geographic and language distributions (localized to the user's locale), hourly usage patterns, conversation durations, messages per conversation, user rating distribution and averages, and cost breakdowns by category. Returns a structured object containing all datasets ready for chart consumption.
+ *
+ * @param dateRange - The start and end dates delimiting the session data to include
+ * @returns An object containing all chart-ready analytics datasets for the specified date range
+ */
 export async function prepareChartData(db: Database, dateRange: DateRange): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
   const endStr = dateRange.end.toISOString();
+
+  // Get user's locale for internationalization
+  const locale = getUserLocale();
 
   // Helper function to execute query and get results
   function execQuery<T = Record<string, unknown>>(sql: string): T[] {
@@ -133,10 +149,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
 
   // Category data
   const categoryData = execQuery<{ category: string; count: number }>(`
-    SELECT category, COUNT(*) as count
+    SELECT 
+      COALESCE(category, 'Unknown') as category, 
+      COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-      AND category IS NOT NULL
     GROUP BY category
     ORDER BY count DESC
   `);
@@ -227,6 +244,31 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     row.daily_messages !== null && row.daily_messages !== undefined ? Number(row.daily_messages) : 0
   );
 
+  // Sentiment time series data
+  const sentimentTimeData = execQuery<{
+    date: string;
+    positive: number;
+    neutral: number;
+    negative: number;
+  }>(`
+    SELECT 
+      DATE(start_time) as date,
+      SUM(CASE WHEN sentiment = 'positive' THEN 1 ELSE 0 END) as positive,
+      SUM(CASE WHEN sentiment = 'neutral' THEN 1 ELSE 0 END) as neutral,
+      SUM(CASE WHEN sentiment = 'negative' THEN 1 ELSE 0 END) as negative
+    FROM sessions
+    WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
+    GROUP BY date
+    ORDER BY date
+  `);
+
+  const sentiment_time_series = sentimentTimeData.map((row) => ({
+    date: row.date as string,
+    positive: safeNumber(row.positive),
+    neutral: safeNumber(row.neutral),
+    negative: safeNumber(row.negative)
+  }));
+
   // Geographic distribution
   const countryData = execQuery<{ country: string; count: number }>(`
     SELECT country, COUNT(*) as count
@@ -237,7 +279,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     LIMIT 10
   `);
 
-  const country_labels = countryData.map((row) => row.country as string);
+  // Convert country codes to localized names
+  const country_labels = countryData.map((row) => {
+    const code = row.country as string;
+    return countryName(code, locale);
+  });
   const country_values = countryData.map((row) => row.count as number);
 
   // Language distribution
@@ -250,7 +296,11 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     LIMIT 8
   `);
 
-  const language_labels = languageData.map((row) => row.language as string);
+  // Convert language codes to localized names
+  const language_labels = languageData.map((row) => {
+    const code = row.language as string;
+    return languageName(code, locale);
+  });
   const language_values = languageData.map((row) => row.count as number);
 
   // Hourly heatmap data
@@ -333,13 +383,12 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     count: number;
   }>(`
     SELECT 
-      category,
+      COALESCE(category, 'Unknown') as category,
       SUM(cost_eur_cents) / 100.0 as total_cost,
       AVG(cost_eur_cents) / 100.0 as avg_cost,
       COUNT(*) as count
     FROM sessions
     WHERE datetime(start_time) BETWEEN datetime(?) AND datetime(?)
-      AND category IS NOT NULL
     GROUP BY category
     ORDER BY total_cost DESC
     LIMIT 10
@@ -383,7 +432,8 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
     messages_per_conversation,
     rating_distribution,
     avg_rating,
-    category_costs
+    category_costs,
+    sentiment_time_series
   };
 }
 

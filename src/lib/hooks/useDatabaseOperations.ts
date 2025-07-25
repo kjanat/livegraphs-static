@@ -7,15 +7,28 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { showConfirmClearDatabaseToast } from "@/components/toasts/ConfirmClearDatabaseToast";
 import { useDatabase } from "@/hooks/useDatabase";
+import { getQueryCache } from "@/lib/cache/QueryCache";
 import { calculateMetrics, exportToCSV, prepareChartData } from "@/lib/dataProcessor";
+import type { Database } from "@/lib/db/sql-wrapper";
 import { generateSampleData } from "@/lib/sampleData";
-import type { ChartData, DateRange, Metrics } from "@/lib/types/session";
+import type { ChartData, ChatSession, DateRange, Metrics } from "@/lib/types/session";
+import { findRecentWorkingWeekWithData } from "@/lib/utils/dateUtils";
+
+const STORAGE_KEY_DATE_RANGE = "livegraphs_date_range";
 
 interface DatabaseStats {
   totalSessions: number;
   dateRange: { min: string; max: string };
+}
+
+interface DatabaseHookData {
+  isInitialized: boolean;
+  error: Error | null;
+  loadSessionsFromJSON: (jsonData: ChatSession[]) => Promise<number>;
+  getDatabaseStats: () => DatabaseStats;
+  clearDatabase: () => void;
+  db: Database | null;
 }
 
 interface UseDatabaseOperationsReturn {
@@ -25,19 +38,70 @@ interface UseDatabaseOperationsReturn {
   metrics: Metrics | null;
   chartData: ChartData | null;
   isLoadingData: boolean;
+  showNoDataAlert: boolean;
+  setShowNoDataAlert: (show: boolean) => void;
 
   // Actions
   loadDataForDateRange: (startDate: Date, endDate: Date) => Promise<void>;
   clearAllData: () => void;
   loadSampleData: () => Promise<void>;
   exportCurrentData: () => void;
-  refreshStats: () => void;
+  refreshStats: (forceReload?: boolean) => void;
+  resetDateRange: () => void;
+  loadNewDataset: () => Promise<void>;
 }
 
+// Helper functions for localStorage persistence
+const saveDateRangeToStorage = (range: DateRange) => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_DATE_RANGE,
+      JSON.stringify({
+        start: range.start.toISOString(),
+        end: range.end.toISOString()
+      })
+    );
+  } catch (err) {
+    console.warn("Failed to save date range to localStorage:", err);
+  }
+};
+
+const loadDateRangeFromStorage = (): DateRange | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_DATE_RANGE);
+    if (!saved) return null;
+
+    const parsed = JSON.parse(saved);
+    return {
+      start: new Date(parsed.start),
+      end: new Date(parsed.end)
+    };
+  } catch (err) {
+    console.warn("Failed to load date range from localStorage:", err);
+    return null;
+  }
+};
+
+const clearDateRangeFromStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_DATE_RANGE);
+  } catch (err) {
+    console.warn("Failed to clear date range from localStorage:", err);
+  }
+};
+
 /**
- * Custom hook for database operations and data management
+ * React hook that manages chatbot analytics database operations, data loading, caching, and UI state for a dashboard.
+ *
+ * Provides methods to load, clear, and export data; manage date range selection with localStorage persistence; auto-load relevant data ranges; and handle metrics and chart data preparation. Integrates with an optional external database hook or defaults to the internal database context.
+ *
+ * @param databaseHook - Optional external database hook to override the default database context.
+ * @returns An object containing database stats, selected date range, metrics, chart data, loading and alert flags, and functions for data manipulation and export.
  */
-export function useDatabaseOperations(): UseDatabaseOperationsReturn {
+export function useDatabaseOperations(
+  databaseHook?: DatabaseHookData
+): UseDatabaseOperationsReturn {
+  const defaultHook = useDatabase();
   const {
     isInitialized,
     error: dbError,
@@ -45,21 +109,49 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     getDatabaseStats,
     clearDatabase,
     db
-  } = useDatabase();
+  } = databaseHook || defaultHook;
 
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [showNoDataAlert, setShowNoDataAlert] = useState(false);
 
-  // Initialize database stats
-  useEffect(() => {
-    if (isInitialized && !dbError) {
-      const stats = getDatabaseStats();
-      setDbStats(stats);
-    }
-  }, [isInitialized, dbError, getDatabaseStats]);
+  // State to track if we should auto-load data after stats update
+  const [shouldAutoLoad, setShouldAutoLoad] = useState(false);
+
+  // Helper function to check if a date range has data
+  const checkDateRangeHasData = useCallback(
+    async (start: Date, end: Date): Promise<boolean> => {
+      if (!db) return false;
+
+      const query = `
+        SELECT COUNT(*) as count 
+        FROM sessions 
+        WHERE start_time >= ? AND start_time <= ?
+      `;
+
+      console.log("checkDateRangeHasData: Checking range", {
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+
+      const stmt = db.prepare(query);
+      stmt.bind([start.toISOString(), end.toISOString()]);
+      const result = [];
+      while (stmt.step()) {
+        result.push(stmt.getAsObject());
+      }
+      stmt.free();
+
+      const hasData = result.length > 0 && (result[0].count as number) > 0;
+      console.log("checkDateRangeHasData: Result", { count: result[0]?.count, hasData });
+
+      return hasData;
+    },
+    [db]
+  );
 
   const loadDataForDateRange = useCallback(
     async (startDate: Date, endDate: Date) => {
@@ -70,11 +162,32 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
         const range: DateRange = { start: startDate, end: endDate };
         setDateRange(range);
 
-        // Calculate metrics and prepare chart data
-        const [newMetrics, newChartData] = await Promise.all([
-          calculateMetrics(db, range),
-          prepareChartData(db, range)
-        ]);
+        // Save the selected range to localStorage
+        saveDateRangeToStorage(range);
+
+        // Check cache first
+        const cache = getQueryCache();
+        const cachedMetrics = cache.getMetrics(range);
+        const cachedChartData = cache.getChartData(range);
+
+        let newMetrics: Metrics;
+        let newChartData: ChartData;
+
+        if (cachedMetrics && cachedChartData) {
+          // Use cached data
+          newMetrics = cachedMetrics;
+          newChartData = cachedChartData;
+        } else {
+          // Calculate metrics and prepare chart data
+          [newMetrics, newChartData] = await Promise.all([
+            cachedMetrics || calculateMetrics(db, range),
+            cachedChartData || prepareChartData(db, range)
+          ]);
+
+          // Store in cache
+          if (!cachedMetrics) cache.setMetrics(range, newMetrics);
+          if (!cachedChartData) cache.setChartData(range, newChartData);
+        }
 
         setMetrics(newMetrics);
         setChartData(newChartData);
@@ -88,26 +201,40 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     [db]
   );
 
+  const resetDateRange = useCallback(() => {
+    setDateRange(null);
+    setMetrics(null);
+    setChartData(null);
+  }, []);
+
   const clearAllData = useCallback(() => {
-    showConfirmClearDatabaseToast(() => {
-      clearDatabase();
-      setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
-      setMetrics(null);
-      setChartData(null);
-      setDateRange(null);
-    });
+    clearDatabase();
+    setDbStats({ totalSessions: 0, dateRange: { min: "", max: "" } });
+    setMetrics(null);
+    setChartData(null);
+    setDateRange(null);
+    // Clear saved date range from localStorage
+    clearDateRangeFromStorage();
+    // Clear cache
+    getQueryCache().clear();
+    toast.success("Database cleared successfully");
   }, [clearDatabase]);
+
+  const loadNewDataset = useCallback(async () => {
+    // Just set the flag - the useEffect will handle loading when stats are ready
+    setShouldAutoLoad(true);
+  }, []);
 
   const loadSampleData = useCallback(async () => {
     try {
       const sampleData = generateSampleData();
       const count = await loadSessionsFromJSON(sampleData);
 
-      const stats = getDatabaseStats();
-      setDbStats(stats);
-      setMetrics(null);
-      setChartData(null);
-      setDateRange(null);
+      // Clear cache when loading new data
+      getQueryCache().clear();
+
+      // Use atomic function to avoid race conditions
+      await loadNewDataset();
 
       toast.success(`Successfully loaded ${count} sample sessions`);
     } catch (err) {
@@ -115,7 +242,7 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
       toast.error(errorMessage);
       console.error(err);
     }
-  }, [loadSessionsFromJSON, getDatabaseStats]);
+  }, [loadSessionsFromJSON, loadNewDataset]);
 
   const exportCurrentData = useCallback(() => {
     if (!db || !dateRange) {
@@ -142,21 +269,134 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     }
   }, [db, dateRange]);
 
-  const refreshStats = useCallback(async () => {
+  const refreshStats = useCallback(
+    async (forceReload = false) => {
+      if (isInitialized && !dbError) {
+        const stats = getDatabaseStats();
+        setDbStats(stats);
+
+        // If we have data and either no date range selected or forceReload is true, automatically load all data
+        if (
+          stats.totalSessions > 0 &&
+          (!dateRange || forceReload) &&
+          stats.dateRange.min &&
+          stats.dateRange.max
+        ) {
+          const startDate = new Date(stats.dateRange.min);
+          const endDate = new Date(stats.dateRange.max);
+          // Set end date to end of day
+          endDate.setHours(23, 59, 59, 999);
+          await loadDataForDateRange(startDate, endDate);
+        }
+      }
+    },
+    [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]
+  );
+
+  // Initialize database stats - re-run when database updates
+  useEffect(() => {
     if (isInitialized && !dbError) {
       const stats = getDatabaseStats();
       setDbStats(stats);
+    }
+  }, [isInitialized, dbError, getDatabaseStats]);
 
-      // If we have data but no date range selected, automatically load all data
-      if (stats.totalSessions > 0 && !dateRange && stats.dateRange.min && stats.dateRange.max) {
-        const startDate = new Date(stats.dateRange.min);
-        const endDate = new Date(stats.dateRange.max);
-        // Set end date to end of day
-        endDate.setHours(23, 59, 59, 999);
-        await loadDataForDateRange(startDate, endDate);
+  // Auto-load data when stats are ready and flag is set
+  useEffect(() => {
+    const loadData = async () => {
+      if (
+        shouldAutoLoad &&
+        dbStats &&
+        dbStats.totalSessions > 0 &&
+        dbStats.dateRange.min &&
+        dbStats.dateRange.max
+      ) {
+        // Clear the flag first to prevent multiple loads
+        setShouldAutoLoad(false);
+
+        const dataMin = new Date(dbStats.dateRange.min);
+        const dataMax = new Date(dbStats.dateRange.max);
+
+        console.log("Auto-load: Data range", {
+          min: dataMin.toISOString(),
+          max: dataMax.toISOString(),
+          today: new Date().toISOString()
+        });
+
+        // Try to load working week data
+        const workingWeekData = await findRecentWorkingWeekWithData(
+          dataMin,
+          dataMax,
+          checkDateRangeHasData
+        );
+
+        console.log("Auto-load: Working week data", workingWeekData);
+
+        if (workingWeekData) {
+          // Show alert if current week has no data
+          setShowNoDataAlert(!workingWeekData.hasCurrentWeekData);
+
+          // Load the data
+          await loadDataForDateRange(workingWeekData.start, workingWeekData.end);
+        } else {
+          // Fall back to loading all data if no working week has data
+          console.log("Auto-load: No working week found, loading all data");
+          const endDate = new Date(dataMax);
+          endDate.setHours(23, 59, 59, 999);
+          await loadDataForDateRange(dataMin, endDate);
+        }
+      }
+    };
+
+    loadData();
+  }, [shouldAutoLoad, dbStats, loadDataForDateRange, checkDateRangeHasData]);
+
+  // Auto-load saved date range on initial mount
+  useEffect(() => {
+    // Only run on mount when:
+    // 1. Database is initialized and has data
+    // 2. No data is currently loaded
+    // 3. Not already planning to auto-load (to avoid conflicts)
+    if (
+      dbStats &&
+      dbStats.totalSessions > 0 &&
+      !dateRange &&
+      !isLoadingData &&
+      !shouldAutoLoad &&
+      dbStats.dateRange.min &&
+      dbStats.dateRange.max
+    ) {
+      // Try to load saved date range
+      const savedRange = loadDateRangeFromStorage();
+
+      if (savedRange) {
+        const dataMin = new Date(dbStats.dateRange.min);
+        const dataMax = new Date(dbStats.dateRange.max);
+
+        // Validate saved range is within current data bounds
+        const validStart = new Date(Math.max(savedRange.start.getTime(), dataMin.getTime()));
+        const validEnd = new Date(Math.min(savedRange.end.getTime(), dataMax.getTime()));
+
+        // Only load if the validated range is meaningful
+        if (validStart < validEnd) {
+          console.log("Loading saved date range", {
+            original: savedRange,
+            validated: { start: validStart, end: validEnd }
+          });
+          loadDataForDateRange(validStart, validEnd);
+        } else {
+          // Saved range is invalid, fall back to working week
+          console.log("Saved date range invalid, falling back to working week");
+          clearDateRangeFromStorage();
+          setShouldAutoLoad(true);
+        }
+      } else {
+        // No saved range, use working week logic
+        console.log("No saved date range, loading working week");
+        setShouldAutoLoad(true);
       }
     }
-  }, [isInitialized, dbError, getDatabaseStats, dateRange, loadDataForDateRange]);
+  }, [dbStats, dateRange, isLoadingData, shouldAutoLoad, loadDataForDateRange]);
 
   return {
     dbStats,
@@ -164,10 +404,14 @@ export function useDatabaseOperations(): UseDatabaseOperationsReturn {
     metrics,
     chartData,
     isLoadingData,
+    showNoDataAlert,
+    setShowNoDataAlert,
     loadDataForDateRange,
     clearAllData,
     loadSampleData,
     exportCurrentData,
-    refreshStats
+    refreshStats,
+    resetDateRange,
+    loadNewDataset
   };
 }

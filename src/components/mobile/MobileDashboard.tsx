@@ -6,12 +6,7 @@
 
 "use client";
 
-import {
-  BarChart3Icon,
-  MessageSquareIcon,
-  TrendingUpIcon,
-  UsersIcon
-} from "@/components/icons/index";
+import { BarChart3, MessageSquare, TrendingUp, Users } from "lucide-react";
 import type { ChartData, Metrics } from "@/lib/types/session";
 import { calculateMetricTrends } from "@/lib/utils/trendCalculator";
 import { MobileCollapsibleSection } from "./MobileCollapsibleSection";
@@ -26,12 +21,21 @@ interface MobileDashboardProps {
   chartData: ChartData;
 }
 
+/**
+ * Renders a mobile-friendly dashboard displaying chatbot conversation analytics in a tabbed interface.
+ *
+ * Organizes summary metrics, performance indicators, user demographics, and detailed breakdowns into Overview, Performance, Users, and Details tabs. Visualizes data using metric cards, progress bars, and collapsible sections for easy navigation and insight on mobile devices.
+ *
+ * @param metrics - Summary statistics for the chatbot, such as total conversations and average response time.
+ * @param chartData - Detailed chart data including resolution statuses, sentiment distribution, user demographics, categories, and frequent questions.
+ * @returns The rendered mobile dashboard component.
+ */
 export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
   const tabs = [
-    { id: "overview", label: "Overview", icon: <BarChart3Icon size={16} /> },
-    { id: "performance", label: "Perf", icon: <TrendingUpIcon size={16} /> },
-    { id: "users", label: "Users", icon: <UsersIcon size={16} /> },
-    { id: "details", label: "Details", icon: <MessageSquareIcon size={16} /> }
+    { id: "overview", label: "Overview", icon: <BarChart3 className="h-4 w-4" /> },
+    { id: "performance", label: "Perf", icon: <TrendingUp className="h-4 w-4" /> },
+    { id: "users", label: "Users", icon: <Users className="h-4 w-4" /> },
+    { id: "details", label: "Details", icon: <MessageSquare className="h-4 w-4" /> }
   ];
 
   // Calculate additional metrics from chart data
@@ -76,7 +80,7 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                       title="Total Conversations"
                       value={metrics["Total Conversations"]}
                       color="primary"
-                      icon={<MessageSquareIcon size={20} />}
+                      icon={<MessageSquare className="h-5 w-5" />}
                       trend={trends.totalConversations}
                     />
                     <MobileMetricCard
@@ -84,20 +88,20 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                       value={resolvedCount}
                       subtitle={`${resolutionRate.toFixed(0)}% resolution rate`}
                       color="green"
-                      icon={<BarChart3Icon size={20} />}
+                      icon={<BarChart3 className="h-5 w-5" />}
                     />
                     <MobileMetricCard
                       title="Avg Response Time"
                       value={`${metrics["Avg. Response Time (sec)"]}s`}
                       color="blue"
-                      icon={<TrendingUpIcon size={20} />}
+                      icon={<TrendingUp className="h-5 w-5" />}
                       trend={trends.responseTime}
                     />
                     <MobileMetricCard
                       title="Avg Daily Cost"
                       value={`€${metrics["Average Daily Cost (€)"]}`}
                       color="purple"
-                      icon={<BarChart3Icon size={20} />}
+                      icon={<BarChart3 className="h-5 w-5" />}
                       trend={trends.dailyCost}
                     />
                   </div>
@@ -187,7 +191,7 @@ export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
                     <MobileMetricCard
                       title="Unique Users"
                       value={metrics["Unique Users"]}
-                      icon={<UsersIcon size={20} />}
+                      icon={<Users className="h-5 w-5" />}
                       color="blue"
                     />
                     <MobileMetricCard

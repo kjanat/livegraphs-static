@@ -6,7 +6,16 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*", "!node_modules", "!.next", "!out", "!public", "!coverage", "!.claude"],
+    "includes": [
+      "**/*",
+      "!node_modules",
+      "!.next",
+      "!out",
+      "!public",
+      "!coverage",
+      "!.claude",
+      "!src/stories"
+    ],
     "ignoreUnknown": true
   },
   "formatter": {
