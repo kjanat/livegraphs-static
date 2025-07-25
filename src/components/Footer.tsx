@@ -6,24 +6,6 @@
 
 import { FooterContent } from "./FooterContent";
 
-export function FooterLink({
-  href,
-  children,
-  ...props
-}: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-primary hover:text-primary/80 underline transition-colors"
-      {...props}
-    >
-      {children}
-    </a>
-  );
-}
-
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground hidden md:block">

@@ -5,7 +5,7 @@
  */
 
 import { siteConfig } from "@/lib/config/site";
-import { FooterLink } from "./Footer";
+import { FooterLink } from "./FooterLink";
 
 interface FooterContentProps {
   className?: string;
