@@ -18,8 +18,15 @@ interface LazyChartProps {
 }
 
 /**
- * Wrapper component that only renders charts when they're in the viewport
- * Improves initial page load performance by deferring off-screen chart rendering
+ * Defers rendering of chart components until they enter the viewport, displaying a skeleton placeholder while off-screen.
+ *
+ * Enhances performance by avoiding unnecessary rendering of charts that are not visible. When the chart container enters the viewport, the chart is rendered inside an error boundary and supports lazy loading with a fallback skeleton.
+ *
+ * @param children - The chart component(s) to render when visible
+ * @param chartName - Optional name for error boundary identification
+ * @param minHeight - Minimum height of the container in pixels; defaults to 400
+ * @param threshold - Intersection threshold for viewport detection; defaults to 0.1
+ * @param rootMargin - Margin around the viewport for intersection detection; defaults to "100px"
  */
 export function LazyChart({
   children,

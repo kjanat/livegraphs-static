@@ -5,20 +5,36 @@ import type * as React from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * Provides the root component for an alert dialog, enabling modal dialog behavior and state management.
+ */
 function AlertDialog({ ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
+/**
+ * Renders a trigger element that opens the alert dialog when activated.
+ *
+ * Forwards all props to the underlying Radix UI AlertDialog trigger component and adds a data attribute for identification.
+ */
 function AlertDialogTrigger({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
   return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />;
 }
 
+/**
+ * Renders the portal container for the alert dialog, forwarding all props and adding a data attribute for identification.
+ */
 function AlertDialogPortal({ ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Portal>) {
   return <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />;
 }
 
+/**
+ * Renders a styled overlay for the alert dialog, covering the viewport with a semi-transparent background and transition animations.
+ *
+ * Additional class names can be merged for further customization.
+ */
 function AlertDialogOverlay({
   className,
   ...props
@@ -35,6 +51,11 @@ function AlertDialogOverlay({
   );
 }
 
+/**
+ * Renders the main content area of the alert dialog, centered on the screen with overlay and animation.
+ *
+ * Combines Radix UI's AlertDialog content primitive with custom styling, animation, and portal rendering. Additional class names can be merged for further customization.
+ */
 function AlertDialogContent({
   className,
   ...props
@@ -54,6 +75,11 @@ function AlertDialogContent({
   );
 }
 
+/**
+ * Renders the header section of an alert dialog with vertical layout and responsive text alignment.
+ *
+ * Additional class names can be merged for further customization.
+ */
 function AlertDialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -64,6 +90,11 @@ function AlertDialogHeader({ className, ...props }: React.ComponentProps<"div">)
   );
 }
 
+/**
+ * Renders the footer section of an alert dialog with responsive layout for action buttons.
+ *
+ * Arranges its children in a column-reverse layout on small screens and switches to a row layout with right alignment on larger screens.
+ */
 function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -74,6 +105,11 @@ function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">)
   );
 }
 
+/**
+ * Renders the alert dialog title with appropriate styling and a data attribute for identification.
+ *
+ * Additional class names can be merged for further customization.
+ */
 function AlertDialogTitle({
   className,
   ...props
@@ -87,6 +123,11 @@ function AlertDialogTitle({
   );
 }
 
+/**
+ * Renders the description text for an alert dialog with muted styling.
+ *
+ * Combines custom class names with default muted foreground and small text size, and adds a data attribute for identification.
+ */
 function AlertDialogDescription({
   className,
   ...props
@@ -100,6 +141,11 @@ function AlertDialogDescription({
   );
 }
 
+/**
+ * Renders an alert dialog action button with primary styling.
+ *
+ * Forwards all props to the underlying Radix UI Action primitive and applies the primary button variant styles.
+ */
 function AlertDialogAction({
   className,
   ...props
@@ -107,6 +153,11 @@ function AlertDialogAction({
   return <AlertDialogPrimitive.Action className={cn(buttonVariants(), className)} {...props} />;
 }
 
+/**
+ * Renders a cancel button for the alert dialog with outlined styling.
+ *
+ * Forwards all props to the underlying Radix UI Cancel primitive and merges additional class names.
+ */
 function AlertDialogCancel({
   className,
   ...props

@@ -5,6 +5,11 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Provides a styled, accessible scrollable container with custom scrollbars.
+ *
+ * Wraps the Radix UI ScrollArea root, applying custom styles and including a viewport, scrollbar, and corner element. Accepts all standard ScrollArea root props.
+ */
 function ScrollArea({
   className,
   children,
@@ -28,6 +33,11 @@ function ScrollArea({
   );
 }
 
+/**
+ * Renders a styled scrollbar for use within a scroll area, supporting vertical or horizontal orientation.
+ *
+ * Applies conditional styling based on the orientation and includes a draggable thumb element.
+ */
 function ScrollBar({
   className,
   orientation = "vertical",

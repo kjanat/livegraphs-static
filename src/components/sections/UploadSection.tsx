@@ -28,6 +28,11 @@ interface UploadSectionProps {
   onDrop: (event: React.DragEvent) => Promise<void>;
 }
 
+/**
+ * Renders a section for uploading, managing, and exporting chatbot conversation data files.
+ *
+ * Provides drag-and-drop and file input support for uploading JSON files, displays upload progress and errors, and offers actions to clear or export existing data when available.
+ */
 export function UploadSection({
   isUploading,
   uploadError,

@@ -11,6 +11,14 @@ const BREAKPOINTS = {
 
 type BreakpointKey = keyof typeof BREAKPOINTS;
 
+/**
+ * Determines if the current window width is at or above a specified Tailwind CSS breakpoint.
+ *
+ * Returns `true` if the window width is greater than or equal to the given breakpoint, or `false` otherwise. Defaults to the "md" breakpoint if none is specified. Returns `false` during server-side rendering or in non-browser environments.
+ *
+ * @param breakpoint - The Tailwind CSS breakpoint to compare against (e.g., "sm", "md", "lg", "xl", "2xl")
+ * @returns Whether the window width is at or above the specified breakpoint
+ */
 export function useBreakpoint(breakpoint: BreakpointKey = "md"): boolean {
   const [isAboveBreakpoint, setIsAboveBreakpoint] = useState(() => {
     // Initialize with current window width in browser, default to false in SSR/tests
@@ -36,7 +44,11 @@ export function useBreakpoint(breakpoint: BreakpointKey = "md"): boolean {
   return isAboveBreakpoint;
 }
 
-// Alias for common use case
+/**
+ * Determines if the current window width is at or above the "md" (desktop) breakpoint.
+ *
+ * @returns `true` if the window width is at least the "md" breakpoint, otherwise `false`
+ */
 export function useIsDesktop(): boolean {
   return useBreakpoint("md");
 }

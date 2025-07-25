@@ -14,6 +14,13 @@ interface MobileHighlightsProps {
   metrics: Metrics;
 }
 
+/**
+ * Displays key chatbot conversation insights and highlights based on provided metrics.
+ *
+ * Renders a summary of important trends such as resolution rate and user satisfaction, with contextual icons and styling. Allows users to dismiss the highlights panel.
+ *
+ * @param metrics - The metrics object containing conversation statistics and ratings used to generate highlights.
+ */
 export function MobileHighlights({ metrics }: MobileHighlightsProps) {
   const [isDismissed, setIsDismissed] = useState(false);
   const highlights = [];

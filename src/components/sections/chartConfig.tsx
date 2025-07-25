@@ -43,8 +43,13 @@ export interface ChartContentProps {
 }
 
 /**
- * Calculate visibility flags based on chart data
- * Optimized with early returns and cached group visibility
+ * Computes chart visibility flags and pre-caches group visibility based on provided chart data and session count.
+ *
+ * Determines the presence of ratings, country data, language data, and sufficient data volume, then evaluates and caches visibility for each chart group.
+ *
+ * @param chartData - The aggregated chart data for the dashboard
+ * @param totalSessions - The total number of sessions available for analysis
+ * @returns A `ChartVisibility` object containing data presence flags and a cached map of group visibility
  */
 export function calculateChartVisibility(
   chartData: ChartData,
@@ -127,8 +132,12 @@ export const CHART_GROUPS: ChartGroupConfig[] = [
 ];
 
 /**
- * Helper to get visible chart groups based on visibility flags
- * Optimized to use pre-calculated group visibility when available
+ * Returns the chart groups that are currently visible based on the provided visibility flags.
+ *
+ * Uses cached group visibility if available for performance; otherwise, evaluates each group's visibility condition.
+ *
+ * @param visibility - The current chart visibility flags and optional cached group visibility map
+ * @returns An array of chart group configurations that should be displayed
  */
 export function getVisibleGroups(visibility: ChartVisibility): ChartGroupConfig[] {
   // Use cached visibility if available for better performance
@@ -141,7 +150,11 @@ export function getVisibleGroups(visibility: ChartVisibility): ChartGroupConfig[
 }
 
 /**
- * Helper to check if a group should be expanded by default
+ * Determines whether a chart group should be expanded by default based on its configuration and current visibility flags.
+ *
+ * @param group - The chart group configuration object
+ * @param visibility - The current chart visibility flags
+ * @returns True if the group should be expanded by default; otherwise, false
  */
 export function isGroupExpanded(group: ChartGroupConfig, visibility: ChartVisibility): boolean {
   if (typeof group.defaultExpanded === "function") {

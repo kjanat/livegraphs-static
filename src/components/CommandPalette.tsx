@@ -38,6 +38,13 @@ interface CommandPaletteProps {
   hasData?: boolean;
 }
 
+/**
+ * Displays a keyboard-accessible command palette for navigating and performing actions within the chatbot analytics dashboard.
+ *
+ * Provides grouped commands for navigating dashboard sections, triggering data actions (such as uploading, exporting, clearing, or loading sample data), applying filters, and executing quick UI actions. The palette can be toggled with the Cmd/Ctrl + K keyboard shortcut and supports both mouse and keyboard interaction.
+ *
+ * @param hasData - Indicates whether data is currently present in the dashboard, affecting which actions are available.
+ */
 export function CommandPalette({
   onClearDatabase,
   onExportCSV,

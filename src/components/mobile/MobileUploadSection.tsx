@@ -24,6 +24,24 @@ interface MobileUploadSectionProps {
   onDrop: (event: React.DragEvent) => void;
 }
 
+/**
+ * Renders a mobile-friendly section for uploading, managing, and exporting data files.
+ *
+ * Provides controls for uploading JSON files, clearing loaded data, and exporting data as CSV (if a date range is present). Supports drag-and-drop file uploads and displays upload progress and error messages. The section can be expanded or collapsed by the user.
+ *
+ * @param isUploading - Whether a file upload is currently in progress
+ * @param uploadError - Error message to display if the upload fails
+ * @param hasData - Indicates if data has already been loaded
+ * @param hasDateRange - Indicates if the loaded data includes a date range (enables CSV export)
+ * @param onFileUpload - Callback invoked when a file is selected for upload
+ * @param onClearDatabase - Callback invoked to clear all loaded data
+ * @param onExportCSV - Callback invoked to export data as a CSV file
+ * @param isDragging - Whether a file is currently being dragged over the section
+ * @param onDragEnter - Handler for drag enter events
+ * @param onDragOver - Handler for drag over events
+ * @param onDragLeave - Handler for drag leave events
+ * @param onDrop - Handler for drop events
+ */
 export function MobileUploadSection({
   isUploading,
   uploadError,

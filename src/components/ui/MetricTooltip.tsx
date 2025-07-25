@@ -54,6 +54,17 @@ const metricExplanations = {
   }
 };
 
+/**
+ * Displays a metric with its value and provides a tooltip containing an explanation and calculation details.
+ *
+ * Shows the metric name and value in a styled container. On hover, an info icon reveals a tooltip with the metric's explanation, calculation method (if available), and current value. Custom explanations and calculations can be provided; otherwise, defaults are used.
+ *
+ * @param metric - The name of the metric to display.
+ * @param value - The value associated with the metric.
+ * @param explanation - Optional custom explanation text for the metric.
+ * @param calculation - Optional custom calculation description for the metric.
+ * @param className - Optional additional CSS classes for the container.
+ */
 export function MetricTooltip({
   metric,
   value,
@@ -110,6 +121,13 @@ export function MetricTooltip({
   );
 }
 
+/**
+ * Displays a collection of key metrics in a styled card with tooltips for each metric.
+ *
+ * Renders each metric using the `MetricTooltip` component, providing interactive explanations and calculation details for each metric value.
+ *
+ * @param metrics - An object mapping metric names to their corresponding values to be displayed.
+ */
 export function EnhancedMetricsDisplay({
   metrics
 }: {

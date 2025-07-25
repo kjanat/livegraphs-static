@@ -2,6 +2,13 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Renders a styled input element with customizable props and enhanced accessibility.
+ *
+ * Combines standard HTML input attributes with predefined utility classes for consistent appearance, accessibility, and dark mode support. Additional classes can be merged via the `className` prop.
+ *
+ * @returns A React input element with merged styling and passed props.
+ */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

@@ -5,6 +5,15 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Renders a customizable progress bar using Radix UI primitives.
+ *
+ * Displays a horizontal progress indicator whose filled portion reflects the `value` prop as a percentage.
+ *
+ * @param className - Additional CSS classes to apply to the progress bar container
+ * @param value - The current progress value as a percentage (0–100)
+ * @returns A React element representing the progress bar
+ */
 function Progress({
   className,
   value,

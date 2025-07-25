@@ -25,6 +25,17 @@ interface FullscreenModalProps {
   triggerRef?: React.RefObject<HTMLElement>; // Reference to the element that triggered the modal
 }
 
+/**
+ * Displays a fullscreen modal dialog with a customizable header and scrollable content area.
+ *
+ * When opened, body scrolling is disabled and focus is restored to the trigger element on close if provided.
+ *
+ * @param isOpen - Whether the modal is open
+ * @param onClose - Callback invoked when the modal requests to close
+ * @param children - Content to display inside the modal
+ * @param title - Optional title text for the modal header
+ * @param triggerRef - Optional reference to the element that triggered the modal, used for focus restoration
+ */
 export function FullscreenModal({
   isOpen,
   onClose,

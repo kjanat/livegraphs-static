@@ -39,6 +39,14 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
+/**
+ * Renders a line chart dashboard displaying daily cost and message volume trends.
+ *
+ * Displays a card with toggle buttons to switch between cost and message views, showing totals and a line chart for each. If no data is available, a placeholder message is shown. The chart visualizes trends over time using formatted dates and values.
+ *
+ * @param data - Contains arrays of dates, cost values, and optionally message counts to visualize.
+ * @returns A React element rendering the chart dashboard or a placeholder if no data is present.
+ */
 export function DailyCostTrendChartShadcn({ data }: DailyCostTrendChartShadcnProps) {
   const [activeChart, setActiveChart] = React.useState<"cost" | "messages">("cost");
 

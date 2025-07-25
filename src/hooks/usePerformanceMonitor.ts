@@ -14,8 +14,12 @@ interface PerformanceMetrics {
 }
 
 /**
- * Hook to monitor component performance in development
- * Tracks render counts and times to identify performance issues
+ * React hook that monitors and logs component render performance metrics during development.
+ *
+ * Tracks the number of renders, last and average render times, and counts of slow renders exceeding a specified threshold. Logs warnings for slow renders and periodic summaries to the console. Has no effect in production environments.
+ *
+ * @param componentName - The display name of the component being monitored
+ * @param threshold - The render time threshold in milliseconds to classify a render as slow (default: 16)
  */
 export function usePerformanceMonitor(componentName: string, threshold = 16) {
   const metricsRef = useRef<PerformanceMetrics>({

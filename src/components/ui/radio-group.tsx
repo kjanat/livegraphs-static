@@ -6,6 +6,11 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Renders a styled radio group container using Radix UI primitives.
+ *
+ * Combines a grid layout with customizable class names and adds a `data-slot` attribute for identification or styling.
+ */
 function RadioGroup({
   className,
   ...props
@@ -19,6 +24,11 @@ function RadioGroup({
   );
 }
 
+/**
+ * Renders a styled radio button item for use within a radio group.
+ *
+ * Enhances the Radix UI radio group item with custom appearance, accessibility attributes, and a visual indicator for selection.
+ */
 function RadioGroupItem({
   className,
   ...props

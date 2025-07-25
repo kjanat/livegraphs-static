@@ -230,12 +230,24 @@ class SessionGenerator:
     """Generates synthetic session data."""
 
     def __init__(self, config: DataConfig, seed: Optional[int] = None):
+        """
+        Initialize the SessionGenerator with a data configuration and optional random seed.
+        
+        Parameters:
+            config (DataConfig): Configuration containing vocabularies and options for data generation.
+            seed (int, optional): Seed for random number generation to ensure reproducibility.
+        """
         self.config = config
         if seed is not None:
             random.seed(seed)
 
     def generate_ipv4(self) -> str:
-        """Generate a random IPv4 address."""
+        """
+        Generate a random IPv4 address in dotted-decimal notation.
+        
+        Returns:
+            str: A synthetically generated IPv4 address (e.g., '192.168.1.1').
+        """
         octets = [
             random.randint(1, 254),
             random.randint(0, 255),
@@ -245,7 +257,16 @@ class SessionGenerator:
         return ".".join(map(str, octets))
 
     def generate_timestamp(self, base: datetime, days_span: int) -> str:
-        """Generate random ISO8601 timestamp within days_span from base."""
+        """
+        Generate a random ISO8601 UTC timestamp within a specified number of days from a base datetime.
+        
+        Parameters:
+            base (datetime): The starting datetime.
+            days_span (int): The maximum number of days to offset from the base.
+        
+        Returns:
+            str: An ISO8601-formatted UTC timestamp string.
+        """
         offset = timedelta(
             days=random.randint(0, days_span), seconds=random.randint(0, 86_400)
         )
@@ -254,7 +275,16 @@ class SessionGenerator:
         )
 
     def generate_sentence(self, min_words: int = 8, max_words: int = 16) -> str:
-        """Generate a random sentence from vocabulary."""
+        """
+        Generate a random sentence using words from the configured vocabulary.
+        
+        Parameters:
+            min_words (int): Minimum number of words in the sentence.
+            max_words (int): Maximum number of words in the sentence.
+        
+        Returns:
+            str: A randomly generated sentence with a capitalized first letter and ending period.
+        """
         num_words = random.randint(min_words, max_words)
         words = random.choices(self.config.vocab, k=num_words)
         return " ".join(words).capitalize() + "."
@@ -262,7 +292,16 @@ class SessionGenerator:
     def generate_transcript(
         self, base_date: datetime, days_span: int
     ) -> list[TranscriptEntry]:
-        """Generate conversation transcript."""
+        """
+        Generate a list of transcript entries representing a synthetic chat conversation.
+        
+        Parameters:
+            base_date (datetime): The base datetime from which transcript entry timestamps are generated.
+            days_span (int): The range in days from the base date within which timestamps are randomized.
+        
+        Returns:
+            list[TranscriptEntry]: A list of 3 to 8 transcript entries with randomized timestamps, roles, and message content.
+        """
         entries = []
         num_entries = random.randint(3, 8)
 
@@ -279,7 +318,17 @@ class SessionGenerator:
     def generate_session(
         self, base_date: datetime, days_span: int, include_rating: bool = True
     ) -> Session:
-        """Generate a complete session."""
+        """
+        Generate a synthetic support/chat session with randomized metadata, transcript, statistics, and optional user rating.
+        
+        Parameters:
+            base_date (datetime): The base datetime for generating session timestamps.
+            days_span (int): The range of days from the base date within which timestamps are generated.
+            include_rating (bool, optional): If True, includes a user rating in the session with an 80% probability.
+        
+        Returns:
+            Session: A fully populated synthetic session object with randomized fields.
+        """
         session_id = str(uuid.uuid4())
 
         # Generate timestamps ensuring end > start
@@ -350,7 +399,19 @@ class SchemaValidator:
 
     @staticmethod
     def fetch_schema(path_or_url: str) -> dict[str, Any]:
-        """Fetch schema from file or URL."""
+        """
+        Loads a JSON Schema from a local file or HTTP(S) URL.
+        
+        Parameters:
+            path_or_url (str): Path to a local schema file or a URL to fetch the schema from.
+        
+        Returns:
+            dict[str, Any]: The loaded JSON Schema as a dictionary.
+        
+        Raises:
+            ValueError: If fetching the schema from a URL fails.
+            FileNotFoundError: If the specified local schema file does not exist.
+        """
         if path_or_url.startswith(("http://", "https://")):
             try:
                 response = requests.get(path_or_url, timeout=15)
@@ -368,7 +429,16 @@ class SchemaValidator:
 
     @staticmethod
     def validate(data: list[dict[str, Any]], schema: dict[str, Any]) -> list[str]:
-        """Validate data against schema, return error messages."""
+        """
+        Validate a list of data objects against a JSON Schema and return error messages for any validation failures.
+        
+        Parameters:
+            data (list[dict[str, Any]]): The data objects to validate.
+            schema (dict[str, Any]): The JSON Schema to validate against.
+        
+        Returns:
+            list[str]: A list of error messages, each indicating the path and reason for a validation failure.
+        """
         validator = Draft7Validator(schema, format_checker=FormatChecker())
         errors = sorted(validator.iter_errors(data), key=lambda e: list(e.path))
 
@@ -384,7 +454,12 @@ class SchemaValidator:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments."""
+    """
+    Parse and return command-line arguments for synthetic session data generation.
+    
+    Returns:
+        argparse.Namespace: Parsed arguments including session count, output file path, random seed, date range, schema options, output formatting, compression, and validation flags.
+    """
     parser = argparse.ArgumentParser(
         description="Generate synthetic session dataset JSON.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -443,7 +518,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Main entry point."""
+    """
+    Generates synthetic support/chat session data based on CLI arguments, writes the output to a file in JSON or JSONL format (optionally compressed), and validates the data against a JSON Schema if requested.
+    
+    Parses command-line options for session count, output file, random seed, date range, formatting, compression, and schema validation. Handles progress logging for large datasets and exits with an error if validation fails.
+    """
     args = parse_args()
 
     # Parse start date

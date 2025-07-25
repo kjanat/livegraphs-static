@@ -16,6 +16,16 @@ interface ChartWrapperProps {
   className?: string;
 }
 
+/**
+ * Renders a styled, accessible container for chart content with optional title and expand functionality.
+ *
+ * Displays a header with the provided title and, if an expand callback is supplied, an accessible expand button. The chart content is rendered within a responsive, visually distinct card layout.
+ *
+ * @param children - The chart content to display within the wrapper.
+ * @param title - Optional title displayed above the chart.
+ * @param onExpand - Optional callback invoked when the expand button is clicked.
+ * @param className - Optional additional CSS classes for the container.
+ */
 export function ChartWrapper({ children, title, onExpand, className = "" }: ChartWrapperProps) {
   // Generate a unique ID for the heading to use with aria-labelledby
   const headingId = title ? `chart-title-${title.toLowerCase().replace(/\s+/g, "-")}` : undefined;

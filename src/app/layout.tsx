@@ -32,6 +32,13 @@ const geistMono = Geist_Mono({
 export const metadata = generateMetadata();
 export const viewport = generateViewport();
 
+/**
+ * Root layout component for the Notso AI web dashboard, providing global structure, theming, and accessibility features.
+ *
+ * Wraps all page content with font styles, theme provider, accessibility navigation, structured data, and global UI components such as footer and notifications.
+ *
+ * @param children - The content to be rendered within the layout
+ */
 export default function RootLayout({
   children
 }: Readonly<{

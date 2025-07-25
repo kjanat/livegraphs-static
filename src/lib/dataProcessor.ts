@@ -9,7 +9,11 @@ import { executeQuery, queryOne } from "./db/sql-wrapper";
 import type { ChartData, DateRange, Metrics } from "./types/session";
 import { countryName, getUserLocale, languageName } from "./utils/i18n";
 
-// Type guards for safer type assertions
+/**
+ * Determines whether the provided value is a string.
+ *
+ * @returns True if the value is a string; otherwise, false.
+ */
 function isString(value: unknown): value is string {
   return typeof value === "string";
 }
@@ -95,6 +99,14 @@ export async function calculateMetrics(db: Database, dateRange: DateRange): Prom
   };
 }
 
+/**
+ * Aggregates and prepares chatbot session analytics data for dashboard charting within a specified date range.
+ *
+ * Executes multiple SQL queries to collect and process metrics including sentiment distribution, resolution status, categories, top questions, time series of sessions, response times, costs, message counts, sentiment trends, geographic and language distributions (localized to the user's locale), hourly usage patterns, conversation durations, messages per conversation, user rating distribution and averages, and cost breakdowns by category. Returns a structured object containing all datasets ready for chart consumption.
+ *
+ * @param dateRange - The start and end dates delimiting the session data to include
+ * @returns An object containing all chart-ready analytics datasets for the specified date range
+ */
 export async function prepareChartData(db: Database, dateRange: DateRange): Promise<ChartData> {
   const startStr = dateRange.start.toISOString();
   const endStr = dateRange.end.toISOString();

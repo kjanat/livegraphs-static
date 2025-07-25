@@ -40,6 +40,13 @@ interface DatabaseHook {
 
 const STORAGE_KEY = DATA_PROCESSING_THRESHOLDS.database.localStorageKey;
 
+/**
+ * React hook for managing a client-side SQL database of chatbot conversation analytics, including initialization, persistence, data loading, statistics retrieval, and clearing functionality.
+ *
+ * The hook handles database lifecycle, schema setup, and localStorage persistence using sql.js. It provides methods to load sessions from JSON, retrieve summary statistics, clear all stored data, and access the current database version for change tracking.
+ *
+ * @returns An object containing the database instance, initialization and error states, methods for loading sessions, retrieving statistics, clearing the database, and the current database version.
+ */
 export function useDatabase(): DatabaseHook {
   const [db, setDb] = useState<Database | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);

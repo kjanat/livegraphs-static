@@ -76,7 +76,12 @@ export const ANALYTICS_THRESHOLDS = {
   }
 } as const;
 
-// Type-safe threshold getter with path
+/**
+ * Retrieves the threshold configuration object for a specified analytics category.
+ *
+ * @param category - The key representing the analytics threshold category to retrieve
+ * @returns The threshold values associated with the given category
+ */
 export function getThreshold<T extends keyof typeof ANALYTICS_THRESHOLDS>(
   category: T
 ): (typeof ANALYTICS_THRESHOLDS)[T] {

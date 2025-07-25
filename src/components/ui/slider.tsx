@@ -5,6 +5,11 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * A customizable slider component supporting single or range selection, built on top of Radix UI's slider primitives.
+ *
+ * Renders a horizontal or vertical slider with one or more thumbs, supporting controlled and uncontrolled usage, custom min/max values, and disabled state. The number of thumbs is determined by the provided `value` or `defaultValue` array.
+ */
 function Slider({
   className,
   defaultValue,

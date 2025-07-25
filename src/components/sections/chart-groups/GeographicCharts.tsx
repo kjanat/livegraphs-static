@@ -31,6 +31,14 @@ interface GeographicChartsProps {
   visibility: ChartVisibility;
 }
 
+/**
+ * Displays geographic analytics charts for chatbot sessions in a responsive grid layout.
+ *
+ * Renders country-based and language-based session charts based on the provided data and visibility flags.
+ *
+ * @param chartData - Chart data containing country and language labels and values
+ * @param visibility - Flags indicating which charts to display
+ */
 function GeographicCharts({ chartData, visibility }: GeographicChartsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

@@ -29,6 +29,13 @@ interface DetailedStatsChartsProps {
   chartData: ChartData;
 }
 
+/**
+ * Displays detailed analytics charts for chatbot conversations, including distributions of conversation durations, messages per conversation, and top questions.
+ *
+ * Renders two bar charts side-by-side for conversation durations and message counts, followed by a section highlighting the most frequently asked questions.
+ *
+ * @param chartData - The analytics data used to populate the charts and top questions section.
+ */
 function DetailedStatsCharts({ chartData }: DetailedStatsChartsProps) {
   return (
     <div className="space-y-6">

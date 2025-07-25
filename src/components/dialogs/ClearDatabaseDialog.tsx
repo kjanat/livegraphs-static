@@ -21,6 +21,15 @@ interface ClearDatabaseDialogProps {
   onConfirm: () => void;
 }
 
+/**
+ * Renders a modal dialog prompting the user to confirm clearing all data from the database.
+ *
+ * Displays a warning that all sessions will be permanently deleted and the action cannot be undone. Provides cancel and confirm actions; confirming triggers the provided callback.
+ *
+ * @param open - Whether the dialog is visible
+ * @param onOpenChange - Callback invoked when the dialog's open state changes
+ * @param onConfirm - Callback invoked when the user confirms the clear action
+ */
 export function ClearDatabaseDialog({ open, onOpenChange, onConfirm }: ClearDatabaseDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

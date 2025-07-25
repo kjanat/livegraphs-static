@@ -34,6 +34,13 @@ interface QualityIssue {
   impact: ImpactLevel;
 }
 
+/**
+ * Analyzes session metrics and optional chart data to assess and display data quality issues.
+ *
+ * Evaluates the provided session metrics, total sessions, date range, and optional chart data for potential data quality concerns such as small sample size, short time period, low activity, slow response times, suspicious escalation rates, high unrecognized categories, HR forwarding anomalies, and unusual rating values. Displays a summary of detected issues with severity and impact, or indicates good data quality if no issues are found. Renders nothing if no significant issues are present.
+ *
+ * @returns A React component displaying data quality issues and summary, or `null` if no significant issues are detected.
+ */
 export function DataQualityIndicator({
   metrics,
   totalSessions,

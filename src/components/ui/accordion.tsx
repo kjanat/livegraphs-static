@@ -6,10 +6,18 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Provides the root container for an accordion interface, wrapping Radix UI's Accordion root with custom slot identification.
+ */
 function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
 }
 
+/**
+ * Renders a single item within the accordion, applying border styles and custom class names.
+ *
+ * Adds a `data-slot="accordion-item"` attribute for identification.
+ */
 function AccordionItem({
   className,
   ...props
@@ -23,6 +31,12 @@ function AccordionItem({
   );
 }
 
+/**
+ * Renders a styled accordion trigger button with an animated chevron icon, handling user interaction to expand or collapse the associated accordion item.
+ *
+ * @param className - Additional CSS classes to apply to the trigger button
+ * @param children - The content to display inside the trigger
+ */
 function AccordionTrigger({
   className,
   children,
@@ -45,6 +59,11 @@ function AccordionTrigger({
   );
 }
 
+/**
+ * Displays the collapsible content area of an accordion item with animated open and close transitions.
+ *
+ * Children are wrapped in a padded container and the content animates based on the accordion's state.
+ */
 function AccordionContent({
   className,
   children,

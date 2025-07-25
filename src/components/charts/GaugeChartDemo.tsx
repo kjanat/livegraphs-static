@@ -12,6 +12,11 @@ import { GaugeChartCircular } from "./GaugeChartCircular";
 import { GaugeChartShadcn } from "./GaugeChartShadcn";
 import { GaugeChartShadcnAlt } from "./GaugeChartShadcnAlt";
 
+/**
+ * Demonstrates and compares multiple gauge chart designs for dashboard analytics.
+ *
+ * Renders an informational header with interactive descriptions of three gauge chart styles—Radial Bar, Semi-Circular Arc, and Modern Circular—followed by a grid of example charts using sample data and varied configurations.
+ */
 export function GaugeChartDemo() {
   const demoValue = 4.2;
   const maxValue = 5;

@@ -41,6 +41,14 @@ interface SessionsByCountryChartShadcnProps {
   };
 }
 
+/**
+ * Renders a vertical bar chart displaying user session counts by country within a styled card layout.
+ *
+ * Shows the top 8 countries by session count, with country names and session numbers labeled on each bar. If the input data is invalid, displays an error message instead of the chart. The card footer summarizes the number of active countries and highlights the top country with its percentage share of total sessions.
+ *
+ * @param data - Contains parallel arrays of country labels and session values; both arrays must be of equal length.
+ * @returns A card component containing the sessions-by-country chart and summary information, or an error message if data is invalid.
+ */
 export function SessionsByCountryChartShadcn({ data }: SessionsByCountryChartShadcnProps) {
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {

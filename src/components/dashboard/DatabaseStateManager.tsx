@@ -13,6 +13,14 @@ interface DatabaseStateManagerProps {
   error: Error | null;
 }
 
+/**
+ * Displays the current state of the database connection as an alert based on initialization and error status.
+ *
+ * Renders a neutral alert while the database is initializing, a destructive alert if an error occurs, or nothing if the database is initialized without errors.
+ *
+ * @param isInitialized - Indicates whether the database has been successfully initialized
+ * @param error - An error encountered during database initialization, or null if none
+ */
 export function DatabaseStateManager({ isInitialized, error }: DatabaseStateManagerProps) {
   if (!isInitialized && !error) {
     return (

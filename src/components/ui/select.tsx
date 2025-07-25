@@ -4,18 +4,38 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Provides a styled root component for building a custom select menu.
+ *
+ * Wraps the Radix UI Select root primitive, forwarding all props and adding a `data-slot="select"` attribute for identification.
+ */
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }
 
+/**
+ * Renders a group of related options within a Select component.
+ *
+ * Forwards all props to the underlying Radix UI Select.Group primitive and adds a `data-slot="select-group"` attribute for identification.
+ */
 function SelectGroup({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
   return <SelectPrimitive.Group data-slot="select-group" {...props} />;
 }
 
+/**
+ * Renders the selected value within a Select component.
+ *
+ * Forwards all props to the underlying Radix SelectPrimitive.Value and adds a data-slot attribute for identification.
+ */
 function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />;
 }
 
+/**
+ * Renders a styled trigger button for the Select component, displaying the selected value and a chevron icon.
+ *
+ * @param size - Optional size of the trigger button ("default" or "sm"). Defaults to "default".
+ */
 function SelectTrigger({
   className,
   size = "default",
@@ -42,6 +62,11 @@ function SelectTrigger({
   );
 }
 
+/**
+ * Renders the dropdown content for the Select component, including scroll buttons and viewport, with customizable positioning and animated transitions.
+ *
+ * @param position - Determines the dropdown positioning strategy. Defaults to "popper".
+ */
 function SelectContent({
   className,
   children,
@@ -77,6 +102,11 @@ function SelectContent({
   );
 }
 
+/**
+ * Renders a styled label for a select group or item.
+ *
+ * Applies muted foreground styling and padding, and forwards all additional props to the underlying Radix Select label primitive.
+ */
 function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
     <SelectPrimitive.Label
@@ -87,6 +117,11 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
   );
 }
 
+/**
+ * Renders a styled selectable item within a Select dropdown, displaying a check icon when selected.
+ *
+ * Children are rendered as the item's label. Disabled and selected states are visually indicated.
+ */
 function SelectItem({
   className,
   children,
@@ -111,6 +146,11 @@ function SelectItem({
   );
 }
 
+/**
+ * Renders a styled separator line within a select dropdown.
+ *
+ * Adds visual separation between groups or items in the select menu.
+ */
 function SelectSeparator({
   className,
   ...props
@@ -124,6 +164,11 @@ function SelectSeparator({
   );
 }
 
+/**
+ * Renders a scroll-up button for the select dropdown, displaying an upward chevron icon.
+ *
+ * Used to indicate and enable scrolling up within the select content when options overflow.
+ */
 function SelectScrollUpButton({
   className,
   ...props
@@ -139,6 +184,11 @@ function SelectScrollUpButton({
   );
 }
 
+/**
+ * Renders a styled scroll down button for the Select dropdown, displaying a downward chevron icon.
+ *
+ * Forwards all props to the underlying Radix UI ScrollDownButton and applies consistent styling and data attributes.
+ */
 function SelectScrollDownButton({
   className,
   ...props

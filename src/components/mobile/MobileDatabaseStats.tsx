@@ -17,6 +17,14 @@ interface MobileDatabaseStatsProps {
   };
 }
 
+/**
+ * Displays a collapsible section with database statistics for chatbot conversation sessions.
+ *
+ * Shows the total number of sessions, the start and end dates of the data range, and the number of days spanned. The section can be expanded or collapsed by the user. Handles missing date data gracefully.
+ *
+ * @param totalSessions - The total number of chatbot conversation sessions.
+ * @param dateRange - An object containing the minimum (`min`) and maximum (`max`) date strings for the data range.
+ */
 export function MobileDatabaseStats({ totalSessions, dateRange }: MobileDatabaseStatsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 

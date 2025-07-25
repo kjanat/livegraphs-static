@@ -32,6 +32,14 @@ interface LanguageDistributionChartShadcnProps {
   };
 }
 
+/**
+ * Renders a vertical bar chart displaying session counts for the top languages, with summary statistics and error handling for invalid data.
+ *
+ * Displays up to eight languages with their session counts, highlights the primary language and its percentage share, and shows the total number of supported languages. If the input data is invalid, an error message is shown instead of the chart.
+ *
+ * @param data - Object containing parallel arrays of language labels and corresponding session counts
+ * @returns A card component containing the language distribution chart and summary information, or an error message if data is invalid
+ */
 export function LanguageDistributionChartShadcn({ data }: LanguageDistributionChartShadcnProps) {
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {

@@ -5,14 +5,29 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * A wrapper component for Radix UI's HoverCard root, adding a data attribute for identification.
+ *
+ * Forwards all props to the underlying HoverCardPrimitive.Root component.
+ */
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
 
+/**
+ * Renders a trigger element for the hover card, forwarding all props and adding a data attribute for identification.
+ */
 function HoverCardTrigger({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />;
 }
 
+/**
+ * Renders the content of a hover card inside a portal with customizable alignment, offset, and styling.
+ *
+ * @param className - Additional CSS classes to apply to the content container
+ * @param align - Alignment of the hover card content relative to the trigger (default: "center")
+ * @param sideOffset - Offset distance from the trigger element (default: 4)
+ */
 function HoverCardContent({
   className,
   align = "center",

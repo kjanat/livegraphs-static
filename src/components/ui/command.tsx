@@ -12,6 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+/**
+ * Renders the root command palette container with base styling, wrapping the underlying command primitive.
+ *
+ * Accepts additional class names and props to customize appearance and behavior.
+ */
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
     <CommandPrimitive
@@ -25,6 +30,15 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   );
 }
 
+/**
+ * Displays a command palette dialog with customizable title, description, and content.
+ *
+ * Renders a modal dialog containing a styled command palette, supporting accessibility features and optional close button. The dialog header is visually hidden but accessible to screen readers.
+ *
+ * @param title - The dialog's accessible title text
+ * @param description - The dialog's accessible description text
+ * @param showCloseButton - Whether to display the close button in the dialog
+ */
 function CommandDialog({
   title = "Command Palette",
   description = "Search for a command to run...",
@@ -56,6 +70,11 @@ function CommandDialog({
   );
 }
 
+/**
+ * Renders a styled command input field with a search icon for use in a command palette.
+ *
+ * Accepts all props supported by the underlying command input primitive, along with optional custom class names.
+ */
 function CommandInput({
   className,
   ...props
@@ -75,6 +94,11 @@ function CommandInput({
   );
 }
 
+/**
+ * Renders a scrollable list of command items with custom styling.
+ *
+ * Wraps the `CommandPrimitive.List` component, applying maximum height, vertical scrolling, and additional class names for layout customization.
+ */
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
   return (
     <CommandPrimitive.List
@@ -85,6 +109,9 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
+/**
+ * Renders a styled empty state message within the command palette when no results are found.
+ */
 function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
     <CommandPrimitive.Empty
@@ -95,6 +122,11 @@ function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive
   );
 }
 
+/**
+ * Renders a styled group container for command items with a custom heading appearance.
+ *
+ * Applies padding, muted heading styles, and overflow handling to visually separate grouped command items.
+ */
 function CommandGroup({
   className,
   ...props
@@ -111,6 +143,11 @@ function CommandGroup({
   );
 }
 
+/**
+ * Renders a horizontal separator line within a command menu, providing visual separation between groups or items.
+ *
+ * Accepts additional class names and props for customization.
+ */
 function CommandSeparator({
   className,
   ...props
@@ -124,6 +161,11 @@ function CommandSeparator({
   );
 }
 
+/**
+ * Renders a styled command menu item with support for selected and disabled states.
+ *
+ * Applies custom styles for layout, selection highlighting, icon sizing, and disabled appearance. Additional class names and props are forwarded to the underlying command item primitive.
+ */
 function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
   return (
     <CommandPrimitive.Item
@@ -137,6 +179,11 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
+/**
+ * Renders a styled span for displaying keyboard shortcut hints within a command item.
+ *
+ * Accepts additional class names and span props for customization.
+ */
 function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span

@@ -21,6 +21,15 @@ interface MobileDashboardProps {
   chartData: ChartData;
 }
 
+/**
+ * Renders a mobile-friendly dashboard displaying chatbot conversation analytics in a tabbed interface.
+ *
+ * Organizes summary metrics, performance indicators, user demographics, and detailed breakdowns into Overview, Performance, Users, and Details tabs. Visualizes data using metric cards, progress bars, and collapsible sections for easy navigation and insight on mobile devices.
+ *
+ * @param metrics - Summary statistics for the chatbot, such as total conversations and average response time.
+ * @param chartData - Detailed chart data including resolution statuses, sentiment distribution, user demographics, categories, and frequent questions.
+ * @returns The rendered mobile dashboard component.
+ */
 export function MobileDashboard({ metrics, chartData }: MobileDashboardProps) {
   const tabs = [
     { id: "overview", label: "Overview", icon: <BarChart3 className="h-4 w-4" /> },

@@ -3,6 +3,11 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * A styled toggle switch component based on Radix UI, supporting custom class names and all native switch props.
+ *
+ * Renders a visually customizable switch with accessible state, focus, and disabled styles, including dark mode support.
+ */
 function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
   return (
     <SwitchPrimitive.Root

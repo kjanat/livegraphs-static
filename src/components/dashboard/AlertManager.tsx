@@ -25,6 +25,17 @@ interface AlertManagerProps {
   onClearConfirm: () => void;
 }
 
+/**
+ * Renders dialogs for clearing the database and notifying the user when no data is available for the current week.
+ *
+ * Displays a confirmation dialog for clearing the database and an alert dialog when there is no data for the current week, allowing users to acknowledge the alert or confirm the clear action.
+ *
+ * @param showClearDialog - Whether the clear database confirmation dialog is visible
+ * @param setShowClearDialog - Setter to control the visibility of the clear database dialog
+ * @param showNoDataAlert - Whether the no data alert dialog is visible
+ * @param setShowNoDataAlert - Setter to control the visibility of the no data alert dialog
+ * @param onClearConfirm - Callback invoked when the user confirms clearing the database
+ */
 export function AlertManager({
   showClearDialog,
   setShowClearDialog,

@@ -33,6 +33,19 @@ interface MultiLineChartShadcnProps {
   yAxisLabel?: string;
 }
 
+/**
+ * Renders a multi-line chart within a styled card, visualizing multiple datasets over a shared x-axis.
+ *
+ * Displays a "No data available" message if the provided data array is empty. Each dataset is rendered as a distinct colored line, with optional chart title and axis labels.
+ *
+ * @param data - Array of records representing the chart data points
+ * @param datasets - Array describing each line's label, data key, and color
+ * @param title - Optional chart title displayed in the card header
+ * @param xAxisKey - Key in the data records to use for the x-axis
+ * @param xAxisLabel - Optional label for the x-axis
+ * @param yAxisLabel - Optional label for the y-axis
+ * @returns A React element containing the multi-line chart or a message if no data is available
+ */
 export function MultiLineChartShadcn({
   data,
   datasets,

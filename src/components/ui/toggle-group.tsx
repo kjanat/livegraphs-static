@@ -9,6 +9,11 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariant
   variant: "default"
 });
 
+/**
+ * Renders a group of toggleable items with shared styling and context for variant and size.
+ *
+ * Provides variant and size values to child toggle items via context, enabling consistent styling across the group.
+ */
 function ToggleGroup({
   className,
   variant,
@@ -34,6 +39,11 @@ function ToggleGroup({
   );
 }
 
+/**
+ * Renders an individual toggle button within a toggle group, applying variant and size styling from context or props.
+ *
+ * The component consumes variant and size values from the nearest `ToggleGroup` context, falling back to its own props if context is not available. It applies appropriate styling and data attributes for consistent appearance within a toggle group.
+ */
 function ToggleGroupItem({
   className,
   children,

@@ -23,6 +23,11 @@ interface FileUploadManagerProps {
   onUploadSuccess: () => Promise<void>;
 }
 
+/**
+ * Renders a file upload manager for a chatbot analytics dashboard, handling file uploads, drag-and-drop events, and related actions.
+ *
+ * Selects a mobile or desktop upload section based on device type, manages upload state and errors, and passes all relevant handlers and flags to the chosen upload section component.
+ */
 export function FileUploadManager({
   hasData,
   hasDateRange,

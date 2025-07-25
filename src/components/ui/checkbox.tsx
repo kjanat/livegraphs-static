@@ -6,6 +6,11 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Renders a styled checkbox component with support for checked, focus, disabled, and invalid states.
+ *
+ * Combines Radix UI's CheckboxPrimitive with custom styles and a check icon indicator.
+ */
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root

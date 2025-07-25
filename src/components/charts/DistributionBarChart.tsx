@@ -34,6 +34,20 @@ interface DistributionBarChartProps {
   formatLabel?: (value: number) => string;
 }
 
+/**
+ * Renders a histogram bar chart visualizing the distribution of a numeric dataset, along with summary statistics and trend indication.
+ *
+ * Displays the data in a styled card with a configurable title, optional description, and customizable bar color. The chart divides the data into a specified number of bins, showing the frequency and percentage of values in each range. Summary statistics (mean, median, mode) are displayed below the chart, and an optional trend indicator compares the average of the first and second halves of the data.
+ *
+ * @param data - Array of numeric values to visualize
+ * @param bins - Number of histogram bins to display (default: 8)
+ * @param title - Title text for the card (default: "Distribution")
+ * @param description - Optional description text below the title
+ * @param color - CSS color value for the bars (default: "hsl(var(--chart-1))")
+ * @param showTrend - Whether to display the trend indicator (default: true)
+ * @param formatLabel - Optional function to format numeric labels and statistics
+ * @returns A React element displaying the histogram, statistics, and trend, or a no-data message if the input array is empty
+ */
 export function DistributionBarChart({
   data,
   bins = 8,

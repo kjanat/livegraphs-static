@@ -20,6 +20,15 @@ interface UseDragGaugeReturn {
   setHovered: (hovered: boolean) => void;
 }
 
+/**
+ * Provides interactive state and event handlers for a draggable, semicircular gauge component with support for pointer and keyboard input.
+ *
+ * Enables smooth dragging, keyboard adjustment, hover state management, and animated spring-back to the original value. Returns the current fill percentage, rounded rating, interaction mode, and handlers for drag, keyboard, and hover events.
+ *
+ * @param value - The current gauge value, or null if unset
+ * @param max - The maximum gauge value (default is 5)
+ * @returns An object containing the current percentage, rating, mode, and event handlers for drag, keyboard, and hover interactions
+ */
 export function useDragGauge(value: number | null, max = 5): UseDragGaugeReturn {
   const [mode, setMode] = useState<GaugeMode>("idle");
   const [dragValue, setDragValue] = useState<number | null>(null);

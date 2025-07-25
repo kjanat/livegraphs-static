@@ -25,6 +25,19 @@ interface GaugeChartShadcnProps {
   };
 }
 
+/**
+ * Renders a radial bar gauge chart within a styled card, visualizing a numeric value as a percentage of a maximum with color-coded thresholds.
+ *
+ * Displays the value as a semi-circular gauge, with color transitions indicating performance levels ("Poor", "Fair", "Good", "Excellent") based on customizable thresholds. Optionally shows a title, description with hover details, and a legend mapping colors to qualitative labels. The value is formatted with a unit and, if the maximum is not 100, displays the maximum below the main value.
+ *
+ * @param value - The current numeric value to visualize as a percentage of `max`.
+ * @param max - The maximum possible value for the gauge (default is 100).
+ * @param title - Optional title displayed above the chart.
+ * @param description - Optional description shown with a hover tooltip explaining the gauge and thresholds.
+ * @param unit - Unit suffix for the displayed value (default is "%").
+ * @param thresholds - Object defining numeric thresholds for color coding (default is `{ low: 30, medium: 60, high: 80 }`).
+ * @returns A React element rendering the gauge chart card.
+ */
 export function GaugeChartShadcn({
   value,
   max = 100,

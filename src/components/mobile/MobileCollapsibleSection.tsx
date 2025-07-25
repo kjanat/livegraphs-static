@@ -16,6 +16,16 @@ interface MobileCollapsibleSectionProps {
   badge?: string | number;
 }
 
+/**
+ * Renders a collapsible section for mobile interfaces with a title, optional badge, and expandable content area.
+ *
+ * The section can be expanded or collapsed by tapping the header. The initial expanded state can be set via `defaultExpanded`.
+ *
+ * @param title - The header text displayed for the section
+ * @param defaultExpanded - If true, the section starts expanded; otherwise, it is collapsed by default
+ * @param children - The content displayed inside the collapsible area
+ * @param badge - An optional label or count shown next to the title
+ */
 export function MobileCollapsibleSection({
   title,
   defaultExpanded = false,

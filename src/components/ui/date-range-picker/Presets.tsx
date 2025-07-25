@@ -3,6 +3,17 @@ import { cn } from "@/lib/utils";
 import { useIsDesktop } from "./hooks/useBreakpoint";
 import type { PresetsProps } from "./types";
 
+/**
+ * Renders a set of selectable preset buttons for date range selection.
+ *
+ * Displays each preset as a button, highlighting the currently selected preset and adapting label display based on screen size. Invokes the provided callback when a preset is selected.
+ *
+ * @param presets - Array of preset options to display
+ * @param onSelect - Callback invoked with the selected preset when a button is clicked
+ * @param currentValue - The currently selected date range, used to determine the active preset
+ * @param className - Optional additional CSS classes for the container
+ * @returns A React element containing the preset buttons
+ */
 export function Presets({ presets, onSelect, currentValue, className }: PresetsProps) {
   const isDesktop = useIsDesktop();
 

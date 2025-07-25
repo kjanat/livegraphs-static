@@ -10,6 +10,11 @@ import { Info } from "lucide-react";
 import { useState } from "react";
 import { FooterContent } from "@/components/FooterContent";
 
+/**
+ * Renders a floating info button and an overlay footer panel for mobile dashboards.
+ *
+ * Displays a fixed info button in the bottom-right corner. When tapped, an overlay appears with additional footer content and a close button. The overlay can be dismissed by tapping outside the panel or the close button.
+ */
 export function MobileFooter() {
   const [showInfo, setShowInfo] = useState(false);
 

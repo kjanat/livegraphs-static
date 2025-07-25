@@ -19,6 +19,11 @@ interface BubbleData {
 
 type BubbleTooltipProps = TooltipProps<number, string>;
 
+/**
+ * Renders a custom tooltip for a bubble chart, displaying category name, average cost, total cost, and session count for the hovered data point.
+ *
+ * Returns `null` if the tooltip is inactive or no data is available.
+ */
 export function BubbleTooltip({ active, payload }: BubbleTooltipProps) {
   if (!active || !payload?.length) return null;
 

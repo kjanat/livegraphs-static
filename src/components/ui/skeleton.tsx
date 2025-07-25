@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils";
 
-// Base skeleton component
+/**
+ * Renders a generic skeleton placeholder with a pulsing animation for loading states.
+ *
+ * Accepts standard `div` props and allows customization of class names and ARIA label for accessibility.
+ */
 function Skeleton({
   className,
   "aria-label": ariaLabel = "Loading",
@@ -19,7 +23,15 @@ function Skeleton({
   );
 }
 
-// Chart skeleton variant for loading charts
+/**
+ * Renders a skeleton placeholder simulating a loading chart.
+ *
+ * Displays a styled card with animated skeleton bars and a faded chart area to indicate chart content is loading. The height and ARIA label can be customized.
+ *
+ * @param className - Optional additional class names for the container
+ * @param height - Height of the skeleton chart area in pixels or CSS units (default: 300)
+ * @param aria-label - ARIA label for accessibility (default: "Loading chart")
+ */
 function ChartSkeleton({
   className = "",
   height = 300,
@@ -47,7 +59,13 @@ function ChartSkeleton({
   );
 }
 
-// Metrics skeleton variant for loading metric cards
+/**
+ * Renders a skeleton placeholder for a grid of metric cards during loading states.
+ *
+ * Displays a configurable number of metric skeleton blocks arranged in a responsive grid, with ARIA attributes for accessibility.
+ *
+ * @param skeletonCount - The number of metric skeleton blocks to display
+ */
 function MetricsSkeleton({
   skeletonCount = 8,
   className = "",

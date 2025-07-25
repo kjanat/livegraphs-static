@@ -13,8 +13,11 @@ interface UseInViewportOptions {
 }
 
 /**
- * Hook to detect when an element is in the viewport
- * Used for lazy loading charts only when they're visible
+ * React hook that detects when a DOM element enters the viewport.
+ *
+ * Returns a ref to attach to the target element and a boolean indicating its visibility in the viewport. Useful for lazy loading or triggering actions when an element becomes visible. The detection behavior can be customized with threshold, root margin, and trigger-once options.
+ *
+ * @returns A tuple containing the element ref and a boolean indicating if the element is in the viewport
  */
 export function useInViewport<T extends HTMLElement = HTMLElement>(
   options: UseInViewportOptions = {}

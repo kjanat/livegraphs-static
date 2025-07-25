@@ -81,6 +81,16 @@ const renderActiveShape = (props: PieSectorDataItem) => {
   );
 };
 
+/**
+ * Renders a pie chart visualizing the distribution of customer sentiment across chatbot sessions.
+ *
+ * Displays sentiment categories as colored sectors, with interactive highlighting, tooltips showing session counts and percentages, and an optional legend. The chart is wrapped in a card layout with a header, content, and a footer summarizing the positive sentiment rate. If input data is invalid, an error message is shown instead.
+ *
+ * @param data - Object containing `labels` (sentiment categories) and `values` (session counts) arrays of equal length
+ * @param showLegend - Whether to display the chart legend (default: false)
+ * @param enableAnimation - Whether to animate the chart transitions (default: true)
+ * @returns A card component containing the sentiment distribution pie chart or an error message if data is invalid
+ */
 export function SentimentDistributionChart({
   data,
   showLegend = false,

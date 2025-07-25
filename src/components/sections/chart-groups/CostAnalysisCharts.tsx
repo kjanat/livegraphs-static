@@ -37,6 +37,14 @@ interface CostAnalysisChartsProps {
   chartData: ChartData;
 }
 
+/**
+ * Displays a set of cost analysis charts for chatbot conversation analytics.
+ *
+ * Renders top categories, category cost breakdown, and daily cost trend charts using the provided chart data.
+ *
+ * @param chartData - The analytics data used to populate the charts
+ * @returns The rendered chart group component
+ */
 function CostAnalysisCharts({ chartData }: CostAnalysisChartsProps) {
   return (
     <div className="space-y-6">

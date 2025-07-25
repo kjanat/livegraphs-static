@@ -14,6 +14,13 @@ interface DatabaseStatsSectionProps {
   };
 }
 
+/**
+ * Displays a section with chatbot conversation database statistics, including total sessions and the data range.
+ *
+ * @param totalSessions - The total number of chatbot sessions to display.
+ * @param dateRange - An object containing the minimum and maximum dates for the data range.
+ * @returns A React section element presenting the statistics in a styled layout.
+ */
 export function DatabaseStatsSection({ totalSessions, dateRange }: DatabaseStatsSectionProps) {
   return (
     <section
