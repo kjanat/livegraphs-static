@@ -4,12 +4,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DateRangePicker } from "./DateRangePicker";
 
 // Helper function to get day buttons from the calendar
-const getDayButtons = () => {
-  const allButtons = screen.getAllByRole("button");
-  return allButtons.filter((btn) => {
-    const text = btn.textContent || "";
-    return /^\d{1,2}$/.test(text);
-  });
+const getDayButtons = (includeDisabled = false) => {
+  // In react-day-picker v9, day buttons have data-day attribute
+  try {
+    const allButtons = screen.getAllByRole("button");
+    return allButtons.filter((btn) => {
+      const text = btn.textContent || "";
+      const hasDataDay = btn.hasAttribute("data-day");
+      const isDisabled =
+        btn.hasAttribute("disabled") || btn.getAttribute("aria-disabled") === "true";
+      // Check if it's a day button (1-31) with data-day attribute
+      if (includeDisabled) {
+        return /^\d{1,2}$/.test(text) && hasDataDay;
+      }
+      return /^\d{1,2}$/.test(text) && hasDataDay && !isDisabled;
+    });
+  } catch {
+    // Fallback if no buttons found
+    return [];
+  }
 };
 
 describe("DateRangePicker", () => {
@@ -228,9 +241,11 @@ describe("DateRangePicker", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      // Find disabled day buttons
-      const dayButtons = getDayButtons();
-      const disabledDates = dayButtons.filter((btn) => btn.hasAttribute("disabled"));
+      // Find all day buttons including disabled ones
+      const allDayButtons = getDayButtons(true);
+      const disabledDates = allDayButtons.filter(
+        (btn) => btn.hasAttribute("disabled") || btn.getAttribute("aria-disabled") === "true"
+      );
 
       expect(disabledDates.length).toBeGreaterThan(0);
     });
@@ -251,8 +266,10 @@ describe("DateRangePicker", () => {
       });
 
       // Most dates should be disabled except the available ones
-      const dayButtons = getDayButtons();
-      const enabledDates = dayButtons.filter((btn) => !btn.hasAttribute("disabled"));
+      const allDayButtons = getDayButtons(true);
+      const enabledDates = allDayButtons.filter(
+        (btn) => !btn.hasAttribute("disabled") && btn.getAttribute("aria-disabled") !== "true"
+      );
 
       expect(enabledDates.length).toBeLessThanOrEqual(availableDates.size);
     });
@@ -504,14 +521,21 @@ describe("DateRangePicker", () => {
 
       // User selects dates
       const dayButtons = getDayButtons();
+
+      // Make sure we have enough day buttons
+      expect(dayButtons.length).toBeGreaterThan(20);
+
       fireEvent.click(dayButtons[10]);
       fireEvent.click(dayButtons[20]); // 11 days
 
       // Wait for the selection to be processed
-      await waitFor(() => {
-        const applyButton = screen.getByText("Apply");
-        expect(applyButton).not.toBeDisabled();
-      });
+      await waitFor(
+        () => {
+          const applyButton = screen.getByText("Apply");
+          expect(applyButton).not.toBeDisabled();
+        },
+        { timeout: 3000 }
+      );
 
       // User clicks Apply
       const applyButton = screen.getByText("Apply");

@@ -104,7 +104,7 @@ export default defineConfig({
 
   // ---- Dev server ----
   webServer: {
-    command: "pnpm dev",
+    command: CI ? "pnpm dlx serve -s out -l 3000" : "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !CI,
     timeout: 120_000
