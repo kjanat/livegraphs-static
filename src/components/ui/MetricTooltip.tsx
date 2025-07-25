@@ -68,12 +68,12 @@ export function MetricTooltip({
   return (
     <div className={cn("relative", className)}>
       <div className="bg-secondary p-4 rounded transition-all hover:bg-secondary/80 hover:scale-105 group">
-        <div className="flex items-center justify-between mb-1">
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
-            {metric}
+        <div className="flex items-center justify-between mb-1 min-w-0">
+          <div className="text-sm text-muted-foreground flex items-center gap-2 min-w-0">
+            <span className="truncate">{metric}</span>
             <HoverCard openDelay={200} closeDelay={100}>
               <HoverCardTrigger asChild>
-                <InfoIcon className="h-3.5 w-3.5 opacity-60 hover:opacity-100 transition-opacity cursor-help" />
+                <InfoIcon className="h-3.5 w-3.5 opacity-60 hover:opacity-100 transition-opacity cursor-help shrink-0 hidden sm:inline-block" />
               </HoverCardTrigger>
               <HoverCardContent className="w-80 max-w-sm select-text" side="top" align="start">
                 <div className="space-y-3">
