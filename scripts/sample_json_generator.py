@@ -7,8 +7,7 @@
 #   "requests",
 #   "types-requests",
 #   "types-jsonschema",
-#   "pydantic",
-#   "pydantic3"
+#   "pydantic"
 # ]
 # ///
 #
