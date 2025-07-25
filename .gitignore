@@ -61,7 +61,7 @@ screenshots/
 *.bak
 
 # next.js docs
-# docs/next-js/
+docs/next-js/
 
 # sql.js files (copied during build)
 public/sql-js/
