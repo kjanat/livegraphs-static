@@ -493,10 +493,7 @@ describe("DateRangePicker", () => {
   });
 
   describe("Integration Tests - Real User Workflows", () => {
-    // TODO: These tests are skipped due to react-day-picker range selection behavior in test environment
-    // In tests, clicking two dates results in the same date being selected for both from and to
-    // The component works correctly in the browser, this is a test-specific issue
-    it.skip("completes full workflow: open, select range, validate, apply", async () => {
+    it("completes full workflow: open, select range, validate, apply", async () => {
       const mockOnChange = vi.fn();
 
       render(
@@ -524,14 +521,27 @@ describe("DateRangePicker", () => {
       // User selects dates
       const dayButtons = getDayButtons();
 
-      // Just use the day buttons directly like the basic test does
+      // Check initial button states
+      const cancelButton = screen.getByText("Cancel");
+      expect(cancelButton).toBeDisabled();
+      expect(screen.queryByText("Apply")).not.toBeInTheDocument();
+
+      // Click first date
       expect(dayButtons.length).toBeGreaterThan(20);
+      fireEvent.click(dayButtons[10]);
 
-      // Click two dates
-      fireEvent.click(dayButtons[10]); // Start date
-      fireEvent.click(dayButtons[15]); // End date
+      // Cancel should now be enabled, Apply still hidden
+      expect(cancelButton).not.toBeDisabled();
+      expect(screen.queryByText("Apply")).not.toBeInTheDocument();
 
-      // Apply the selection
+      // Click second date to complete range
+      fireEvent.click(dayButtons[15]);
+
+      // Apply should now be visible
+      await waitFor(() => {
+        expect(screen.getByText("Apply")).toBeInTheDocument();
+      });
+
       const applyButton = screen.getByText("Apply");
       fireEvent.click(applyButton);
 
@@ -582,7 +592,7 @@ describe("DateRangePicker", () => {
       expect(daysDiff).toBe(6); // 7 days inclusive
     });
 
-    it.skip("handles error recovery workflow", async () => {
+    it("handles error recovery workflow", async () => {
       const mockOnChange = vi.fn();
       const mockOnError = vi.fn();
 
@@ -691,6 +701,152 @@ describe("DateRangePicker", () => {
       });
 
       expect(screen.getByText("This Week")).toBeInTheDocument();
+    });
+  });
+
+  describe("User Story Scenarios", () => {
+    it("shows pre-selected range with disabled Cancel and no Apply button initially", async () => {
+      const preSelectedRange = {
+        from: new Date(2025, 6, 21), // Jul 21, 2025
+        to: new Date(2025, 6, 25) // Jul 25, 2025
+      };
+
+      render(<DateRangePicker value={preSelectedRange} onChange={mockOnChange} />);
+
+      // Open calendar
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      // Check initial button states
+      const cancelButton = screen.getByText("Cancel");
+      expect(cancelButton).toBeDisabled();
+      expect(screen.queryByText("Apply")).not.toBeInTheDocument();
+    });
+
+    it("enables Cancel after clicking any date, Apply remains hidden until complete range", async () => {
+      render(
+        <DateRangePicker
+          value={{ from: new Date(2025, 6, 21), to: new Date(2025, 6, 25) }}
+          onChange={mockOnChange}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByText("Cancel");
+      const dayButtons = getDayButtons();
+
+      // Click single date
+      fireEvent.click(dayButtons[5]);
+
+      // Cancel enabled, Apply still hidden
+      expect(cancelButton).not.toBeDisabled();
+      expect(screen.queryByText("Apply")).not.toBeInTheDocument();
+    });
+
+    it("shows Apply button only when new complete range differs from current value", async () => {
+      const currentRange = { from: new Date(2025, 6, 21), to: new Date(2025, 6, 25) };
+      render(<DateRangePicker value={currentRange} onChange={mockOnChange} />);
+
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const dayButtons = getDayButtons();
+
+      // Select new range
+      fireEvent.click(dayButtons[10]);
+      fireEvent.click(dayButtons[15]);
+
+      // Apply should appear
+      await waitFor(() => {
+        expect(screen.getByText("Apply")).toBeInTheDocument();
+      });
+    });
+
+    it("clears pre-selected range on first click regardless of where clicked", async () => {
+      render(
+        <DateRangePicker
+          value={{ from: new Date(2025, 6, 21), to: new Date(2025, 6, 25) }}
+          onChange={mockOnChange}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const dayButtons = getDayButtons();
+
+      // Click a date - should clear previous selection
+      fireEvent.click(dayButtons[22]); // Jul 22 (inside existing range)
+
+      // Click second date
+      fireEvent.click(dayButtons[25]);
+
+      // Should have new range selected
+      await waitFor(() => {
+        expect(screen.getByText("Apply")).toBeInTheDocument();
+      });
+    });
+
+    it("handles cross-month range selection", async () => {
+      render(<DateRangePicker onChange={mockOnChange} monthsDesktop={2} />);
+
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const dayButtons = getDayButtons();
+
+      // Assuming we have buttons from multiple months visible
+      // Click dates from different months
+      fireEvent.click(dayButtons[25]); // Late in first month
+      fireEvent.click(dayButtons[dayButtons.length - 20]); // Early in next month
+
+      await waitFor(() => {
+        expect(screen.getByText("Apply")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Apply"));
+      expect(mockOnChange).toHaveBeenCalled();
+    });
+
+    it("maintains clean state when reopening after Apply", async () => {
+      const { rerender } = render(<DateRangePicker onChange={mockOnChange} />);
+
+      // First interaction
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const dayButtons = getDayButtons();
+      fireEvent.click(dayButtons[10]);
+      fireEvent.click(dayButtons[15]);
+      fireEvent.click(screen.getByText("Apply"));
+
+      // Simulate value update
+      const newValue = mockOnChange.mock.calls[0][0];
+      rerender(<DateRangePicker value={newValue} onChange={mockOnChange} />);
+
+      // Reopen
+      fireEvent.click(screen.getByRole("button"));
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      // Should show clean state
+      expect(screen.getByText("Cancel")).toBeDisabled();
+      expect(screen.queryByText("Apply")).not.toBeInTheDocument();
     });
   });
 });

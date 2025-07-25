@@ -2,6 +2,7 @@ import {
   endOfDay,
   endOfMonth,
   endOfWeek,
+  isSameDay,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -127,7 +128,11 @@ export function DateRangePicker({
   showPresetCombobox = false
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
-  const [internalValue, setInternalValue] = useState<DateRange | undefined>(value);
+  const [selectionMode, setSelectionMode] = useState<"idle" | "selecting-start" | "selecting-end">(
+    "idle"
+  );
+  const [tempRange, setTempRange] = useState<DateRange | undefined>();
+  const [hoveredDate, setHoveredDate] = useState<Date | undefined>();
   const [error, setError] = useState<string | undefined>();
   const isDesktop = useIsDesktop();
 
@@ -165,74 +170,126 @@ export function DateRangePicker({
     return matchers;
   }, [isDayDisabled, availableDates, minDate, maxDate]);
 
-  // Sync internal value with external value
+  // Reset selection state when popover opens/closes
   useEffect(() => {
-    setInternalValue(value);
-  }, [value]);
+    if (!open) {
+      setSelectionMode("idle");
+      setTempRange(undefined);
+      setHoveredDate(undefined);
+      setError(undefined);
+    }
+  }, [open]);
 
   const handleSelect = useCallback(
     (range: DateRange | undefined) => {
-      const normalized = normalizeRange(range);
-
-      // For range mode, react-day-picker provides partial selection until both dates are chosen
-      setInternalValue(normalized);
-
-      if (normalized?.from && normalized?.to) {
-        const validation = validateDuration(normalized, minDuration, maxDuration);
-
-        if (!validation.valid) {
-          setError(validation.message);
-          onError?.(validation.message || "Invalid selection");
-          return;
-        }
+      // react-day-picker calls this when a range is being selected
+      if (!range) {
+        // User clicked the same date or outside - reset
+        setTempRange(undefined);
+        setSelectionMode("idle");
+        return;
       }
 
-      // Clear error on valid selection or partial selection
-      setError(undefined);
+      if (!range.from) {
+        // Should not happen in range mode
+        return;
+      }
+
+      // Check if this is a single date click (from and to are same)
+      const isSingleClick = range.to && isSameDay(range.from, range.to);
+      
+      if (!range.to || isSingleClick) {
+        // First click or single date - start selection
+        setTempRange({ from: range.from, to: undefined });
+        setSelectionMode("selecting-end");
+        setError(undefined);
+      } else {
+        // Range completed with different dates
+        const normalized = normalizeRange(range);
+        if (normalized) {
+          setTempRange(normalized);
+          setSelectionMode("selecting-end");
+
+          // Validate if needed
+          if (minDuration || maxDuration) {
+            const validation = validateDuration(normalized, minDuration, maxDuration);
+            if (!validation.valid) {
+              setError(validation.message);
+              onError?.(validation.message || "Invalid selection");
+              return;
+            }
+          }
+
+          setError(undefined);
+        }
+      }
     },
     [minDuration, maxDuration, onError]
   );
 
-  const handleApply = useCallback(() => {
-    if (internalValue?.from && internalValue?.to) {
-      // Re-validate before applying
-      const validation = validateDuration(internalValue, minDuration, maxDuration);
-
-      if (!validation.valid) {
-        setError(validation.message);
-        onError?.(validation.message || "Invalid selection");
-        return;
+  const handleDayMouseEnter = useCallback(
+    (date: Date | undefined) => {
+      if (date && selectionMode === "selecting-end") {
+        setHoveredDate(date);
       }
+    },
+    [selectionMode]
+  );
 
-      const withTime = applyTimeToRange(internalValue);
+  const handleDayMouseLeave = useCallback(() => {
+    setHoveredDate(undefined);
+  }, []);
+
+  const handleApply = useCallback(() => {
+    if (tempRange?.from && tempRange?.to) {
+      const withTime = applyTimeToRange(tempRange);
       onChange?.(withTime);
       setOpen(false);
     }
-  }, [internalValue, onChange, minDuration, maxDuration, onError]);
+  }, [tempRange, onChange]);
+
+  const handleCancel = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   const handlePresetSelect = useCallback(
     (preset: Preset) => {
       const range = preset.value();
       const withTime = applyTimeToRange(range);
-      setInternalValue(withTime);
       onChange?.(withTime);
       setOpen(false);
     },
     [onChange]
   );
 
+  // Compute display range for the calendar
+  const displayRange = useMemo(() => {
+    if (selectionMode === "selecting-end" && tempRange?.from && hoveredDate) {
+      return normalizeRange({ from: tempRange.from, to: hoveredDate });
+    }
+    // CRITICAL: Fall back to value to show pre-selected range
+    return tempRange ?? value;
+  }, [selectionMode, tempRange, hoveredDate, value]);
+
+  // Determine button states
+  const showApplyButton = useMemo(() => {
+    if (!tempRange?.from || !tempRange?.to || error) return false;
+    if (!value?.from || !value?.to) return true;
+    return !isSameDay(tempRange.from, value.from) || !isSameDay(tempRange.to, value.to);
+  }, [tempRange, value, error]);
+
+  const cancelDisabled = selectionMode === "idle";
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      } else if (e.key === "Enter" && internalValue?.from && internalValue?.to && !error) {
+      if (e.key === "Escape" && !cancelDisabled) {
+        handleCancel();
+      } else if (e.key === "Enter" && showApplyButton) {
         handleApply();
       }
     },
-    [internalValue, error, handleApply]
+    [cancelDisabled, showApplyButton, handleCancel, handleApply]
   );
-
-  const displayValue = value || internalValue;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -241,7 +298,7 @@ export function DateRangePicker({
           variant="outline"
           className={cn(
             "justify-start text-left font-normal",
-            !displayValue && "text-muted-foreground",
+            !value && "text-muted-foreground",
             className
           )}
           disabled={isLoading}
@@ -254,7 +311,7 @@ export function DateRangePicker({
           ) : (
             <>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {formatDateRange(displayValue, dateFormat)}
+              {formatDateRange(value, dateFormat)}
             </>
           )}
         </Button>
@@ -268,11 +325,13 @@ export function DateRangePicker({
           <Calendar
             mode="range"
             defaultMonth={
-              internalValue?.from ||
+              value?.from ||
               (maxDate ? new Date(Math.min(Date.now(), maxDate.getTime())) : new Date())
             }
-            selected={internalValue}
+            selected={displayRange}
             onSelect={handleSelect}
+            onDayMouseEnter={handleDayMouseEnter}
+            onDayMouseLeave={handleDayMouseLeave}
             numberOfMonths={numberOfMonths}
             disabled={disabledDayMatcher}
             locale={locale}
@@ -299,28 +358,27 @@ export function DateRangePicker({
                 <PresetSelector
                   presets={presets}
                   onSelect={handlePresetSelect}
-                  currentValue={displayValue}
+                  currentValue={value}
                 />
               </div>
             ) : (
-              <Presets
-                presets={presets}
-                onSelect={handlePresetSelect}
-                currentValue={displayValue}
-              />
+              <Presets presets={presets} onSelect={handlePresetSelect} currentValue={value} />
             ))}
 
           <div className="flex gap-2 p-3 border-t">
-            <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleCancel}
+              disabled={cancelDisabled}
+            >
               Cancel
             </Button>
-            <Button
-              className="flex-1"
-              onClick={handleApply}
-              disabled={!internalValue?.from || !internalValue?.to || !!error}
-            >
-              Apply
-            </Button>
+            {showApplyButton && (
+              <Button className="flex-1" onClick={handleApply}>
+                Apply
+              </Button>
+            )}
           </div>
         </div>
       </PopoverContent>
