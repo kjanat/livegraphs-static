@@ -184,7 +184,7 @@ export function DistributionBarChart({
                 />
               }
             />
-            <Bar dataKey="count" fill={color} radius={[8, 8, 0, 0]}>
+            <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]}>
               <LabelList
                 position="top"
                 offset={12}

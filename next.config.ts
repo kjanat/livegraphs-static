@@ -28,6 +28,13 @@ const nextConfig: NextConfig = {
   // Enable strict mode
   reactStrictMode: true,
 
+  // TypeScript configuration
+  typescript: {
+    // Ignore TypeScript errors in test files during build
+    ignoreBuildErrors: false,
+    tsconfigPath: "./tsconfig.json"
+  },
+
   // Optimize imports for better tree shaking
   /* experimental: {
     optimizePackageImports: [
