@@ -94,6 +94,9 @@ function randomElement<T>(array: readonly T[]): T {
 }
 
 function randomInt(min: number, max: number): number {
+  // Note: This uses Math.random() which is not cryptographically secure.
+  // This is acceptable here as this function is only used for generating
+  // sample/demo data, not for any security-sensitive operations.
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
