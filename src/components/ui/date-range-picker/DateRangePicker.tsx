@@ -174,20 +174,21 @@ export function DateRangePicker({
     (range: DateRange | undefined) => {
       const normalized = normalizeRange(range);
 
+      // For range mode, react-day-picker provides partial selection until both dates are chosen
+      setInternalValue(normalized);
+
       if (normalized?.from && normalized?.to) {
         const validation = validateDuration(normalized, minDuration, maxDuration);
 
         if (!validation.valid) {
           setError(validation.message);
           onError?.(validation.message || "Invalid selection");
-          // Don't update internal value on invalid selection
           return;
         }
       }
 
-      // Clear error and update value on valid selection
+      // Clear error on valid selection or partial selection
       setError(undefined);
-      setInternalValue(normalized);
     },
     [minDuration, maxDuration, onError]
   );
