@@ -195,7 +195,11 @@ export class QueryCache {
 let cacheInstance: QueryCache | null = null;
 
 /**
- * Get the singleton cache instance
+ * Returns the singleton instance of the QueryCache.
+ *
+ * Ensures that only one QueryCache instance exists throughout the application.
+ *
+ * @returns The shared QueryCache instance
  */
 export function getQueryCache(): QueryCache {
   if (!cacheInstance) {

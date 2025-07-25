@@ -14,8 +14,14 @@ interface TabsScrollIndicatorsProps {
 }
 
 /**
- * Wrapper component that adds scroll indicators to horizontally scrollable tabs
- * Shows left/right arrows when content overflows
+ * Provides horizontal scroll indicators and navigation buttons for a scrollable tab container.
+ *
+ * Renders left and right arrow buttons when the tab content overflows horizontally, allowing users to scroll the container by clicking the arrows. The scroll indicators are only visible on smaller screens and update dynamically based on the scroll position and container size.
+ *
+ * @param children - The tab elements or content to display inside the scrollable container.
+ * @param className - Optional additional CSS classes for the wrapper element.
+ *
+ * @returns A wrapper component with scrollable tab content and conditional scroll indicators.
  */
 export function TabsScrollIndicators({ children, className }: TabsScrollIndicatorsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);

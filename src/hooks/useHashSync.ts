@@ -7,9 +7,13 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Hook to sync a value with URL hash for shareable state
- * @param value - The value to sync with the hash
- * @param key - Optional prefix for the hash (e.g., "tab" → "#tab-overview")
+ * Synchronizes a string value with the browser's URL hash, enabling shareable state via the URL.
+ *
+ * If a `key` is provided, the hash is prefixed with `key-` (e.g., `#tab-overview`). The hook updates the hash without adding a new browser history entry and avoids update loops. It returns a function to retrieve the current hash value, optionally stripping the key prefix.
+ *
+ * @param value - The string value to synchronize with the URL hash
+ * @param key - Optional prefix to namespace the hash value
+ * @returns An object with `getHashValue`, a function that retrieves the current hash value or `null` if unavailable or mismatched
  */
 export function useHashSync(value: string | undefined, key = "") {
   const isInternalUpdate = useRef(false);

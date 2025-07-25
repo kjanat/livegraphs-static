@@ -10,6 +10,11 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Renders a button that toggles between light, dark, and system themes.
+ *
+ * The button displays different icons and an indicator based on the current theme, and ensures theme-dependent content is only rendered after the component mounts to prevent hydration mismatches.
+ */
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

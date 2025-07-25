@@ -81,6 +81,16 @@ const renderActiveShape = (props: PieSectorDataItem) => {
   );
 };
 
+/**
+ * Displays a pie chart summarizing chatbot session resolution statuses, including resolved, escalated, and unresolved sessions.
+ *
+ * Validates input data, computes totals, and renders an interactive chart with tooltips, optional legend, and a central resolution rate label. Shows an error message if data is invalid.
+ *
+ * @param data - Object containing `labels` (status names) and `values` (session counts) arrays of equal length.
+ * @param showLegend - If true, displays a legend for the chart (default: false).
+ * @param enableAnimation - If true, enables chart animation (default: true).
+ * @returns A card component containing the resolution status pie chart or an error message if data is invalid.
+ */
 export function ResolutionStatusChart({
   data,
   showLegend = false,

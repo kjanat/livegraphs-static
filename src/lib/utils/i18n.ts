@@ -14,14 +14,13 @@ const regionCache: Record<string, Intl.DisplayNames> = {};
 const langCache: Record<string, Intl.DisplayNames> = {};
 
 /**
- * Convert an ISO country code to a localized country name
- * @param code - ISO 3166-1 alpha-2 country code (e.g., 'US', 'FR', 'JP')
- * @param locale - BCP 47 language tag (defaults to 'en')
- * @returns Localized country name or original code if not found
- * @example
- * countryName('US') // 'United States'
- * countryName('FR', 'fr') // 'France'
- * countryName('JP', 'ja') // '日本'
+ * Returns the localized display name for an ISO 3166-1 alpha-2 country code.
+ *
+ * If the code is not recognized or is falsy, returns the original code.
+ *
+ * @param code - The ISO 3166-1 alpha-2 country code (e.g., 'US', 'FR', 'JP')
+ * @param locale - Optional BCP 47 language tag for localization (defaults to 'en')
+ * @returns The localized country name, or the original code if not found
  */
 export function countryName(code: string, locale = "en"): string {
   if (!code) return code;
@@ -36,14 +35,13 @@ export function countryName(code: string, locale = "en"): string {
 }
 
 /**
- * Convert an ISO language code to a localized language name
- * @param code - ISO 639-1/2/3 language code (e.g., 'en', 'es', 'zh')
- * @param locale - BCP 47 language tag (defaults to 'en')
- * @returns Localized language name or original code if not found
- * @example
- * languageName('en') // 'English'
- * languageName('es', 'es') // 'español'
- * languageName('zh', 'zh') // '中文'
+ * Returns the localized name for a given ISO language code.
+ *
+ * Converts an ISO 639 language code to its display name in the specified locale. If the code is not recognized, returns the original code.
+ *
+ * @param code - The ISO 639 language code to localize (e.g., 'en', 'es', 'zh')
+ * @param locale - The BCP 47 locale to use for localization (defaults to 'en')
+ * @returns The localized language name, or the original code if not found
  */
 export function languageName(code: string, locale = "en"): string {
   if (!code) return code;
@@ -58,28 +56,31 @@ export function languageName(code: string, locale = "en"): string {
 }
 
 /**
- * Convert multiple country codes to localized names
- * @param codes - Array of ISO country codes
- * @param locale - BCP 47 language tag
- * @returns Array of localized country names
+ * Converts an array of ISO country codes to their localized country names.
+ *
+ * @param codes - Array of ISO 3166-1 alpha-2 country codes to localize
+ * @param locale - Optional BCP 47 language tag specifying the desired locale (defaults to "en")
+ * @returns Array of localized country names corresponding to the input codes
  */
 export function countryNames(codes: string[], locale = "en"): string[] {
   return codes.map((code) => countryName(code, locale));
 }
 
 /**
- * Convert multiple language codes to localized names
- * @param codes - Array of ISO language codes
- * @param locale - BCP 47 language tag
- * @returns Array of localized language names
+ * Converts an array of ISO language codes to their localized language names.
+ *
+ * @param codes - The ISO language codes to convert
+ * @param locale - Optional BCP 47 locale to use for localization (defaults to "en")
+ * @returns An array of localized language names corresponding to the input codes
  */
 export function languageNames(codes: string[], locale = "en"): string[] {
   return codes.map((code) => languageName(code, locale));
 }
 
 /**
- * Get the user's preferred locale from the browser
- * @returns The user's preferred locale or 'en' as fallback
+ * Retrieves the user's preferred locale from the browser environment.
+ *
+ * @returns The user's preferred locale, or "en" if unavailable.
  */
 export function getUserLocale(): string {
   if (typeof window !== "undefined" && window.navigator) {

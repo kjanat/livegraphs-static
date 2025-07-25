@@ -13,6 +13,14 @@ interface TopQuestionsSectionProps {
   };
 }
 
+/**
+ * Renders a section displaying the top questions and their corresponding counts.
+ *
+ * If the provided data is missing, empty, or has mismatched array lengths, the component either renders nothing or displays an error message.
+ *
+ * @param data - Contains `labels` (question texts) and `values` (counts) arrays to display.
+ * @returns A styled section with a list of questions and counts, or `null`/an error message if data is invalid.
+ */
 export function TopQuestionsSection({ data }: TopQuestionsSectionProps) {
   // Validate that both arrays exist and have data
   if (!data.labels || !data.values || data.labels.length === 0) {

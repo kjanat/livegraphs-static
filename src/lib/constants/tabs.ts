@@ -16,7 +16,12 @@ export const GRID_COLS_MAP = {
   7: "lg:grid-cols-7"
 } as const;
 
-// Get grid class for a given number of columns
+/**
+ * Returns the Tailwind CSS grid column class for a specified number of columns, clamped between 1 and 7.
+ *
+ * @param count - Desired number of grid columns
+ * @returns The corresponding Tailwind CSS grid column class for large screens
+ */
 export function getGridColsClass(count: number): string {
   // Clamp to supported range
   const safeCount = Math.min(Math.max(1, count), 7) as keyof typeof GRID_COLS_MAP;

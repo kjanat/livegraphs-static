@@ -13,6 +13,16 @@ interface FooterContentProps {
   compact?: boolean;
 }
 
+/**
+ * Renders the footer content for the dashboard, displaying copyright,
+ * license information, and links to the source code and issue tracker.
+ *
+ * The layout adapts based on the `compact` prop, showing either a condensed or detailed footer.
+ *
+ * @param className - Optional CSS class for the container element.
+ * @param linkClassName - Optional CSS class for link elements in compact mode.
+ * @param compact - If true, renders a simplified footer layout.
+ */
 export function FooterContent({
   className = "",
   linkClassName = "",

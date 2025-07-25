@@ -24,6 +24,18 @@ interface HistogramChartShadcnProps {
   color?: string;
 }
 
+/**
+ * Renders a histogram chart with summary statistics in a styled card.
+ *
+ * Displays the distribution of numeric data as a histogram, with configurable bin count, title, x-axis label, and bar color. Shows mean, median, and total count above the chart. If no data is provided, displays a placeholder message.
+ *
+ * @param data - Array of numeric values to visualize in the histogram.
+ * @param bins - Number of bins to divide the data into; defaults to 10.
+ * @param title - Title displayed above the chart; defaults to "Distribution".
+ * @param xLabel - Label for the x-axis; defaults to "Value".
+ * @param color - Color used for the histogram bars; defaults to "#3b82f6".
+ * @returns A React element containing the histogram chart and summary statistics.
+ */
 export function HistogramChartShadcn({
   data,
   bins = 10,

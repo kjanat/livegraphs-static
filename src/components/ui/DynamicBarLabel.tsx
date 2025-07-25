@@ -20,8 +20,12 @@ interface DynamicBarLabelProps {
 }
 
 /**
- * Reusable component for rendering dynamically truncated labels inside horizontal bar charts.
- * Automatically truncates text with ellipsis when it doesn't fit within the bar width.
+ * Renders a text label inside a horizontal bar chart, automatically truncating the label with an ellipsis if it exceeds the available width.
+ *
+ * The label is vertically centered within the bar and styled according to the provided font size and fill color. Padding can be adjusted to control spacing from the bar edges.
+ *
+ * @param props - Properties specifying label position, size, content, styling, and padding
+ * @returns An SVG `<text>` element with the truncated label
  *
  * @example
  * <LabelList

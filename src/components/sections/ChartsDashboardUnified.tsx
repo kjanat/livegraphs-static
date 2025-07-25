@@ -23,6 +23,16 @@ interface ChartsDashboardUnifiedProps {
   viewMode?: "tabs" | "expandable";
 }
 
+/**
+ * Renders a unified dashboard for chatbot conversation analytics with either tabbed or expandable chart group views.
+ *
+ * Displays chart groups based on provided metrics and chart data, automatically filtering and showing only relevant groups. In "tabs" mode, the selected tab is synchronized with the URL hash and localStorage, and only the active chart group is rendered for performance. In "expandable" mode, all visible chart groups are shown as collapsible sections. Chart content is lazily loaded to optimize rendering.
+ *
+ * @param metrics - Metrics data used to determine chart visibility and provide context to chart components.
+ * @param chartData - Data used to populate the charts within each group.
+ * @param viewMode - Optional view mode; "tabs" (default) displays chart groups as tabs, "expandable" displays them as collapsible sections.
+ * @returns The dashboard UI displaying relevant chart groups in the selected view mode.
+ */
 function ChartsDashboardUnifiedBase({
   metrics,
   chartData,

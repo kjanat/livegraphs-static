@@ -47,6 +47,16 @@ interface OverviewChartsProps {
   visibility: ChartVisibility;
 }
 
+/**
+ * Displays a dashboard section with multiple chatbot analytics charts, including sentiment distribution, resolution status, average user rating, and sentiment trends over time.
+ *
+ * Renders charts based on the provided data and visibility settings. The average user rating gauge is shown only if ratings are enabled and available.
+ *
+ * @param chartData - Data used to populate the charts, including sentiment, resolution, ratings, and time series information
+ * @param visibility - Controls which charts are visible, such as whether to display the ratings gauge
+ *
+ * @returns The rendered set of analytics charts for the dashboard
+ */
 function OverviewCharts({ chartData, visibility }: OverviewChartsProps) {
   return (
     <>

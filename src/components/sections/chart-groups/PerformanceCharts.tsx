@@ -29,6 +29,13 @@ interface PerformanceChartsProps {
   chartData: ChartData;
 }
 
+/**
+ * Displays chatbot conversation analytics using performance trends and heatmap charts.
+ *
+ * Renders a performance trends chart with sentiment time series data and a weekly usage heatmap based on hourly data.
+ *
+ * @param chartData - The analytics data containing sentiment time series and hourly usage information
+ */
 function PerformanceCharts({ chartData }: PerformanceChartsProps) {
   return (
     <div className="space-y-6">

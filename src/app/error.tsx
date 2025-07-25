@@ -62,6 +62,15 @@ function getErrorStrategy(error: Error) {
   return ERROR_STRATEGIES.DEFAULT;
 }
 
+/**
+ * React error boundary component for displaying user-friendly error messages and recovery options.
+ *
+ * Presents contextual error information, suggested actions, and developer diagnostics when an error occurs in the application. Offers options such as retrying, clearing browser data, reloading the page, or returning home, depending on the error type. Includes a reporting mechanism and detailed error output in development mode.
+ *
+ * @param error - The error object to display and analyze
+ * @param reset - Callback to attempt recovery from the error
+ * @returns The rendered error boundary UI
+ */
 export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [isReporting, setIsReporting] = useState(false);

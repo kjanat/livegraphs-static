@@ -5,10 +5,13 @@
  */
 
 /**
- * Measures the pixel width of text using Canvas API
+ * Returns the pixel width of a text string as it would be rendered in the browser, using the specified font.
+ *
+ * If run outside a browser environment or if the Canvas context is unavailable, returns a rough estimate based on character count.
+ *
  * @param text - The text to measure
- * @param font - CSS font string (e.g., "12px Arial")
- * @returns Width in pixels
+ * @param font - Optional CSS font descriptor (e.g., "12px Arial")
+ * @returns The width of the text in pixels
  */
 export function measureTextWidth(text: string, font = "12px Arial"): number {
   if (typeof window === "undefined") {
@@ -27,12 +30,15 @@ export function measureTextWidth(text: string, font = "12px Arial"): number {
 }
 
 /**
- * Truncates text to fit within a specific pixel width
+ * Truncates a text string so that its rendered width does not exceed a specified maximum, appending an ellipsis if truncation occurs.
+ *
+ * If the text fits within the given pixel width, it is returned unchanged. Otherwise, the function finds the longest substring that fits when combined with the ellipsis. If only the ellipsis fits, returns the first character plus the ellipsis.
+ *
  * @param text - The text to truncate
- * @param maxWidth - Maximum width in pixels
- * @param font - CSS font string (e.g., "12px Arial")
- * @param ellipsis - String to append when truncating (default: "...")
- * @returns Truncated text with ellipsis if needed
+ * @param maxWidth - The maximum allowed width in pixels
+ * @param font - Optional CSS font descriptor used for measurement (default: "12px Arial")
+ * @param ellipsis - Optional string to append when truncating (default: "...")
+ * @returns The truncated text with ellipsis if truncation was necessary
  */
 export function truncateToFitWidth(
   text: string,

@@ -46,6 +46,11 @@ const stageDescriptions = {
   processing: "Processing Data"
 };
 
+/**
+ * Displays an animated loading interface with contextual messages and a progress indicator based on the current processing stage.
+ *
+ * Shows a rotating set of status messages, a simulated progress bar, and contextual information such as estimated time and dataset insights. Intended for use during multi-stage client-side data processing.
+ */
 export function EnhancedLoadingState({
   stage,
   totalSessions,

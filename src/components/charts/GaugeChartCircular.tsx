@@ -32,6 +32,23 @@ interface GaugeChartCircularProps {
   }[];
 }
 
+/**
+ * Renders a circular gauge chart inside a card, visualizing a numeric value relative to a maximum with color-coded segments and labels.
+ *
+ * Displays the value as a donut-shaped arc, segmented by customizable thresholds, with optional title, subtitle, and legend. The chart is accessible and responsive to different sizes and formatting options.
+ *
+ * @param value - The current value to display on the gauge.
+ * @param max - The maximum value for scaling the gauge (default is 100).
+ * @param title - Optional title displayed in the card header.
+ * @param subtitle - Optional subtitle displayed below the title.
+ * @param size - Size of the gauge ("sm", "md", or "lg"; default is "md").
+ * @param thickness - Thickness ratio of the gauge arc (default is 0.15).
+ * @param showValue - Whether to display the formatted value in the center (default is true).
+ * @param formatValue - Function to format the displayed value (default formats as percentage).
+ * @param segments - Array defining threshold percentages, colors, and labels for gauge segments.
+ *
+ * @returns A card component containing the circular gauge chart and legend.
+ */
 export function GaugeChartCircular({
   value,
   max = 100,

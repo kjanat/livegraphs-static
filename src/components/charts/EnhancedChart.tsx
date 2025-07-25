@@ -18,6 +18,16 @@ interface EnhancedChartProps {
   className?: string;
 }
 
+/**
+ * Displays a chart with enhanced features including fullscreen viewing and PNG export.
+ *
+ * Renders a chart element with a header, export button, and fullscreen toggle. Allows users to export the chart as a PNG image and view it in a fullscreen modal. The chart content is provided as a child element.
+ *
+ * @param title - The title displayed above the chart.
+ * @param children - The chart element to be rendered.
+ * @param exportFileName - Optional base filename for exported PNG files. Defaults to "chart".
+ * @param className - Optional additional CSS classes for the chart wrapper.
+ */
 export function EnhancedChart({
   title,
   children,

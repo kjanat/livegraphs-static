@@ -50,6 +50,13 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
+/**
+ * Displays an interactive area chart visualizing sentiment trends over time for chatbot conversations.
+ *
+ * Allows users to select a time range (7, 30, or 90 days) to filter sentiment data and view stacked areas for positive, neutral, and negative sentiments. Shows the percentage of positive sentiment for the selected period and provides a legend and tooltip for detailed insights.
+ *
+ * @param data - Array of sentiment data points, each containing a date and counts for positive, neutral, and negative sentiments.
+ */
 export function PerformanceTrendsShadcn({ data }: PerformanceTrendsShadcnProps) {
   const [timeRange, setTimeRange] = React.useState("30d");
 

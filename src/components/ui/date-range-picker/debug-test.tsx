@@ -32,7 +32,9 @@ describe("Debug DateRangePicker", () => {
       const hasName = btn.getAttribute("name") === "day";
       const hasDataDay = btn.hasAttribute("data-day");
       const text = btn.textContent || "";
-      console.log(`Button: text="${text}", name="${btn.getAttribute("name")}", hasDataDay=${hasDataDay}`);
+      console.log(
+        `Button: text="${text}", name="${btn.getAttribute("name")}", hasDataDay=${hasDataDay}`
+      );
       return hasName;
     });
 

@@ -5,9 +5,11 @@
 import { endOfDay, startOfWeek } from "date-fns";
 
 /**
- * Get the date range for the current working week (Monday to today)
- * If today is Sunday at 23:59.99999, you get almost 7 days of data
- * At Monday 00:00, it starts showing this week's data
+ * Returns the date range for the current working week, starting from Monday up to the end of the specified day.
+ *
+ * The range begins at the Monday of the week containing the provided date (or today if not specified) and ends at the end of that day.
+ *
+ * @returns An object with `start` as the Monday of the week and `end` as the end of the specified day.
  */
 export function getWorkingWeekRange(now: Date = new Date()): { start: Date; end: Date } {
   // Get the start of the week (Monday)
@@ -20,10 +22,14 @@ export function getWorkingWeekRange(now: Date = new Date()): { start: Date; end:
 }
 
 /**
- * Find the most recent working week that has data within the given date range
- * @param dataMin - Minimum date in the dataset
- * @param dataMax - Maximum date in the dataset
- * @param checkDataFn - Function to check if a date range has data
+ * Asynchronously finds the most recent working week within the specified date range that contains data.
+ *
+ * Checks if the current working week (Monday to today) has data using the provided check function. If not, iterates backward week-by-week from the week of `dataMax` to `dataMin`, returning the first week found with data. The returned range is adjusted so the end date does not exceed `dataMax`.
+ *
+ * @param dataMin - The earliest date to consider in the search
+ * @param dataMax - The latest date to consider in the search
+ * @param checkDataFn - An asynchronous function that determines if a given date range contains data
+ * @returns An object with the start and end dates of the found week and a flag indicating if it is the current week, or `null` if no week with data is found
  */
 export async function findRecentWorkingWeekWithData(
   dataMin: Date,

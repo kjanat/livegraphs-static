@@ -81,7 +81,12 @@ export const SAMPLE_DATA_THRESHOLDS = {
   defaultHistoryDays: 365 // One year of data by default
 } as const;
 
-// Type-safe threshold getter
+/**
+ * Retrieves the specified sample data threshold configuration category in a type-safe manner.
+ *
+ * @param category - The key of the threshold category to retrieve
+ * @returns The configuration object for the specified threshold category
+ */
 export function getSampleDataThreshold<T extends keyof typeof SAMPLE_DATA_THRESHOLDS>(
   category: T
 ): (typeof SAMPLE_DATA_THRESHOLDS)[T] {

@@ -86,6 +86,13 @@ export const SAMPLE_DATA_CONSTANTS = {
 const { categories, sentiments, negativeKeywords, questions, countries, languages } =
   SAMPLE_DATA_CONSTANTS;
 
+/**
+ * Returns a random element from a non-empty array.
+ *
+ * @param array - The array to select a random element from. Must not be empty.
+ * @returns A randomly selected element from the array.
+ * @throws If the array is empty.
+ */
 function randomElement<T>(array: readonly T[]): T {
   if (array.length === 0) {
     throw new Error("Cannot select random element from empty array");
@@ -93,6 +100,13 @@ function randomElement<T>(array: readonly T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+/**
+ * Returns a random integer between the specified minimum and maximum values, inclusive.
+ *
+ * @param min - The lower bound of the random integer range
+ * @param max - The upper bound of the random integer range
+ * @returns A random integer between `min` and `max`, inclusive
+ */
 function randomInt(min: number, max: number): number {
   // Note: This uses Math.random() which is not cryptographically secure.
   // This is acceptable here as this function is only used for generating
@@ -100,6 +114,15 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Generates a synthetic chat session with realistic metadata, transcript, statistics, and user information for a given date and session index.
+ *
+ * The generated session includes randomized start and end times, message transcript, sentiment, escalation status, category, user details, summary, and user rating, all parameterized by configuration thresholds to simulate diverse real-world scenarios.
+ *
+ * @param index - The session's index for the specified date, used in session ID generation
+ * @param date - The date on which the session occurs
+ * @returns A fully populated `SampleSession` object representing a single chat session
+ */
 function generateSession(index: number, date: Date): SampleSession {
   const startTime = new Date(date);
   startTime.setHours(
@@ -249,6 +272,14 @@ function generateSession(index: number, date: Date): SampleSession {
   };
 }
 
+/**
+ * Generates an array of synthetic chat session data spanning a configurable number of past days.
+ *
+ * The number of sessions per day varies based on day of week, seasonal factors, and randomization to simulate realistic usage patterns.
+ *
+ * @param daysOfHistory - Number of days of history to generate; defaults to the configured value if not specified.
+ * @returns An array of generated sample chat sessions.
+ */
 export function generateSampleData(
   daysOfHistory = SAMPLE_DATA_THRESHOLDS.defaultHistoryDays
 ): SampleSession[] {

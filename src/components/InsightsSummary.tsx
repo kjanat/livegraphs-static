@@ -33,6 +33,13 @@ interface Insight {
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
+/**
+ * Displays paginated, data-driven insights summarizing chatbot conversation performance for a given date range.
+ *
+ * Generates and presents key insights based on provided metrics and analytics, including activity volume, user satisfaction, resolution rate, response time, sentiment, and data quality. Insights are categorized by type (positive, negative, warning) and visually styled with icons and colors. Supports pagination when multiple insights are available.
+ *
+ * Returns `null` if no insights are generated from the input data.
+ */
 export function InsightsSummary({ metrics, chartData, dateRange }: InsightsSummaryProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const insightsPerPage = 2;

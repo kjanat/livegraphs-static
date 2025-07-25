@@ -34,6 +34,18 @@ interface DataVisualizationProps {
   totalSessions?: number;
 }
 
+/**
+ * Renders a responsive analytics dashboard for chatbot conversation data, adapting layout and features for mobile and desktop devices.
+ *
+ * Displays metrics, charts, data quality indicators, and insights summary based on the provided data and date range. On desktop, allows toggling between tabbed and expandable chart views, with user preference persisted across sessions. Shows loading states when data is being fetched and renders nothing if required data is missing.
+ *
+ * @param metrics - Aggregated metrics for the selected date range and chatbot
+ * @param chartData - Data used to render analytics charts
+ * @param dateRange - The date range for which analytics are displayed
+ * @param isLoadingData - Whether analytics data is currently being loaded
+ * @param totalSessions - Optional total number of chatbot sessions in the selected period
+ * @returns The analytics dashboard UI or null if required data is unavailable
+ */
 export function DataVisualization({
   metrics,
   chartData,

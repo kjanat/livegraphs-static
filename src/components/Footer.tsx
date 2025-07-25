@@ -6,6 +6,9 @@
 
 import { FooterContent } from "./FooterContent";
 
+/**
+ * Renders the site footer with consistent styling and content for medium and larger screens.
+ */
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-muted py-6 text-center text-sm text-muted-foreground hidden md:block">

@@ -21,6 +21,21 @@ interface GaugeChartShadcnAltProps {
   className?: string;
 }
 
+/**
+ * Renders a semi-circular gauge chart within a styled card, visualizing a numeric value as a colored arc relative to a maximum.
+ *
+ * Displays the current value or percentage, with dynamic arc color indicating performance thresholds. Supports configurable size, optional title, description with explanatory tooltip, label, and custom styling. The gauge is accessible and suitable for dashboards displaying multiple metrics.
+ *
+ * @param value - The numeric value to visualize on the gauge.
+ * @param max - The maximum value for scaling the gauge (default: 100).
+ * @param title - Optional title displayed above the gauge.
+ * @param description - Optional description shown with a hover-triggered tooltip.
+ * @param label - Optional label displayed below the value.
+ * @param size - Size variant for the gauge ("sm", "md", or "lg"; default: "md").
+ * @param showPercentage - Whether to display the value as a percentage (default: true).
+ * @param className - Additional CSS classes for the card container.
+ * @returns A React element rendering the gauge chart and associated UI.
+ */
 export function GaugeChartShadcnAlt({
   value,
   max = 100,

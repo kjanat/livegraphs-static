@@ -91,7 +91,12 @@ const clearDateRangeFromStorage = () => {
 };
 
 /**
- * Custom hook for database operations and data management
+ * React hook that manages chatbot analytics database operations, data loading, caching, and UI state for a dashboard.
+ *
+ * Provides methods to load, clear, and export data; manage date range selection with localStorage persistence; auto-load relevant data ranges; and handle metrics and chart data preparation. Integrates with an optional external database hook or defaults to the internal database context.
+ *
+ * @param databaseHook - Optional external database hook to override the default database context.
+ * @returns An object containing database stats, selected date range, metrics, chart data, loading and alert flags, and functions for data manipulation and export.
  */
 export function useDatabaseOperations(
   databaseHook?: DatabaseHookData

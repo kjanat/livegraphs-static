@@ -58,7 +58,12 @@ export const DATA_PROCESSING_THRESHOLDS = {
   }
 } as const;
 
-// Type-safe threshold getter
+/**
+ * Retrieves a configuration category from the data processing thresholds object in a type-safe manner.
+ *
+ * @param category - The key of the configuration category to retrieve
+ * @returns The configuration object corresponding to the specified category
+ */
 export function getDataProcessingThreshold<T extends keyof typeof DATA_PROCESSING_THRESHOLDS>(
   category: T
 ): (typeof DATA_PROCESSING_THRESHOLDS)[T] {

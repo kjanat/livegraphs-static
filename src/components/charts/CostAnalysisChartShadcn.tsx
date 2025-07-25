@@ -57,6 +57,14 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
+/**
+ * Renders a bubble chart visualizing cost analysis data by category, with bubble size representing session count, X-axis showing average cost per session, and Y-axis showing total cost.
+ *
+ * If no data is provided, displays a placeholder message. The chart dynamically applies logarithmic scales to axes when value ranges are large, and includes tooltips and explanatory hover cards for chart dimensions. A footer summarizes total cost, total sessions, and average cost per session.
+ *
+ * @param data - Array of category cost analysis objects to visualize
+ * @returns A React component displaying the cost analysis bubble chart or a placeholder if no data is available
+ */
 export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) {
   if (!data.length) {
     return (

@@ -22,6 +22,18 @@ interface ExpandableSectionProps {
   className?: string;
 }
 
+/**
+ * Renders a collapsible section with a header, optional subtitle, and priority-based styling and badge.
+ *
+ * Displays content that can be expanded or collapsed by the user. The section header includes a title, optional subtitle, and a badge indicating its priority ("Essential", "Detailed", or "Advanced"). When expanded, the section smoothly scrolls into view if it was not initially expanded and is outside the viewport. Styling and badge appearance are determined by the specified priority.
+ *
+ * @param title - The main heading for the section.
+ * @param subtitle - Optional subheading displayed below the title.
+ * @param defaultExpanded - If true, the section is expanded by default.
+ * @param priority - Determines the section's visual style and badge ("high", "medium", or "low").
+ * @param children - The content to display inside the expandable section.
+ * @param className - Additional CSS classes for the section container.
+ */
 export function ExpandableSection({
   title,
   subtitle,

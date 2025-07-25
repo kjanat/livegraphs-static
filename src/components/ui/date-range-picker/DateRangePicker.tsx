@@ -99,6 +99,13 @@ const defaultPresets: Preset[] = [
   }
 ];
 
+/**
+ * Renders a date range picker component with optional presets, validation, and responsive calendar UI.
+ *
+ * Allows users to select a date range within specified constraints, choose from preset ranges, and apply or cancel their selection. Supports minimum and maximum duration limits, disabled and available date constraints, localization, custom date formatting, and loading state. The component adapts its calendar display for desktop and mobile, and provides error feedback for invalid selections.
+ *
+ * @returns The rendered date range picker UI component.
+ */
 export function DateRangePicker({
   value,
   onChange,

@@ -23,8 +23,9 @@ import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 /**
- * Client Dashboard - Refactored version with better separation of concerns
- * This is a Client Component that handles state management and user interactions
+ * Renders the main client dashboard for chatbot conversation analytics, managing state, user interactions, and data visualization.
+ *
+ * This component orchestrates database state, file uploads, command palette actions, alert dialogs, date range selection, and responsive UI for both mobile and desktop. It conditionally renders sections for file upload, database statistics, date range picker, data visualization, and empty state based on the current database and user interaction state.
  */
 export function ClientDashboard() {
   useKeyboardNavigation();

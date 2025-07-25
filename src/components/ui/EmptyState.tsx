@@ -14,6 +14,15 @@ interface EmptyStateProps {
   onFileUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * Renders an empty state UI for chatbot analytics, guiding users to upload or try sample data and showcasing key features and data requirements.
+ *
+ * Displays a hero section with illustration, upload options, and sample data button; highlights value propositions; lists analytics features; and provides a data format guide with schema reference and example.
+ *
+ * @param onSampleData - Optional callback triggered when the "Try Sample Data" button is clicked.
+ * @param onUploadClick - Optional callback triggered when the upload button is clicked (if file input is not provided).
+ * @param onFileUpload - Optional event handler for file input changes, accepting a JSON file upload.
+ */
 export function EmptyState({ onSampleData, onUploadClick, onFileUpload }: EmptyStateProps) {
   return (
     <div className="space-y-8">

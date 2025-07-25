@@ -33,6 +33,15 @@ interface TopCategoriesChartShadcnProps {
   limit?: number;
 }
 
+/**
+ * Renders a vertical bar chart displaying the top conversation categories by session count.
+ *
+ * Validates the input data, limits the number of displayed categories, and shows a styled card with a chart and summary of the leading category. If the data is invalid, displays an error message instead of the chart.
+ *
+ * @param data - Object containing parallel arrays of category labels and session counts
+ * @param limit - Maximum number of categories to display (default is 8)
+ * @returns A React element containing the chart and summary card
+ */
 export function TopCategoriesChartShadcn({ data, limit = 8 }: TopCategoriesChartShadcnProps) {
   // Validate that labels and values arrays have equal length
   if (!data.labels || !data.values || data.labels.length !== data.values.length) {
