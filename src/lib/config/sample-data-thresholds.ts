@@ -78,7 +78,7 @@ export const SAMPLE_DATA_THRESHOLDS = {
   },
 
   // Default history length
-  defaultHistoryDays: 365 // One year of data by default
+  defaultHistoryDays: 100 // One year of data by default
 } as const;
 
 /**
