@@ -9,10 +9,10 @@ import { memo } from "react";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import type { ChartData } from "@/lib/types/session";
 
-const DistributionBarChart = dynamic(
+const HistogramChart = dynamic(
   () =>
-    import("@/components/charts/DistributionBarChart").then((mod) => ({
-      default: mod.DistributionBarChart
+    import("@/components/charts/HistogramChartShadcn").then((mod) => ({
+      default: mod.HistogramChartShadcn
     })),
   { loading: () => <ChartSkeleton />, ssr: false }
 );
@@ -40,21 +40,15 @@ function DetailedStatsCharts({ chartData }: DetailedStatsChartsProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <DistributionBarChart
+        <HistogramChart
           data={chartData.conversation_durations}
           title="Conversation Duration"
-          description="How long customer conversations typically last"
           bins={8}
-          color="hsl(var(--chart-3))"
-          formatLabel={(value) => `${Math.round(value)}m`}
         />
-        <DistributionBarChart
+        <HistogramChart
           data={chartData.messages_per_conversation}
           title="Messages per Conversation"
-          description="Distribution of message exchanges in conversations"
           bins={8}
-          color="hsl(var(--chart-4))"
-          formatLabel={(value) => Math.round(value).toString()}
         />
       </div>
       <TopQuestionsSection

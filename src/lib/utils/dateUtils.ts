@@ -39,18 +39,10 @@ export async function findRecentWorkingWeekWithData(
   const now = new Date();
   const currentWeekRange = getWorkingWeekRange(now);
 
-  console.log("findRecentWorkingWeekWithData: Current week range", {
-    start: currentWeekRange.start.toISOString(),
-    end: currentWeekRange.end.toISOString(),
-    dataMax: dataMax.toISOString()
-  });
-
   // First check if current week has data
   // Adjust end date to not exceed dataMax
   const adjustedCurrentWeekEnd = currentWeekRange.end > dataMax ? dataMax : currentWeekRange.end;
   const hasCurrentWeekData = await checkDataFn(currentWeekRange.start, adjustedCurrentWeekEnd);
-
-  console.log("findRecentWorkingWeekWithData: Current week has data?", hasCurrentWeekData);
 
   if (hasCurrentWeekData) {
     return {

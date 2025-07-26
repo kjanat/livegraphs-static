@@ -28,8 +28,8 @@ const ResolutionStatusChart = dynamic(
 
 const GaugeChart = dynamic(
   () =>
-    import("@/components/charts/GaugeChartCircular").then((mod) => ({
-      default: mod.GaugeChartCircular
+    import("@/components/charts/GaugeChartShadcn").then((mod) => ({
+      default: mod.GaugeChartShadcn
     })),
   { loading: () => <ChartSkeleton height={250} />, ssr: false }
 );
@@ -78,15 +78,8 @@ function OverviewCharts({ chartData, visibility }: OverviewChartsProps) {
             value={chartData.avg_rating}
             max={5}
             title="Average User Rating"
-            subtitle="Customer satisfaction score"
-            formatValue={(val) => val.toFixed(1)}
-            segments={[
-              { threshold: 20, color: "rgb(239, 68, 68)", label: "Poor" },
-              { threshold: 40, color: "rgb(251, 146, 60)", label: "Fair" },
-              { threshold: 60, color: "rgb(250, 204, 21)", label: "Good" },
-              { threshold: 80, color: "rgb(34, 197, 94)", label: "Very Good" },
-              { threshold: 100, color: "rgb(16, 185, 129)", label: "Excellent" }
-            ]}
+            description="Customer satisfaction score"
+            unit=""
           />
         )}
       </div>

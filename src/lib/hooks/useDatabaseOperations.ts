@@ -132,11 +132,6 @@ export function useDatabaseOperations(
         WHERE start_time >= ? AND start_time <= ?
       `;
 
-      console.log("checkDateRangeHasData: Checking range", {
-        start: start.toISOString(),
-        end: end.toISOString()
-      });
-
       const stmt = db.prepare(query);
       stmt.bind([start.toISOString(), end.toISOString()]);
       const result = [];
@@ -146,7 +141,6 @@ export function useDatabaseOperations(
       stmt.free();
 
       const hasData = result.length > 0 && (result[0].count as number) > 0;
-      console.log("checkDateRangeHasData: Result", { count: result[0]?.count, hasData });
 
       return hasData;
     },
@@ -317,20 +311,12 @@ export function useDatabaseOperations(
         const dataMin = new Date(dbStats.dateRange.min);
         const dataMax = new Date(dbStats.dateRange.max);
 
-        console.log("Auto-load: Data range", {
-          min: dataMin.toISOString(),
-          max: dataMax.toISOString(),
-          today: new Date().toISOString()
-        });
-
         // Try to load working week data
         const workingWeekData = await findRecentWorkingWeekWithData(
           dataMin,
           dataMax,
           checkDateRangeHasData
         );
-
-        console.log("Auto-load: Working week data", workingWeekData);
 
         if (workingWeekData) {
           // Show alert if current week has no data
@@ -340,7 +326,6 @@ export function useDatabaseOperations(
           await loadDataForDateRange(workingWeekData.start, workingWeekData.end);
         } else {
           // Fall back to loading all data if no working week has data
-          console.log("Auto-load: No working week found, loading all data");
           const endDate = new Date(dataMax);
           endDate.setHours(23, 59, 59, 999);
           await loadDataForDateRange(dataMin, endDate);
@@ -379,20 +364,14 @@ export function useDatabaseOperations(
 
         // Only load if the validated range is meaningful
         if (validStart < validEnd) {
-          console.log("Loading saved date range", {
-            original: savedRange,
-            validated: { start: validStart, end: validEnd }
-          });
           loadDataForDateRange(validStart, validEnd);
         } else {
           // Saved range is invalid, fall back to working week
-          console.log("Saved date range invalid, falling back to working week");
           clearDateRangeFromStorage();
           setShouldAutoLoad(true);
         }
       } else {
         // No saved range, use working week logic
-        console.log("No saved date range, loading working week");
         setShouldAutoLoad(true);
       }
     }

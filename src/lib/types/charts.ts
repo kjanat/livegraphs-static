@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import type { ChartData, ChartOptions, ChartType } from "chart.js";
-
 /**
  * Base props for all chart components
  */
@@ -19,14 +17,6 @@ export interface BaseChartProps {
  */
 export interface DataChartProps<T = unknown> extends BaseChartProps {
   data: T[];
-}
-
-/**
- * Props for charts using Chart.js data structure
- */
-export interface ChartJsProps<T extends ChartType> extends BaseChartProps {
-  data: ChartData<T>;
-  options?: ChartOptions<T>;
 }
 
 /**

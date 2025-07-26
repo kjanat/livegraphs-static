@@ -12,6 +12,9 @@ license: AGPL-3.0-or-later
 author: Kaj Kowalski <dev@kajkowalski.nl>
 scripts:
   build: next build
+  build:static: cross-env DEPLOY_TARGET=static next build"
+  build:edge: cross-env DEPLOY_TARGET=edge next build"
+  build:node: cross-env DEPLOY_TARGET=node next build"
   dev: next dev
   dev:turbo: next dev --turbopack
   format: biome format --write
@@ -22,6 +25,9 @@ scripts:
   lint:biome: biome check
   lint:next: next lint
   pre-commit: lint-staged
+  prebuild: |
+    mkdir -p public/sql-js
+    cp node_modules/sql.js/dist/sql-wasm.* public/sql-js/
   prepare: husky
   start: |
     next build

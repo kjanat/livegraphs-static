@@ -69,7 +69,6 @@ export function useDatabase(): DatabaseHook {
           try {
             const dataArray = Uint8Array.from(atob(savedData), (c) => c.charCodeAt(0));
             database = await createDatabase(dataArray);
-            console.log("Loaded existing database from localStorage");
           } catch (err) {
             console.warn("Failed to load saved database, creating new one", err);
             database = await createDatabase();
