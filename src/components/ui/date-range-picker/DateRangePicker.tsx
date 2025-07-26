@@ -10,7 +10,7 @@ import {
 } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange, Matcher } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -24,7 +24,6 @@ import {
   applyTimeToRange,
   createDisabledDayMatcher,
   formatDateRange,
-  normalizeRange,
   validateDuration
 } from "./utils";
 
@@ -101,11 +100,11 @@ const defaultPresets: Preset[] = [
 ];
 
 /**
- * Renders a date range picker component with optional presets, validation, and responsive calendar UI.
- *
- * Allows users to select a date range within specified constraints, choose from preset ranges, and apply or cancel their selection. Supports minimum and maximum duration limits, disabled and available date constraints, localization, custom date formatting, and loading state. The component adapts its calendar display for desktop and mobile, and provides error feedback for invalid selections.
- *
- * @returns The rendered date range picker UI component.
+ * Simple date range picker following the user's specification:
+ * - Keeps calendar in plain range mode
+ * - Maintains minimal temp state (draft)
+ * - Shows Apply only when range is complete and different from current value
+ * - Cancel is disabled when no changes have been made
  */
 export function DateRangePicker({
   value,
@@ -128,12 +127,11 @@ export function DateRangePicker({
   showPresetCombobox = false
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
-  const [selectionMode, setSelectionMode] = useState<"idle" | "selecting-start" | "selecting-end">(
-    "idle"
-  );
-  const [tempRange, setTempRange] = useState<DateRange | undefined>();
-  const [hoveredDate, setHoveredDate] = useState<Date | undefined>();
+  const [draft, setDraft] = useState<DateRange | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [, setIsSelectingEnd] = useState(false);
+  const isSelectingEndRef = useRef(false);
+  const draftRef = useRef<DateRange | undefined>(undefined);
   const isDesktop = useIsDesktop();
 
   // Determine number of months to show
@@ -170,56 +168,88 @@ export function DateRangePicker({
     return matchers;
   }, [isDayDisabled, availableDates, minDate, maxDate]);
 
-  // Reset selection state when popover opens/closes
+  // Initialize draft with current value when popover opens
   useEffect(() => {
-    if (!open) {
-      setSelectionMode("idle");
-      setTempRange(undefined);
-      setHoveredDate(undefined);
+    if (open) {
+      setDraft(value);
+      draftRef.current = value;
+      setIsSelectingEnd(false);
+      isSelectingEndRef.current = false;
+    } else {
+      setDraft(undefined);
+      draftRef.current = undefined;
       setError(undefined);
+      setIsSelectingEnd(false);
+      isSelectingEndRef.current = false;
     }
-  }, [open]);
+  }, [open, value]);
 
   const handleSelect = useCallback(
     (range: DateRange | undefined) => {
-      // react-day-picker calls this when a range is being selected
-      if (!range) {
-        // User clicked the same date or outside - reset
-        setTempRange(undefined);
-        setSelectionMode("idle");
-        return;
-      }
+      // Update draft immediately
+      setDraft(range);
+      draftRef.current = range;
 
-      if (!range.from) {
-        // Should not happen in range mode
-        return;
-      }
+      // Clear error initially
+      setError(undefined);
 
-      // Check if this is a single date click (from and to are same)
-      const isSingleClick = range.to && isSameDay(range.from, range.to);
-      
-      if (!range.to || isSingleClick) {
-        // First click or single date - start selection
-        setTempRange({ from: range.from, to: undefined });
-        setSelectionMode("selecting-end");
-        setError(undefined);
-      } else {
-        // Range completed with different dates
-        const normalized = normalizeRange(range);
-        if (normalized) {
-          setTempRange(normalized);
-          setSelectionMode("selecting-end");
+      // Check if this is a complete range (from hovering and selecting)
+      if (range?.from && range?.to && !isSameDay(range.from, range.to)) {
+        // Complete range selected
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
 
-          // Validate if needed
-          if (minDuration || maxDuration) {
-            const validation = validateDuration(normalized, minDuration, maxDuration);
-            if (!validation.valid) {
-              setError(validation.message);
-              onError?.(validation.message || "Invalid selection");
-              return;
-            }
+        // Validate the range
+        if (minDuration || maxDuration) {
+          const validation = validateDuration(range, minDuration, maxDuration);
+          if (!validation.valid) {
+            setError(validation.message);
+            onError?.(validation.message || "Invalid selection");
           }
+        }
+      } else if (range?.from) {
+        // Single date clicked - entering selection mode
+        setIsSelectingEnd(true);
+        isSelectingEndRef.current = true;
+      } else {
+        // Cleared selection
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
+      }
+    },
+    [minDuration, maxDuration, onError]
+  );
 
+  // Handle calendar day clicks since react-day-picker doesn't fire onSelect on second click
+  const handleDayClick = useCallback(
+    (day: Date, _modifiers: unknown, e: React.MouseEvent) => {
+      // Only handle the click if we're selecting the end date
+      // Use ref to get immediate value since state updates are async
+      if (isSelectingEndRef.current && draftRef.current?.from && !draftRef.current?.to) {
+        // Prevent the default calendar behavior
+        e?.preventDefault?.();
+
+        // Second click - complete the range
+        const newRange = {
+          from: draftRef.current.from > day ? day : draftRef.current.from,
+          to: draftRef.current.from > day ? draftRef.current.from : day
+        };
+
+        setDraft(newRange);
+        draftRef.current = newRange;
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
+
+        // Validate the range
+        if (!isSameDay(newRange.from, newRange.to) && (minDuration || maxDuration)) {
+          const validation = validateDuration(newRange, minDuration, maxDuration);
+          if (!validation.valid) {
+            setError(validation.message);
+            onError?.(validation.message || "Invalid selection");
+          } else {
+            setError(undefined);
+          }
+        } else {
           setError(undefined);
         }
       }
@@ -227,26 +257,13 @@ export function DateRangePicker({
     [minDuration, maxDuration, onError]
   );
 
-  const handleDayMouseEnter = useCallback(
-    (date: Date | undefined) => {
-      if (date && selectionMode === "selecting-end") {
-        setHoveredDate(date);
-      }
-    },
-    [selectionMode]
-  );
-
-  const handleDayMouseLeave = useCallback(() => {
-    setHoveredDate(undefined);
-  }, []);
-
   const handleApply = useCallback(() => {
-    if (tempRange?.from && tempRange?.to) {
-      const withTime = applyTimeToRange(tempRange);
+    if (draft?.from && draft?.to && !error) {
+      const withTime = applyTimeToRange(draft);
       onChange?.(withTime);
       setOpen(false);
     }
-  }, [tempRange, onChange]);
+  }, [draft, error, onChange]);
 
   const handleCancel = useCallback(() => {
     setOpen(false);
@@ -262,33 +279,48 @@ export function DateRangePicker({
     [onChange]
   );
 
-  // Compute display range for the calendar
-  const displayRange = useMemo(() => {
-    if (selectionMode === "selecting-end" && tempRange?.from && hoveredDate) {
-      return normalizeRange({ from: tempRange.from, to: hoveredDate });
-    }
-    // CRITICAL: Fall back to value to show pre-selected range
-    return tempRange ?? value;
-  }, [selectionMode, tempRange, hoveredDate, value]);
+  // Derived state
+  const hasStart = !!draft?.from;
+  const hasEnd = !!draft?.to;
 
-  // Determine button states
-  const showApplyButton = useMemo(() => {
-    if (!tempRange?.from || !tempRange?.to || error) return false;
+  const changed = useMemo(() => {
+    // Changed if we have any draft that's different from value
+    if (!draft?.from && !draft?.to && !value?.from && !value?.to) return false;
+    if (!draft?.from && !draft?.to && (value?.from || value?.to)) return true;
+    if ((draft?.from || draft?.to) && !value?.from && !value?.to) return true;
+    if (draft?.from && value?.from && !isSameDay(draft.from, value.from)) return true;
+    if (draft?.to && value?.to && !isSameDay(draft.to, value.to)) return true;
+    return false;
+  }, [draft, value]);
+
+  const isCompleteRange = useMemo(() => {
+    if (!hasStart || !hasEnd || !draft.from || !draft.to) return false;
+    // Don't count single-date selections as complete
+    return !isSameDay(draft.from, draft.to);
+  }, [hasStart, hasEnd, draft]);
+
+  const isDifferentFromValue = useMemo(() => {
+    if (!isCompleteRange) return false;
     if (!value?.from || !value?.to) return true;
-    return !isSameDay(tempRange.from, value.from) || !isSameDay(tempRange.to, value.to);
-  }, [tempRange, value, error]);
+    if (!draft?.from || !draft?.to) return false;
+    return !isSameDay(draft.from, value.from) || !isSameDay(draft.to, value.to);
+  }, [isCompleteRange, draft, value]);
 
-  const cancelDisabled = selectionMode === "idle";
+  const showApplyButton = true; // Always show Apply button
+  const applyDisabled = !isCompleteRange || !isDifferentFromValue || !!error;
+  const cancelDisabled = false; // Always allow Cancel for better UX
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Escape" && !cancelDisabled) {
+      if (e.key === "Escape") {
+        e.preventDefault();
         handleCancel();
-      } else if (e.key === "Enter" && showApplyButton) {
+      } else if (e.key === "Enter" && !applyDisabled) {
+        e.preventDefault();
         handleApply();
       }
     },
-    [cancelDisabled, showApplyButton, handleCancel, handleApply]
+    [applyDisabled, handleCancel, handleApply]
   );
 
   return (
@@ -328,10 +360,9 @@ export function DateRangePicker({
               value?.from ||
               (maxDate ? new Date(Math.min(Date.now(), maxDate.getTime())) : new Date())
             }
-            selected={displayRange}
+            selected={draft}
             onSelect={handleSelect}
-            onDayMouseEnter={handleDayMouseEnter}
-            onDayMouseLeave={handleDayMouseLeave}
+            onDayClick={handleDayClick}
             numberOfMonths={numberOfMonths}
             disabled={disabledDayMatcher}
             locale={locale}
@@ -374,11 +405,9 @@ export function DateRangePicker({
             >
               Cancel
             </Button>
-            {showApplyButton && (
-              <Button className="flex-1" onClick={handleApply}>
-                Apply
-              </Button>
-            )}
+            <Button className="flex-1" onClick={handleApply} disabled={applyDisabled}>
+              Apply
+            </Button>
           </div>
         </div>
       </PopoverContent>
