@@ -17,6 +17,7 @@ import type { Metrics } from "@/lib/types/session";
 interface DataQualityIndicatorProps {
   metrics: Metrics;
   totalSessions: number;
+  totalDatasetSessions?: number;
   dateRange: { start: Date; end: Date };
   chartData?: {
     category_labels?: string[];
@@ -44,24 +45,28 @@ interface QualityIssue {
 export function DataQualityIndicator({
   metrics,
   totalSessions,
+  totalDatasetSessions,
   dateRange,
   chartData
 }: DataQualityIndicatorProps) {
   const issues: QualityIssue[] = [];
 
-  // Sample size analysis
-  if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.verySmall) {
+  // Use total dataset sessions for quality assessment, fallback to filtered sessions
+  const datasetSize = totalDatasetSessions ?? totalSessions;
+
+  // Sample size analysis based on total dataset
+  if (datasetSize < ANALYTICS_THRESHOLDS.sampleSize.verySmall) {
     issues.push({
       type: "error",
       title: "Very Small Sample Size",
-      description: `Only ${totalSessions} conversations available. Results may not be statistically significant.`,
+      description: `Only ${datasetSize} conversations available in total dataset. Results may not be statistically significant.`,
       impact: "high"
     });
-  } else if (totalSessions < ANALYTICS_THRESHOLDS.sampleSize.small) {
+  } else if (datasetSize < ANALYTICS_THRESHOLDS.sampleSize.small) {
     issues.push({
       type: "warning",
       title: "Small Sample Size",
-      description: `${totalSessions} conversations may limit insight reliability. Consider larger datasets.`,
+      description: `${datasetSize} conversations in total dataset may limit insight reliability. Consider larger datasets.`,
       impact: "medium"
     });
   }
@@ -264,12 +269,12 @@ export function DataQualityIndicator({
     );
   };
 
-  // Only show if there are significant issues or if sample size is very small
+  // Only show if there are significant issues or if dataset size is very small
   const shouldShow = issues.some(
     (issue) =>
       issue.type === "error" ||
       (issue.type === "warning" && issue.impact === "high") ||
-      totalSessions < ANALYTICS_THRESHOLDS.qualityDisplay.alwaysShowBelowSessions
+      datasetSize < ANALYTICS_THRESHOLDS.qualityDisplay.alwaysShowBelowSessions
   );
 
   if (!shouldShow) {
