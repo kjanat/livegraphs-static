@@ -7,79 +7,49 @@
 "use client";
 
 import "chartjs-adapter-date-fns";
-import {
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  type ChartData,
-  Chart as ChartJS,
-  type ChartOptions,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  TimeScale,
-  Tooltip
-} from "chart.js";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { useChartSetup } from "@/hooks/useChartSetup";
+import type { ChartJsProps } from "@/lib/types/charts";
+import { ChartWrapper } from "./ChartWrapper";
 
-// Register all necessary Chart.js components
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  TimeScale
-);
+type SupportedChartType = "doughnut" | "bar" | "line";
 
-type ChartType = "doughnut" | "bar" | "line";
-
-interface AnalyticsChartProps {
-  type: ChartType;
-  data: ChartData<ChartType>;
-  options?: ChartOptions<ChartType>;
+interface AnalyticsChartProps extends ChartJsProps<SupportedChartType> {
+  type: SupportedChartType;
   title: string;
 }
 
-const ChartComponent = <T extends ChartType>({
-  type,
-  data,
-  options
-}: {
-  type: T;
-  data: ChartData<T>;
-  options?: ChartOptions<T>;
-}) => {
-  switch (type) {
-    case "doughnut":
-      return (
-        <Doughnut
-          data={data as ChartData<"doughnut">}
-          options={options as ChartOptions<"doughnut">}
-        />
-      );
-    case "bar":
-      return <Bar data={data as ChartData<"bar">} options={options as ChartOptions<"bar">} />;
-    case "line":
-      return <Line data={data as ChartData<"line">} options={options as ChartOptions<"line">} />;
-    default:
-      return null;
-  }
-};
+const ChartComponents = {
+  doughnut: Doughnut,
+  bar: Bar,
+  line: Line
+} as const;
 
 export const AnalyticsChart = memo(({ type, data, options, title }: AnalyticsChartProps) => {
+  useChartSetup();
+  const isEmpty = useMemo(
+    () => !data.datasets || data.datasets.length === 0 || data.datasets[0].data.length === 0,
+    [data]
+  );
+
+  const renderChart = () => {
+    switch (type) {
+      case "doughnut":
+        return <Doughnut data={data as any} options={options as any} />;
+      case "bar":
+        return <Bar data={data as any} options={options as any} />;
+      case "line":
+        return <Line data={data as any} options={options as any} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="bg-card rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-4 text-card-foreground">{title}</h3>
-      <div className="relative h-96">
-        <ChartComponent type={type} data={data} options={options} />
-      </div>
-    </div>
+    <ChartWrapper title={title} isEmpty={isEmpty} contentClassName="relative h-96">
+      {renderChart()}
+    </ChartWrapper>
   );
 });
 

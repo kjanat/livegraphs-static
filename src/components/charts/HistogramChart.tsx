@@ -7,66 +7,60 @@
 "use client";
 
 import type { ChartOptions } from "chart.js";
+import { memo, useMemo } from "react";
 import { Bar } from "react-chartjs-2";
-import { setupCharts } from "./ChartConfig";
+import { useChartSetup } from "@/hooks/useChartSetup";
+import { CHART_DEFAULTS, DEFAULT_CHART_COLOR } from "@/lib/constants/charts";
+import type { DataChartProps } from "@/lib/types/charts";
+import { ChartWrapper } from "./ChartWrapper";
 
-setupCharts();
-
-interface HistogramChartProps {
-  data: number[];
+interface HistogramChartProps extends DataChartProps<number> {
   bins?: number;
-  title?: string;
   xLabel?: string;
   color?: string;
 }
 
-export function HistogramChart({
-  data,
-  bins = 10,
-  title = "Distribution",
-  xLabel = "Value",
-  color = "#3b82f6"
-}: HistogramChartProps) {
+interface HistogramData {
+  labels: string[];
+  values: number[];
+  stats: {
+    mean: number;
+    median: number;
+    total: number;
+    isInteger: boolean;
+  };
+}
+
+function calculateHistogram(data: number[], bins: number): HistogramData {
   if (!data.length) {
-    return (
-      <div className="bg-card rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold mb-4">{title}</h3>
-        <div className="text-center text-muted-foreground py-12">No data available</div>
-      </div>
-    );
+    return {
+      labels: [],
+      values: [],
+      stats: { mean: 0, median: 0, total: 0, isInteger: false }
+    };
   }
 
-  // Calculate histogram bins
   const min = Math.min(...data);
   const max = Math.max(...data);
   const binWidth = (max - min) / bins;
-
   const histogram = new Array(bins).fill(0);
-  const binLabels = [];
+  const binLabels: string[] = [];
+  const dataIsIntegers = data.every((val) => Number.isInteger(val));
+  const binWidthIsReasonable = binWidth >= 0.5;
+
+  const formatValue = (val: number) => {
+    if (dataIsIntegers && binWidthIsReasonable) {
+      return Math.round(val).toString();
+    }
+    if (val % 1 === 0) {
+      return Math.round(val).toString();
+    }
+    return val.toFixed(1);
+  };
 
   for (let i = 0; i < bins; i++) {
     const binStart = min + i * binWidth;
     const binEnd = binStart + binWidth;
-
-    // Format labels based on whether the data appears to be integers
-    // Improved logic: if all data points are integers AND bin width is reasonably close to an integer,
-    // format as integers
-    const dataIsIntegers = data.every((val) => Number.isInteger(val));
-    const binWidthIsReasonable = binWidth >= 0.5; // Don't show decimals for reasonable bin widths
-
-    const formatValue = (val: number) => {
-      // If data consists of integers and we have reasonable bin widths,
-      // always round to integers regardless of the exact boundary value
-      if (dataIsIntegers && binWidthIsReasonable) {
-        return Math.round(val).toString();
-      }
-      // Otherwise, show decimals only if needed
-      if (val % 1 === 0) {
-        return Math.round(val).toString();
-      }
-      return val.toFixed(1);
-    };
-
     binLabels.push(`${formatValue(binStart)}-${formatValue(binEnd)}`);
 
     data.forEach((value) => {
@@ -78,95 +72,123 @@ export function HistogramChart({
     });
   }
 
-  const chartData = {
-    labels: binLabels,
-    datasets: [
-      {
-        label: "Frequency",
-        data: histogram,
-        backgroundColor: `${color}80`,
-        borderColor: color,
-        borderWidth: 1,
-        borderRadius: 4
-      }
-    ]
-  };
-
-  const options: ChartOptions<"bar"> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        callbacks: {
-          title: (context) => {
-            return `${xLabel}: ${context[0].label}`;
-          },
-          label: (context) => {
-            const count = context.parsed.y;
-            const percentage = ((count / data.length) * 100).toFixed(1);
-            return `Count: ${count} (${percentage}%)`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: xLabel
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Frequency"
-        },
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
-        }
-      }
-    }
-  };
-
-  // Calculate statistics
   const mean = data.reduce((a, b) => a + b, 0) / data.length;
   const sorted = [...data].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
 
-  // Use consistent formatting for statistics
-  const dataIsIntegers = data.every((val) => Number.isInteger(val));
-  const formatStat = (val: number) => {
-    // If data is all integers, round statistics to integers too
-    if (dataIsIntegers) {
-      return Math.round(val).toString();
+  return {
+    labels: binLabels,
+    values: histogram,
+    stats: {
+      mean,
+      median,
+      total: data.length,
+      isInteger: dataIsIntegers
     }
-    return val.toFixed(1);
   };
-
-  return (
-    <div className="bg-card rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
-        <div className="text-center">
-          <div className="text-muted-foreground">Mean</div>
-          <div className="font-semibold">{formatStat(mean)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-muted-foreground">Median</div>
-          <div className="font-semibold">{formatStat(median)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-muted-foreground">Total</div>
-          <div className="font-semibold">{data.length}</div>
-        </div>
-      </div>
-      <div className="relative h-64">
-        <Bar data={chartData} options={options} />
-      </div>
-    </div>
-  );
 }
+
+export const HistogramChart = memo(
+  ({
+    data,
+    bins = 10,
+    title = "Distribution",
+    xLabel = "Value",
+    color = DEFAULT_CHART_COLOR
+  }: HistogramChartProps) => {
+    useChartSetup();
+    const isEmpty = !data.length;
+
+    const { chartData, options, stats } = useMemo(() => {
+      const histogramData = calculateHistogram(data, bins);
+      const { labels, values, stats } = histogramData;
+
+      const chartData = {
+        labels,
+        datasets: [
+          {
+            label: "Frequency",
+            data: values,
+            backgroundColor: `${color}80`,
+            borderColor: color,
+            borderWidth: CHART_DEFAULTS.borderWidth,
+            borderRadius: CHART_DEFAULTS.borderRadius
+          }
+        ]
+      };
+
+      const options: ChartOptions<"bar"> = {
+        responsive: CHART_DEFAULTS.responsive,
+        maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              title: (context) => {
+                return `${xLabel}: ${context[0].label}`;
+              },
+              label: (context) => {
+                const count = context.parsed.y;
+                const percentage = ((count / stats.total) * 100).toFixed(1);
+                return `Count: ${count} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: xLabel
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Frequency"
+            },
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      };
+
+      return { chartData, options, stats };
+    }, [data, bins, xLabel, color, isEmpty]);
+
+    const formatStat = (val: number) => {
+      if (stats.isInteger) {
+        return Math.round(val).toString();
+      }
+      return val.toFixed(1);
+    };
+
+    return (
+      <ChartWrapper title={title} isEmpty={isEmpty}>
+        <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
+          <div className="text-center">
+            <div className="text-muted-foreground">Mean</div>
+            <div className="font-semibold">{formatStat(stats.mean)}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-muted-foreground">Median</div>
+            <div className="font-semibold">{formatStat(stats.median)}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-muted-foreground">Total</div>
+            <div className="font-semibold">{stats.total}</div>
+          </div>
+        </div>
+        <div className="relative h-64">
+          <Bar data={chartData} options={options} />
+        </div>
+      </ChartWrapper>
+    );
+  }
+);
+
+HistogramChart.displayName = "HistogramChart";

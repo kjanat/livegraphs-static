@@ -7,123 +7,122 @@
 "use client";
 
 import type { ChartOptions } from "chart.js";
+import { memo, useMemo } from "react";
 import { Bubble } from "react-chartjs-2";
-import { setupCharts } from "./ChartConfig";
+import { useChartSetup } from "@/hooks/useChartSetup";
+import { CHART_COLORS, CHART_DEFAULTS } from "@/lib/constants/charts";
+import { ChartWrapper } from "./ChartWrapper";
 
-setupCharts();
+interface BubbleDataPoint {
+  category: string;
+  total_cost: number;
+  avg_cost: number;
+  count: number;
+}
 
 interface BubbleChartProps {
-  data: {
-    category: string;
-    total_cost: number;
-    avg_cost: number;
-    count: number;
-  }[];
+  data: BubbleDataPoint[];
   title?: string;
 }
 
-export function BubbleChart({ data, title = "Cost Analysis by Category" }: BubbleChartProps) {
-  if (!data.length) {
-    return (
-      <div className="bg-card rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold mb-4">{title}</h3>
-        <div className="text-center text-muted-foreground py-12">
-          No category cost data available
-        </div>
-      </div>
-    );
-  }
+export const BubbleChart = memo(
+  ({ data, title = "Cost Analysis by Category" }: BubbleChartProps) => {
+    useChartSetup();
+    const isEmpty = !data.length;
 
-  const maxCount = Math.max(...data.map((d) => d.count));
-  const colors = [
-    "#3B82F6",
-    "#10B981",
-    "#F59E0B",
-    "#EF4444",
-    "#8B5CF6",
-    "#EC4899",
-    "#14B8A6",
-    "#F97316",
-    "#6366F1",
-    "#84CC16"
-  ];
+    const { chartData, options } = useMemo(() => {
+      if (isEmpty) return { chartData: { datasets: [] }, options: {} };
 
-  const chartData = {
-    datasets: [
-      {
-        label: "Categories",
-        data: data.map((item) => ({
-          x: item.avg_cost,
-          y: item.total_cost,
-          r: Math.sqrt(item.count / maxCount) * 30 + 5,
-          category: item.category,
-          count: item.count
-        })),
-        backgroundColor: data.map((_, index) => `${colors[index % colors.length]}80`),
-        borderColor: data.map((_, index) => colors[index % colors.length]),
-        borderWidth: 2
-      }
-    ]
-  };
+      const maxCount = Math.max(...data.map((d) => d.count));
 
-  const options: ChartOptions<"bubble"> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const data = context.raw as {
-              x: number;
-              y: number;
-              r: number;
-              category: string;
-              count: number;
-            };
-            return [
-              `Category: ${data.category}`,
-              `Avg Cost: €${data.x.toFixed(4)}`,
-              `Total Cost: €${data.y.toFixed(2)}`,
-              `Sessions: ${data.count}`
-            ];
+      const chartData = {
+        datasets: [
+          {
+            label: "Categories",
+            data: data.map((item) => ({
+              x: item.avg_cost,
+              y: item.total_cost,
+              r: Math.sqrt(item.count / maxCount) * 30 + 5,
+              category: item.category,
+              count: item.count
+            })),
+            backgroundColor: data.map(
+              (_, index) => `${CHART_COLORS[index % CHART_COLORS.length]}80`
+            ),
+            borderColor: data.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]),
+            borderWidth: 2
+          }
+        ]
+      };
+
+      const options: ChartOptions<"bubble"> = {
+        responsive: CHART_DEFAULTS.responsive,
+        maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const data = context.raw as {
+                  x: number;
+                  y: number;
+                  r: number;
+                  category: string;
+                  count: number;
+                };
+                return [
+                  `Category: ${data.category}`,
+                  `Avg Cost: €${data.x.toFixed(4)}`,
+                  `Total Cost: €${data.y.toFixed(2)}`,
+                  `Sessions: ${data.count}`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Average Cost per Session (€)"
+            },
+            ticks: {
+              callback: (value) => `€${Number(value).toFixed(3)}`
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Total Cost (€)"
+            },
+            ticks: {
+              callback: (value) => `€${Number(value).toFixed(0)}`
+            }
           }
         }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: "Average Cost per Session (€)"
-        },
-        ticks: {
-          callback: (value) => `€${Number(value).toFixed(3)}`
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Total Cost (€)"
-        },
-        ticks: {
-          callback: (value) => `€${Number(value).toFixed(0)}`
-        }
-      }
-    }
-  };
+      };
 
-  return (
-    <div className="bg-card rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        Bubble size represents number of sessions
-      </p>
-      <div className="relative h-96">
-        <Bubble data={chartData} options={options} />
-      </div>
-    </div>
-  );
-}
+      return { chartData, options };
+    }, [data, isEmpty]);
+
+    return (
+      <ChartWrapper
+        title={title}
+        isEmpty={isEmpty}
+        emptyMessage="No category cost data available"
+        contentClassName="relative"
+      >
+        <p className="text-sm text-muted-foreground mb-4">
+          Bubble size represents number of sessions
+        </p>
+        <div className="h-96">
+          <Bubble data={chartData} options={options} />
+        </div>
+      </ChartWrapper>
+    );
+  }
+);
+
+BubbleChart.displayName = "BubbleChart";

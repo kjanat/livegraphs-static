@@ -18,6 +18,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { createDateRangePresets } from "@/lib/constants/dateRangePresets";
 import { useDatabaseOperations } from "@/lib/hooks/useDatabaseOperations";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
@@ -139,47 +140,7 @@ export function ClientDashboard() {
               }}
               minDate={new Date(dbStats.dateRange.min)}
               maxDate={new Date(dbStats.dateRange.max)}
-              presets={[
-                {
-                  label: "All Data",
-                  shortLabel: "All",
-                  value: () => {
-                    const min = new Date(dbStats.dateRange.min);
-                    const max = new Date(dbStats.dateRange.max);
-                    return { from: min, to: max };
-                  }
-                },
-                {
-                  label: "Last 7 Days",
-                  shortLabel: "7D",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 6);
-                    return { from: start, to: end };
-                  }
-                },
-                {
-                  label: "Last 30 Days",
-                  shortLabel: "30D",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 29);
-                    return { from: start, to: end };
-                  }
-                },
-                {
-                  label: "Last 3 Months",
-                  shortLabel: "3M",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setMonth(start.getMonth() - 3);
-                    return { from: start, to: end };
-                  }
-                }
-              ]}
+              presets={createDateRangePresets(dbStats.dateRange)}
               monthsMobile={1}
               monthsDesktop={2}
               showPresetCombobox={true}
