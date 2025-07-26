@@ -283,16 +283,6 @@ export function DateRangePicker({
   const hasStart = !!draft?.from;
   const hasEnd = !!draft?.to;
 
-  const changed = useMemo(() => {
-    // Changed if we have any draft that's different from value
-    if (!draft?.from && !draft?.to && !value?.from && !value?.to) return false;
-    if (!draft?.from && !draft?.to && (value?.from || value?.to)) return true;
-    if ((draft?.from || draft?.to) && !value?.from && !value?.to) return true;
-    if (draft?.from && value?.from && !isSameDay(draft.from, value.from)) return true;
-    if (draft?.to && value?.to && !isSameDay(draft.to, value.to)) return true;
-    return false;
-  }, [draft, value]);
-
   const isCompleteRange = useMemo(() => {
     if (!hasStart || !hasEnd || !draft.from || !draft.to) return false;
     // Don't count single-date selections as complete
@@ -306,7 +296,6 @@ export function DateRangePicker({
     return !isSameDay(draft.from, value.from) || !isSameDay(draft.to, value.to);
   }, [isCompleteRange, draft, value]);
 
-  const showApplyButton = true; // Always show Apply button
   const applyDisabled = !isCompleteRange || !isDifferentFromValue || !!error;
   const cancelDisabled = false; // Always allow Cancel for better UX
 
