@@ -2,7 +2,8 @@ import CopyPlugin from "copy-webpack-plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // output: "export",
+  output: "standalone",
 
   // Disable build-activity overlay and auto-prerender in dev mode
   // devIndicators: false,
@@ -134,3 +135,7 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+initOpenNextCloudflareForDev();
