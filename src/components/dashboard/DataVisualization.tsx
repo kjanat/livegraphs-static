@@ -104,6 +104,7 @@ export function DataVisualization({
       <DataQualityIndicator
         metrics={metrics}
         totalSessions={metrics["Total Conversations"]}
+        totalDatasetSessions={totalSessions}
         dateRange={dateRange}
         chartData={chartData}
       />

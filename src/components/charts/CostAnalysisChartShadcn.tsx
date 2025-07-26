@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { BubbleTooltip } from "./BubbleTooltip";
 
 interface CostAnalysisChartShadcnProps {
   data: {
@@ -241,7 +240,7 @@ export function CostAnalysisChartShadcn({ data }: CostAnalysisChartShadcnProps) 
                 return `€${value.toFixed(yAxisDecimals)}`;
               }}
             />
-            <ChartTooltip cursor={{ strokeDasharray: "3 3" }} content={<BubbleTooltip />} />
+            <ChartTooltip cursor={{ strokeDasharray: "3 3" }} />
             <Scatter
               name="Categories"
               data={chartData}

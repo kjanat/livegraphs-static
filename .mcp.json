@@ -7,6 +7,18 @@
     "playwright": {
       "command": "npx",
       "args": ["--yes", "@playwright/mcp@latest"]
+    },
+    "cloudflare-bindings": {
+      "type": "sse",
+      "url": "https://bindings.mcp.cloudflare.com/sse"
+    },
+    "cloudflare-docs": {
+      "type": "sse",
+      "url": "https://docs.mcp.cloudflare.com/sse"
+    },
+    "cloudflare-builds": {
+      "type": "sse",
+      "url": "https://builds.mcp.cloudflare.com/sse"
     }
   }
 }

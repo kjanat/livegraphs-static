@@ -21,6 +21,9 @@ export default defineConfig({
       "**/useDatabase.test.ts",
       "**/dataProcessor.integration.test.ts"
     ],
+    reporters: process.env.GITHUB_ACTIONS
+      ? ["dot", "github-actions"]
+      : ["default", "dot", "hanging-process"],
     coverage: {
       reporter: ["text", "json", "html"],
       exclude: [

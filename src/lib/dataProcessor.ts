@@ -370,10 +370,8 @@ export async function prepareChartData(db: Database, dateRange: DateRange): Prom
       AND user_rating IS NOT NULL
   `);
 
-  const avg_rating =
-    avgRatingData.length > 0 && avgRatingData[0].avg_rating !== null
-      ? Number((avgRatingData[0].avg_rating as number).toFixed(1))
-      : null;
+  const _avg = Number(avgRatingData?.[0]?.avg_rating);
+  const avg_rating = Number.isFinite(_avg) ? Number(_avg.toFixed(1)) : null;
 
   // Cost by category
   const categoryCostData = execQuery<{

@@ -2,6 +2,7 @@ import {
   endOfDay,
   endOfMonth,
   endOfWeek,
+  isSameDay,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -9,7 +10,7 @@ import {
 } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange, Matcher } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,7 +24,6 @@ import {
   applyTimeToRange,
   createDisabledDayMatcher,
   formatDateRange,
-  normalizeRange,
   validateDuration
 } from "./utils";
 
@@ -100,11 +100,11 @@ const defaultPresets: Preset[] = [
 ];
 
 /**
- * Renders a date range picker component with optional presets, validation, and responsive calendar UI.
- *
- * Allows users to select a date range within specified constraints, choose from preset ranges, and apply or cancel their selection. Supports minimum and maximum duration limits, disabled and available date constraints, localization, custom date formatting, and loading state. The component adapts its calendar display for desktop and mobile, and provides error feedback for invalid selections.
- *
- * @returns The rendered date range picker UI component.
+ * Simple date range picker following the user's specification:
+ * - Keeps calendar in plain range mode
+ * - Maintains minimal temp state (draft)
+ * - Shows Apply only when range is complete and different from current value
+ * - Cancel is disabled when no changes have been made
  */
 export function DateRangePicker({
   value,
@@ -127,8 +127,11 @@ export function DateRangePicker({
   showPresetCombobox = false
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
-  const [internalValue, setInternalValue] = useState<DateRange | undefined>(value);
+  const [draft, setDraft] = useState<DateRange | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [, setIsSelectingEnd] = useState(false);
+  const isSelectingEndRef = useRef(false);
+  const draftRef = useRef<DateRange | undefined>(undefined);
   const isDesktop = useIsDesktop();
 
   // Determine number of months to show
@@ -165,74 +168,149 @@ export function DateRangePicker({
     return matchers;
   }, [isDayDisabled, availableDates, minDate, maxDate]);
 
-  // Sync internal value with external value
+  // Initialize draft with current value when popover opens
   useEffect(() => {
-    setInternalValue(value);
-  }, [value]);
+    if (open) {
+      setDraft(value);
+      draftRef.current = value;
+      setIsSelectingEnd(false);
+      isSelectingEndRef.current = false;
+    } else {
+      setDraft(undefined);
+      draftRef.current = undefined;
+      setError(undefined);
+      setIsSelectingEnd(false);
+      isSelectingEndRef.current = false;
+    }
+  }, [open, value]);
 
   const handleSelect = useCallback(
     (range: DateRange | undefined) => {
-      const normalized = normalizeRange(range);
+      // Update draft immediately
+      setDraft(range);
+      draftRef.current = range;
 
-      // For range mode, react-day-picker provides partial selection until both dates are chosen
-      setInternalValue(normalized);
+      // Clear error initially
+      setError(undefined);
 
-      if (normalized?.from && normalized?.to) {
-        const validation = validateDuration(normalized, minDuration, maxDuration);
+      // Check if this is a complete range (from hovering and selecting)
+      if (range?.from && range?.to && !isSameDay(range.from, range.to)) {
+        // Complete range selected
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
 
-        if (!validation.valid) {
-          setError(validation.message);
-          onError?.(validation.message || "Invalid selection");
-          return;
+        // Validate the range
+        if (minDuration || maxDuration) {
+          const validation = validateDuration(range, minDuration, maxDuration);
+          if (!validation.valid) {
+            setError(validation.message);
+            onError?.(validation.message || "Invalid selection");
+          }
+        }
+      } else if (range?.from) {
+        // Single date clicked - entering selection mode
+        setIsSelectingEnd(true);
+        isSelectingEndRef.current = true;
+      } else {
+        // Cleared selection
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
+      }
+    },
+    [minDuration, maxDuration, onError]
+  );
+
+  // Handle calendar day clicks since react-day-picker doesn't fire onSelect on second click
+  const handleDayClick = useCallback(
+    (day: Date, _modifiers: unknown, e: React.MouseEvent) => {
+      // Only handle the click if we're selecting the end date
+      // Use ref to get immediate value since state updates are async
+      if (isSelectingEndRef.current && draftRef.current?.from && !draftRef.current?.to) {
+        // Prevent the default calendar behavior
+        e?.preventDefault?.();
+
+        // Second click - complete the range
+        const newRange = {
+          from: draftRef.current.from > day ? day : draftRef.current.from,
+          to: draftRef.current.from > day ? draftRef.current.from : day
+        };
+
+        setDraft(newRange);
+        draftRef.current = newRange;
+        setIsSelectingEnd(false);
+        isSelectingEndRef.current = false;
+
+        // Validate the range
+        if (!isSameDay(newRange.from, newRange.to) && (minDuration || maxDuration)) {
+          const validation = validateDuration(newRange, minDuration, maxDuration);
+          if (!validation.valid) {
+            setError(validation.message);
+            onError?.(validation.message || "Invalid selection");
+          } else {
+            setError(undefined);
+          }
+        } else {
+          setError(undefined);
         }
       }
-
-      // Clear error on valid selection or partial selection
-      setError(undefined);
     },
     [minDuration, maxDuration, onError]
   );
 
   const handleApply = useCallback(() => {
-    if (internalValue?.from && internalValue?.to) {
-      // Re-validate before applying
-      const validation = validateDuration(internalValue, minDuration, maxDuration);
-
-      if (!validation.valid) {
-        setError(validation.message);
-        onError?.(validation.message || "Invalid selection");
-        return;
-      }
-
-      const withTime = applyTimeToRange(internalValue);
+    if (draft?.from && draft?.to && !error) {
+      const withTime = applyTimeToRange(draft);
       onChange?.(withTime);
       setOpen(false);
     }
-  }, [internalValue, onChange, minDuration, maxDuration, onError]);
+  }, [draft, error, onChange]);
+
+  const handleCancel = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   const handlePresetSelect = useCallback(
     (preset: Preset) => {
       const range = preset.value();
       const withTime = applyTimeToRange(range);
-      setInternalValue(withTime);
       onChange?.(withTime);
       setOpen(false);
     },
     [onChange]
   );
 
+  // Derived state
+  const hasStart = !!draft?.from;
+  const hasEnd = !!draft?.to;
+
+  const isCompleteRange = useMemo(() => {
+    if (!hasStart || !hasEnd || !draft.from || !draft.to) return false;
+    // Don't count single-date selections as complete
+    return !isSameDay(draft.from, draft.to);
+  }, [hasStart, hasEnd, draft]);
+
+  const isDifferentFromValue = useMemo(() => {
+    if (!isCompleteRange) return false;
+    if (!value?.from || !value?.to) return true;
+    if (!draft?.from || !draft?.to) return false;
+    return !isSameDay(draft.from, value.from) || !isSameDay(draft.to, value.to);
+  }, [isCompleteRange, draft, value]);
+
+  const applyDisabled = !isCompleteRange || !isDifferentFromValue || !!error;
+  const cancelDisabled = false; // Always allow Cancel for better UX
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
-        setOpen(false);
-      } else if (e.key === "Enter" && internalValue?.from && internalValue?.to && !error) {
+        e.preventDefault();
+        handleCancel();
+      } else if (e.key === "Enter" && !applyDisabled) {
+        e.preventDefault();
         handleApply();
       }
     },
-    [internalValue, error, handleApply]
+    [applyDisabled, handleCancel, handleApply]
   );
-
-  const displayValue = value || internalValue;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -241,7 +319,7 @@ export function DateRangePicker({
           variant="outline"
           className={cn(
             "justify-start text-left font-normal",
-            !displayValue && "text-muted-foreground",
+            !value && "text-muted-foreground",
             className
           )}
           disabled={isLoading}
@@ -254,7 +332,7 @@ export function DateRangePicker({
           ) : (
             <>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {formatDateRange(displayValue, dateFormat)}
+              {formatDateRange(value, dateFormat)}
             </>
           )}
         </Button>
@@ -268,11 +346,12 @@ export function DateRangePicker({
           <Calendar
             mode="range"
             defaultMonth={
-              internalValue?.from ||
+              value?.from ||
               (maxDate ? new Date(Math.min(Date.now(), maxDate.getTime())) : new Date())
             }
-            selected={internalValue}
+            selected={draft}
             onSelect={handleSelect}
+            onDayClick={handleDayClick}
             numberOfMonths={numberOfMonths}
             disabled={disabledDayMatcher}
             locale={locale}
@@ -299,26 +378,23 @@ export function DateRangePicker({
                 <PresetSelector
                   presets={presets}
                   onSelect={handlePresetSelect}
-                  currentValue={displayValue}
+                  currentValue={value}
                 />
               </div>
             ) : (
-              <Presets
-                presets={presets}
-                onSelect={handlePresetSelect}
-                currentValue={displayValue}
-              />
+              <Presets presets={presets} onSelect={handlePresetSelect} currentValue={value} />
             ))}
 
           <div className="flex gap-2 p-3 border-t">
-            <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleCancel}
+              disabled={cancelDisabled}
+            >
               Cancel
             </Button>
-            <Button
-              className="flex-1"
-              onClick={handleApply}
-              disabled={!internalValue?.from || !internalValue?.to || !!error}
-            >
+            <Button className="flex-1" onClick={handleApply} disabled={applyDisabled}>
               Apply
             </Button>
           </div>

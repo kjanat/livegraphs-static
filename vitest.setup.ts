@@ -4,6 +4,46 @@ import { afterEach, beforeEach, vi } from "vitest";
 
 globalThis.global = globalThis;
 
+// --- Recharts needs ResizeObserver in JSDOM ---
+class ResizeObserverMock {
+  private _cb: ResizeObserverCallback;
+  constructor(cb: ResizeObserverCallback) {
+    this._cb = cb;
+  }
+  observe(target: Element) {
+    // Fire once so ResponsiveContainer thinks it has a size
+    this._cb(
+      [
+        {
+          target,
+          contentRect: target.getBoundingClientRect()
+        } as unknown as ResizeObserverEntry
+      ],
+      this as unknown as ResizeObserver
+    );
+  }
+  unobserve() {}
+  disconnect() {}
+}
+
+if (typeof (globalThis as any).ResizeObserver === "undefined") {
+  (globalThis as any).ResizeObserver = ResizeObserverMock;
+}
+
+// Give elements a non-zero size so charts don't bail out
+Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+  configurable: true,
+  get() {
+    return 800;
+  }
+});
+Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+  configurable: true,
+  get() {
+    return 600;
+  }
+});
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();

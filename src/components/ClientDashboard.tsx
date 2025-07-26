@@ -10,17 +10,11 @@ import { useState } from "react";
 import { CommandPalette } from "@/components/CommandPalette";
 import { AlertManager } from "@/components/dashboard/AlertManager";
 import { DatabaseStateManager } from "@/components/dashboard/DatabaseStateManager";
-import { DataVisualization } from "@/components/dashboard/DataVisualization";
-import { FileUploadManager } from "@/components/dashboard/FileUploadManager";
-import { MobileDatabaseStats } from "@/components/mobile/MobileDatabaseStats";
-import { DatabaseStatsSection } from "@/components/sections/DatabaseStatsSection";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { MainDashboardContent } from "@/components/dashboard/MainDashboardContent";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useDatabaseOperations } from "@/lib/hooks/useDatabaseOperations";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 /**
  * Renders the main client dashboard for chatbot conversation analytics, managing state, user interactions, and data visualization.
@@ -30,7 +24,6 @@ import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 export function ClientDashboard() {
   useKeyboardNavigation();
 
-  const isMobile = useIsMobile();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const databaseHook = useDatabase();
   const { isInitialized, error: dbError, loadSessionsFromJSON } = databaseHook;
@@ -67,7 +60,6 @@ export function ClientDashboard() {
 
   // Computed values
   const hasData = (dbStats?.totalSessions ?? 0) > 0;
-  const hasDateRange = !!dateRange;
 
   // Handlers
   const handleClearDatabase = () => setShowClearDialog(true);
@@ -100,115 +92,27 @@ export function ClientDashboard() {
 
       {/* Main Content */}
       {isInitialized && (
-        <>
-          {/* File Upload Section */}
-          <FileUploadManager
-            hasData={hasData}
-            hasDateRange={hasDateRange}
-            isUploading={isUploading}
-            uploadError={uploadError}
-            onFileUpload={loadSessionsFromJSON}
-            onClearDatabase={handleClearDatabase}
-            onExportCSV={exportCurrentData}
-            onUploadSuccess={loadNewDataset}
-          />
-
-          {/* Database Stats */}
-          {dbStats &&
-            hasData &&
-            (isMobile ? (
-              <MobileDatabaseStats
-                totalSessions={dbStats.totalSessions}
-                dateRange={dbStats.dateRange}
-              />
-            ) : (
-              <DatabaseStatsSection
-                totalSessions={dbStats.totalSessions}
-                dateRange={dbStats.dateRange}
-              />
-            ))}
-
-          {/* Date Range Picker */}
-          {dbStats && hasData && (
-            <DateRangePicker
-              value={dateRange ? { from: dateRange.start, to: dateRange.end } : undefined}
-              onChange={(range) => {
-                if (range?.from && range?.to) {
-                  loadDataForDateRange(range.from, range.to);
-                }
-              }}
-              minDate={new Date(dbStats.dateRange.min)}
-              maxDate={new Date(dbStats.dateRange.max)}
-              presets={[
-                {
-                  label: "All Data",
-                  shortLabel: "All",
-                  value: () => {
-                    const min = new Date(dbStats.dateRange.min);
-                    const max = new Date(dbStats.dateRange.max);
-                    return { from: min, to: max };
-                  }
-                },
-                {
-                  label: "Last 7 Days",
-                  shortLabel: "7D",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 6);
-                    return { from: start, to: end };
-                  }
-                },
-                {
-                  label: "Last 30 Days",
-                  shortLabel: "30D",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 29);
-                    return { from: start, to: end };
-                  }
-                },
-                {
-                  label: "Last 3 Months",
-                  shortLabel: "3M",
-                  value: () => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setMonth(start.getMonth() - 3);
-                    return { from: start, to: end };
-                  }
-                }
-              ]}
-              monthsMobile={1}
-              monthsDesktop={2}
-              showPresetCombobox={true}
-            />
-          )}
-
-          {/* Data Visualization */}
-          <DataVisualization
-            metrics={metrics}
-            chartData={chartData}
-            dateRange={dateRange}
-            isLoadingData={isLoadingData}
-            totalSessions={dbStats?.totalSessions}
-          />
-
-          {/* Empty State */}
-          {!hasData && (
-            <section
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={isDragging ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""}
-              aria-label="Drop zone for JSON files"
-            >
-              <EmptyState onSampleData={loadSampleData} onFileUpload={handleFileUpload} />
-            </section>
-          )}
-        </>
+        <MainDashboardContent
+          dbStats={dbStats}
+          dateRange={dateRange}
+          metrics={metrics}
+          chartData={chartData}
+          isLoadingData={isLoadingData}
+          isUploading={isUploading}
+          uploadError={uploadError}
+          isDragging={isDragging}
+          onDateRangeChange={loadDataForDateRange}
+          onFileUploadForManager={loadSessionsFromJSON}
+          onFileUploadForEmpty={handleFileUpload}
+          onClearDatabase={handleClearDatabase}
+          onExportCSV={exportCurrentData}
+          onLoadSampleData={loadSampleData}
+          onUploadSuccess={loadNewDataset}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        />
       )}
     </>
   );

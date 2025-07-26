@@ -12,9 +12,12 @@
       "!.next",
       "!out",
       "!public",
+      "!vitest.*",
       "!coverage",
       "!.claude",
-      "!src/stories"
+      "!src/stories",
+      "!worker-configuration.d.ts",
+      "!cloudflare-env.d.ts"
     ],
     "ignoreUnknown": true
   },

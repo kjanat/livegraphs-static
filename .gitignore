@@ -93,5 +93,17 @@ src/components/calendar-components.md
 *storybook.log
 storybook-static
 
+# temp directories
+**/temp/*
+**/tmp/*
+
 # AI
 .gemini/
+
+# Cloudflare
+# .wrangler/
+.open-next
+.dev.vars
+
+# vitest
+html/
